@@ -106,7 +106,7 @@ export class FlightController {
     if (this.input.isDown('a')) thrustX -= 1;
     if (this.input.isDown('d')) thrustX += 1;
     if (this.input.isDown(' ')) thrustY += 1;
-    if (this.input.isDown('shift')) thrustY -= 1;
+    if (this.input.isDown('control')) thrustY -= 1;
 
     const thrustLen = Math.hypot(thrustX, thrustY, thrustZ);
     if (thrustLen > 1) {

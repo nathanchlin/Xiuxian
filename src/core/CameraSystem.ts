@@ -19,6 +19,10 @@ export class CameraSystem {
 
   private currentLookAt = new THREE.Vector3();
 
+  // Snapshot of camera state when transition starts
+  private transitionStartPos = new THREE.Vector3();
+  private transitionStartLookAt = new THREE.Vector3();
+
   constructor(camera: THREE.PerspectiveCamera) {
     this.camera = camera;
   }
@@ -33,6 +37,10 @@ export class CameraSystem {
 
   toggleMode(): void {
     if (this.transitioning) return;
+    // Snapshot current actual camera state before switching
+    this.transitionStartPos.copy(this.camera.position);
+    this.transitionStartLookAt.copy(this.currentLookAt);
+
     this.mode = this.mode === 'third_person' ? 'first_person' : 'third_person';
     this.transitioning = true;
     this.transitionProgress = 0;
@@ -72,16 +80,16 @@ export class CameraSystem {
 
     if (this.mode === 'third_person') {
       if (this.transitioning) {
-        targetPos = firstTarget.clone().lerp(thirdTarget, t);
-        lookAt = firstLookAt.clone().lerp(thirdLookAt, t);
+        targetPos = this.transitionStartPos.clone().lerp(thirdTarget, t);
+        lookAt = this.transitionStartLookAt.clone().lerp(thirdLookAt, t);
       } else {
         targetPos = thirdTarget;
         lookAt = thirdLookAt;
       }
     } else {
       if (this.transitioning) {
-        targetPos = thirdTarget.clone().lerp(firstTarget, t);
-        lookAt = thirdLookAt.clone().lerp(firstLookAt, t);
+        targetPos = this.transitionStartPos.clone().lerp(firstTarget, t);
+        lookAt = this.transitionStartLookAt.clone().lerp(firstLookAt, t);
       } else {
         targetPos = firstTarget;
         lookAt = firstLookAt;
@@ -101,10 +109,12 @@ export class CameraSystem {
       // First-person: direct quaternion
       this.camera.position.copy(targetPos);
       this.camera.quaternion.copy(playerQuat);
+      this.currentLookAt.copy(firstLookAt);
     } else {
       // During transition: direct placement
       this.camera.position.copy(targetPos);
       this.camera.lookAt(lookAt);
+      this.currentLookAt.copy(lookAt);
     }
   }
 

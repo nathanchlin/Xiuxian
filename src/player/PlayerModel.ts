@@ -58,6 +58,14 @@ export class PlayerModel {
     const speed = flight.getSpeed();
     const trailMat = this.swordTrail.material as THREE.MeshBasicMaterial;
     trailMat.opacity = Math.min(0.6, speed / 100);
+
+    // 加速时拖尾变长
+    const baseLength = 2;
+    const maxLength = 8;
+    const speedRatio = Math.min(1, speed / 100);
+    const trailLength = baseLength + (maxLength - baseLength) * speedRatio;
+    this.swordTrail.scale.y = trailLength / baseLength;
+    this.swordTrail.position.z = 1.2 + (trailLength - baseLength) * 0.5;
   }
 
   dispose(): void {

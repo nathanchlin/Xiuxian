@@ -66,7 +66,7 @@ export class Game {
       if (this.state === 'playing') this.cameraSystem.toggleMode();
     });
 
-    this.input.registerKey('tab', () => {
+    this.input.registerKey('shift', () => {
       if (this.state !== 'playing') return;
       if (this.flight.tryBoost()) {
         this.sfx.boost();
@@ -195,6 +195,9 @@ export class Game {
   }
 
   private spawnEnemies(): void {
+    // [DEBUG] 屏蔽怪物生成，用于测试移动
+    return;
+
     const count = Math.floor(
       CONFIG.progression.scaling.enemyCountBase +
       CONFIG.progression.scaling.enemyCountPerLevel * this.level,
@@ -217,6 +220,9 @@ export class Game {
   }
 
   private spawnBoss(): void {
+    // [DEBUG] 屏蔽Boss生成，用于测试移动
+    return;
+
     const spawn = new THREE.Vector3(
       this.flight.position.x + 80,
       60,
@@ -371,6 +377,8 @@ export class Game {
     }
 
     // 9. Wave progression — check if all enemies dead
+    // [DEBUG] 屏蔽通关判断，用于测试移动
+    /*
     const aliveEnemies = this.enemies.filter((e) => e.alive).length;
     const bossAlive = this.boss ? this.boss.alive : false;
 
@@ -391,6 +399,7 @@ export class Game {
         this.nextWave();
       }
     }
+    */
 
     // 11. Update weapon targets (alive enemies + boss)
     this.updateWeaponTargets();
