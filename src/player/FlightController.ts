@@ -151,8 +151,9 @@ export class FlightController {
       this.dashTimer -= dt;
       if (this.dashTimer <= 0) {
         this.dashing = false;
-        setTimeout(() => { this.dashInvincible = false; },
-          (CONFIG.skills.swordDash.invincibleDuration - CONFIG.skills.swordDash.dashDuration) * 1000);
+        setTimeout(() => {
+          this.dashInvincible = false;
+        }, (CONFIG.skills.swordDash.invincibleDuration - CONFIG.skills.swordDash.dashDuration) * 1000);
       }
     }
 
@@ -171,7 +172,9 @@ export class FlightController {
     const thrustMult = this.boostActive ? cfg.boostMultiplier : 1.0;
 
     // Collect thrust input (local frame)
-    let thrustX = 0, thrustY = 0, thrustZ = 0;
+    let thrustX = 0,
+      thrustY = 0,
+      thrustZ = 0;
     if (this.input.isDown('w')) thrustZ -= 1;
     if (this.input.isDown('s')) thrustZ += 1;
     if (this.input.isDown('a')) thrustX -= 1;
@@ -208,7 +211,7 @@ export class FlightController {
     const pitchDirect = -dy * this.mouseSens;
     const yawDirect = -dx * this.mouseSens;
 
-    // Q/E roll uses angular velocity with drag
+    // E roll uses angular velocity with drag (Q freed for skill system)
     let rollInput = 0;
     if (this.input.isDown('e')) rollInput -= cfg.angularThrust * dt;
     this.angularVelocity.z += rollInput;
