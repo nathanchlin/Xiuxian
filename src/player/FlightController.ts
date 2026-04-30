@@ -30,6 +30,18 @@ export class FlightController {
   dashing = false;
   dashInvincible = false;
 
+  // ─── Sword Intent ───
+  swordIntent = 0;
+  private intentDecayTimer = 0;
+
+  // ─── Parry ───
+  parrying = false;
+  private parryTimer = 0;
+
+  // ─── Dash (for skill system) ───
+  private dashTimer = 0;
+  private dashDirection = new THREE.Vector3();
+
   private readonly mouseSens = 0.002;
 
   constructor(private readonly input: Input) {}
@@ -67,6 +79,35 @@ export class FlightController {
     return true;
   }
 
+  addSwordIntent(amount: number): void {
+    this.swordIntent = Math.min(CONFIG.skills.swordIntent.maxStacks, this.swordIntent + amount);
+    this.intentDecayTimer = CONFIG.skills.swordIntent.decayTime;
+  }
+
+  consumeSwordIntent(amount: number): boolean {
+    if (this.swordIntent < amount) return false;
+    this.swordIntent -= amount;
+    return true;
+  }
+
+  startParry(): void {
+    if (this.parrying) return;
+    this.parrying = true;
+    this.parryTimer = CONFIG.skills.parry.parryWindow;
+  }
+
+  endParry(): void {
+    this.parrying = false;
+    this.parryTimer = 0;
+  }
+
+  startDash(direction: THREE.Vector3, duration: number): void {
+    this.dashing = true;
+    this.dashInvincible = true;
+    this.dashDirection.copy(direction);
+    this.dashTimer = duration;
+  }
+
   takeDamage(amount: number): boolean {
     if (!this.alive || this.dashInvincible) return false;
     this.hp = Math.max(0, this.hp - amount);
@@ -84,6 +125,36 @@ export class FlightController {
 
     // Spirit regen
     this.spirit = Math.min(CONFIG.spirit.maxSpirit, this.spirit + CONFIG.spirit.regenRate * dt);
+
+    // Sword intent decay
+    if (this.swordIntent > 0) {
+      this.intentDecayTimer -= dt;
+      if (this.intentDecayTimer <= 0) {
+        this.swordIntent = Math.max(0, this.swordIntent - 1);
+        this.intentDecayTimer = CONFIG.skills.swordIntent.decayTime;
+      }
+    }
+
+    // Parry timer
+    if (this.parrying) {
+      this.parryTimer -= dt;
+      if (this.parryTimer <= 0) {
+        this.parrying = false;
+        this.parryTimer = 0;
+      }
+    }
+
+    // Dash movement (skill-driven)
+    if (this.dashing && this.dashTimer > 0) {
+      const dashSpeed = CONFIG.skills.swordDash.dashDistance / CONFIG.skills.swordDash.dashDuration;
+      this.position.addScaledVector(this.dashDirection, dashSpeed * dt);
+      this.dashTimer -= dt;
+      if (this.dashTimer <= 0) {
+        this.dashing = false;
+        setTimeout(() => { this.dashInvincible = false; },
+          (CONFIG.skills.swordDash.invincibleDuration - CONFIG.skills.swordDash.dashDuration) * 1000);
+      }
+    }
 
     // Boost management
     if (this.boostActive) {
@@ -139,7 +210,6 @@ export class FlightController {
 
     // Q/E roll uses angular velocity with drag
     let rollInput = 0;
-    if (this.input.isDown('q')) rollInput += cfg.angularThrust * dt;
     if (this.input.isDown('e')) rollInput -= cfg.angularThrust * dt;
     this.angularVelocity.z += rollInput;
     this.angularVelocity.z *= Math.pow(cfg.angularDrag, dt * 60);
