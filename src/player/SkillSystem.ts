@@ -294,15 +294,14 @@ export class SkillSystem {
       this.beamMesh.geometry.dispose();
       (this.beamMesh.material as THREE.Material).dispose();
     }
-    const dir = end.clone().sub(start);
-    const length = dir.length();
+    const length = end.clone().sub(start).length();
+    const mid = start.clone().add(end).multiplyScalar(0.5);
     const geo = new THREE.CylinderGeometry(0.05, 0.05, length, 4);
-    geo.rotateX(Math.PI / 2);
-    geo.translate(0, 0, -length / 2);
     const mat = new THREE.MeshBasicMaterial({ color: CONFIG.weapons.beam.color, transparent: true, opacity: 0.8 });
     this.beamMesh = new THREE.Mesh(geo, mat);
-    this.beamMesh.position.copy(start);
+    this.beamMesh.position.copy(mid);
     this.beamMesh.lookAt(end);
+    this.beamMesh.rotateX(Math.PI / 2);
     this.scene.add(this.beamMesh);
     this.beamTimer = 0.1;
   }
@@ -315,13 +314,13 @@ export class SkillSystem {
     }
     const cfg = CONFIG.skills.finalStrike;
     const end = origin.clone().add(dir.clone().multiplyScalar(range));
+    const mid = origin.clone().add(end).multiplyScalar(0.5);
     const geo = new THREE.CylinderGeometry(cfg.beamRadius, cfg.beamRadius * 0.5, range, 8);
-    geo.rotateX(Math.PI / 2);
-    geo.translate(0, 0, -range / 2);
     const mat = new THREE.MeshBasicMaterial({ color: cfg.color, transparent: true, opacity: 0.9 });
     this.beamMesh = new THREE.Mesh(geo, mat);
-    this.beamMesh.position.copy(origin);
+    this.beamMesh.position.copy(mid);
     this.beamMesh.lookAt(end);
+    this.beamMesh.rotateX(Math.PI / 2);
     this.scene.add(this.beamMesh);
     this.beamTimer = cfg.beamDuration;
   }
