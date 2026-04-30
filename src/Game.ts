@@ -223,6 +223,7 @@ export class Game {
     // [DEBUG] 屏蔽Boss生成，用于测试移动
     return;
 
+    /* eslint-disable no-unreachable */
     const spawn = new THREE.Vector3(
       this.flight.position.x + 80,
       60,
@@ -230,7 +231,7 @@ export class Game {
     );
     this.boss = new Boss(this.nextEnemyId++, spawn, this.level, this.engine.scene);
 
-    this.boss.onSummon = (count, pos) => {
+    this.boss!.onSummon = (count, pos) => {
       for (let i = 0; i < count; i++) {
         const offset = new THREE.Vector3(
           (Math.random() - 0.5) * 40,
@@ -244,7 +245,7 @@ export class Game {
       this.updateWeaponTargets();
     };
 
-    this.boss.onPhaseChange = (phase) => {
+    this.boss!.onPhaseChange = (phase) => {
       this.sfx.bossPhaseChange();
       this.hud.showBossPhase(phase);
     };
@@ -378,6 +379,8 @@ export class Game {
 
     // 9. Wave progression — check if all enemies dead
     // [DEBUG] 屏蔽通关判断，用于测试移动
+    void this.restTimer;
+    void this.onLevelComplete;
     /*
     const aliveEnemies = this.enemies.filter((e) => e.alive).length;
     const bossAlive = this.boss ? this.boss.alive : false;
