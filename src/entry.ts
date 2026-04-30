@@ -13,6 +13,10 @@ startBtn.addEventListener('click', () => {
 
 document.addEventListener('pointerlockchange', () => {
   if (document.pointerLockElement == null) {
+    // Don't show start overlay when game is showing its own end screen
+    if (game.state === 'dead' || game.state === 'game_over' || game.state === 'level_complete') {
+      return;
+    }
     overlay.style.display = 'flex';
     startBtn.textContent = '点击继续';
   } else {

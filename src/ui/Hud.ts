@@ -121,10 +121,10 @@ export class Hud {
     }
     this.root.appendChild(crossContainer);
 
-    // ── Bottom-left: weapon info ──────────────────────────────────────────────
+    // ── Bottom-left: weapon info (hidden — replaced by skill cooldowns) ────────
     const weaponPanel = div(
       `${BASE}bottom:90px;left:18px;background:${SEMI};` +
-        `padding:6px 12px;border-radius:6px;font-size:13px;`,
+        `padding:6px 12px;border-radius:6px;font-size:13px;display:none;`,
     );
     this.weaponNameEl = div(`color:${GOLD};font-size:14px;font-weight:bold;margin-bottom:2px;`);
     this.weaponNameEl.textContent = '灵力射线';
@@ -206,9 +206,9 @@ export class Hud {
     }
     this.root.appendChild(this.intentContainer);
 
-    // ── Skill cooldown indicators (left side) ────────────────────────
+    // ── Skill cooldown indicators (left side, above bottom bar) ────
     this.skillCdContainer = div(
-      `${BASE}bottom:90px;left:18px;display:flex;gap:6px;font-size:12px;`,
+      `${BASE}bottom:80px;left:18px;display:flex;gap:6px;font-size:12px;`,
     );
     const makeCdBox = (label: string) => {
       const box = div(
@@ -220,9 +220,9 @@ export class Hud {
       return box;
     };
     this.skillCds = {
-      q: makeCdBox('Q'),
-      f: makeCdBox('F'),
-      r: makeCdBox('R'),
+      q: makeCdBox('1'),
+      f: makeCdBox('2'),
+      r: makeCdBox('3'),
     };
     this.skillCdContainer.append(this.skillCds.q, this.skillCds.f, this.skillCds.r);
     this.root.appendChild(this.skillCdContainer);
@@ -375,9 +375,9 @@ export class Hud {
         el.style.color = GOLD;
       }
     };
-    setCd(this.skillCds.q, bladeFan, 'Q');
-    setCd(this.skillCds.f, swordDash, 'F');
-    setCd(this.skillCds.r, parry, 'R');
+    setCd(this.skillCds.q, bladeFan, '1');
+    setCd(this.skillCds.f, swordDash, '2');
+    setCd(this.skillCds.r, parry, '3');
   }
 
   setFinalStrikeReady(ready: boolean): void {

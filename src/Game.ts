@@ -25,7 +25,10 @@ export class Game {
   readonly skillSystem: SkillSystem;
   readonly hud: Hud;
 
-  private state: GameState = 'menu';
+  private _state: GameState = 'menu';
+
+  get state(): GameState { return this._state; }
+  private set state(v: GameState) { this._state = v; }
   private arena!: Arena;
   private playerModel!: PlayerModel;
   private enemies: Enemy[] = [];
@@ -72,17 +75,17 @@ export class Game {
       }
     });
 
-    this.input.registerKey('f', () => {
-      if (this.state !== 'playing') return;
-      this.skillSystem.activateSwordDash();
-    });
-
-    this.input.registerKey('q', () => {
+    this.input.registerKey('1', () => {
       if (this.state !== 'playing') return;
       this.skillSystem.fireBladeFan();
     });
 
-    this.input.registerKey('r', () => {
+    this.input.registerKey('2', () => {
+      if (this.state !== 'playing') return;
+      this.skillSystem.activateSwordDash();
+    });
+
+    this.input.registerKey('3', () => {
       if (this.state !== 'playing') return;
       this.skillSystem.activateParry();
     });
@@ -111,7 +114,7 @@ export class Game {
     this.startTime = performance.now() / 1000;
     this.kills = 0;
     this.state = 'briefing';
-    this.briefingTimer = 1.5;
+    this.briefingTimer = 3.0;
     this.initLevel(1);
     this.engine.start();
   }
@@ -137,8 +140,7 @@ export class Game {
 
     this.initLevel(1);
     this.state = 'briefing';
-    this.briefingTimer = 1.5;
-    this.input.requestPointerLock();
+    this.briefingTimer = 3.0;
   }
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -214,11 +216,11 @@ export class Game {
     const types = this.getEnemyTypesForLevel(this.level);
 
     for (let i = 0; i < count; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const dist = 60 + Math.random() * 80;
+      const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+      const dist = 40 + Math.random() * 30;
       const spawn = new THREE.Vector3(
         this.flight.position.x + Math.cos(angle) * dist,
-        40 + Math.random() * 60,
+        40 + Math.random() * 40,
         this.flight.position.z + Math.sin(angle) * dist,
       );
       const typeName = types[i % types.length]!;
@@ -466,7 +468,10 @@ export class Game {
     // Bind restart button (created dynamically by HUD)
     requestAnimationFrame(() => {
       const btn = document.getElementById('hud-restart');
-      if (btn) btn.addEventListener('click', () => this.restart());
+      if (btn) btn.addEventListener('click', () => {
+        this.input.requestPointerLock();
+        this.restart();
+      });
     });
   }
 
@@ -505,7 +510,7 @@ export class Game {
           this.hud.hideEndScreens();
           this.initLevel(this.level + 1);
           this.state = 'briefing';
-          this.briefingTimer = 1.5;
+          this.briefingTimer = 3.0;
           this.input.requestPointerLock();
         });
       }

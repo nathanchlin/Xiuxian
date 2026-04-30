@@ -211,8 +211,9 @@ export class FlightController {
     const pitchDirect = -dy * this.mouseSens;
     const yawDirect = -dx * this.mouseSens;
 
-    // E roll uses angular velocity with drag (Q freed for skill system)
+    // Q/E roll uses angular velocity with drag
     let rollInput = 0;
+    if (this.input.isDown('q')) rollInput += cfg.angularThrust * dt;
     if (this.input.isDown('e')) rollInput -= cfg.angularThrust * dt;
     this.angularVelocity.z += rollInput;
     this.angularVelocity.z *= Math.pow(cfg.angularDrag, dt * 60);
