@@ -77,6 +77,60 @@ export const CONFIG = {
     },
   },
 
+  // ─── Skills (4技能BD) ───
+  skills: {
+    swordIntent: {
+      maxStacks: 5,
+      decayTime: 10,
+    },
+    bladeFan: {
+      name: '灵刃散射',
+      spiritCost: 8,
+      cooldown: 1.5,
+      damage: 15,
+      range: 80,
+      projectileSpeed: 60,
+      projectileRadius: 1,
+      fanAngle: Math.PI / 24,
+      bladeCount: 3,
+      intentPerHit: 1,
+      color: 0x44ffcc,
+    },
+    swordDash: {
+      name: '御剑突刺',
+      spiritCost: 20,
+      cooldown: 3,
+      damage: 60,
+      dashDistance: 20,
+      dashDuration: 0.2,
+      invincibleDuration: 0.3,
+      intentPerHit: 2,
+      hitRadius: 3,
+      color: 0x00ffcc,
+    },
+    parry: {
+      name: '剑气护体',
+      spiritCost: 15,
+      cooldown: 5,
+      parryWindow: 0.8,
+      reflectDamage: 50,
+      intentOnSuccess: 3,
+      color: 0xffd700,
+    },
+    finalStrike: {
+      name: '万剑归宗',
+      spiritCost: 30,
+      requiredIntent: 5,
+      damage: 150,
+      range: 200,
+      chargeTime: 0.5,
+      beamRadius: 3,
+      beamDuration: 0.3,
+      chargeFov: 72,
+      color: 0xffd700,
+    },
+  },
+
   // ─── Player ───
   player: {
     maxHealth: 100,
