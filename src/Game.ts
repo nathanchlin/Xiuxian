@@ -206,9 +206,6 @@ export class Game {
   }
 
   private spawnEnemies(): void {
-    // [DEBUG] 屏蔽怪物生成，用于测试移动
-    return;
-
     const count = Math.floor(
       CONFIG.progression.scaling.enemyCountBase +
       CONFIG.progression.scaling.enemyCountPerLevel * this.level,
@@ -231,10 +228,6 @@ export class Game {
   }
 
   private spawnBoss(): void {
-    // [DEBUG] 屏蔽Boss生成，用于测试移动
-    return;
-
-    /* eslint-disable no-unreachable */
     const spawn = new THREE.Vector3(
       this.flight.position.x + 80,
       60,
@@ -242,7 +235,7 @@ export class Game {
     );
     this.boss = new Boss(this.nextEnemyId++, spawn, this.level, this.engine.scene);
 
-    this.boss!.onSummon = (count, pos) => {
+    this.boss.onSummon = (count, pos) => {
       for (let i = 0; i < count; i++) {
         const offset = new THREE.Vector3(
           (Math.random() - 0.5) * 40,
@@ -256,7 +249,7 @@ export class Game {
       this.updateSkillTargets();
     };
 
-    this.boss!.onPhaseChange = (phase) => {
+    this.boss.onPhaseChange = (phase) => {
       this.sfx.bossPhaseChange();
       this.hud.showBossPhase(phase);
     };
@@ -390,10 +383,6 @@ export class Game {
     }
 
     // 9. Wave progression — check if all enemies dead
-    // [DEBUG] 屏蔽通关判断，用于测试移动
-    void this.restTimer;
-    void this.onLevelComplete;
-    /*
     const aliveEnemies = this.enemies.filter((e) => e.alive).length;
     const bossAlive = this.boss ? this.boss.alive : false;
 
@@ -414,7 +403,6 @@ export class Game {
         this.nextWave();
       }
     }
-    */
 
     // 11. Update weapon targets (alive enemies + boss)
     this.updateSkillTargets();
