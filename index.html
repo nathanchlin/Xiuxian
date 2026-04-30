@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>仙侠空战</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { overflow: hidden; background: #000; font-family: 'Courier New', monospace; }
+    #game { width: 100vw; height: 100vh; }
+    #overlay {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.85); z-index: 500; color: #fff;
+    }
+    #overlay h1 { font-size: 48px; color: #daa520; margin-bottom: 8px; letter-spacing: 8px; }
+    #overlay .subtitle { font-size: 16px; color: #888; margin-bottom: 32px; }
+    #overlay .controls { font-size: 13px; color: #aaa; margin-bottom: 24px; display: grid; grid-template-columns: auto auto; gap: 4px 16px; }
+    #overlay .controls span:nth-child(odd) { color: #daa520; text-align: right; }
+    #start { padding: 14px 48px; font-size: 18px; cursor: pointer; background: transparent; color: #daa520; border: 1px solid #daa520; border-radius: 4px; }
+    #start:hover { background: rgba(218,165,32,0.15); }
+  </style>
+  <script type="module" crossorigin src="./assets/index-DNht4Fcp.js"></script>
+</head>
+<body>
+  <div id="game"></div>
+  <div id="overlay">
+    <h1>仙侠空战</h1>
+    <div class="subtitle">御剑飞行 · 斩妖除魔</div>
+    <div class="controls">
+      <span>W/A/S/D</span><span>前后左右推力</span>
+      <span>Space / Shift</span><span>上升 / 下降</span>
+      <span>Q / E</span><span>翻滚</span>
+      <span>鼠标</span><span>偏航 / 俯仰</span>
+      <span>左键</span><span>灵力射线</span>
+      <span>V</span><span>切换视角</span>
+      <span>Tab</span><span>加力</span>
+      <span>F</span><span>飞剑冲刺</span>
+    </div>
+    <button id="start">点击开始</button>
+  </div>
+</body>
+</html>
