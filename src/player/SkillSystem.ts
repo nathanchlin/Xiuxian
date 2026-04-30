@@ -1,0 +1,417 @@
+import * as THREE from 'three';
+import { CONFIG } from '../config';
+import type { FlightController } from './FlightController';
+import type { Sfx } from '../shared/Sfx';
+
+export interface SkillHitResult {
+  targetId: number;
+  damage: number;
+}
+
+export interface EnemyTarget {
+  id: number;
+  mesh: THREE.Object3D;
+  position: THREE.Vector3;
+  alive: boolean;
+}
+
+export class SkillSystem {
+  private bladeFanCd = 0;
+  private swordDashCd = 0;
+  private parryCd = 0;
+
+  private charging = false;
+  chargeTimer = 0;
+
+  readonly blades: Blade[] = [];
+  private dashHitIds = new Set<number>();
+  private dashHitsThisFrame: number[] = [];
+
+  private targets: EnemyTarget[] = [];
+
+  private readonly raycaster = new THREE.Raycaster();
+
+  private beamMesh: THREE.Mesh | null = null;
+  private beamTimer = 0;
+  private parryShield: THREE.Group | null = null;
+
+  constructor(
+    private readonly flight: FlightController,
+    private readonly scene: THREE.Scene,
+    private readonly sfx: Sfx,
+  ) {}
+
+  setTargets(targets: EnemyTarget[]): void {
+    this.targets = targets;
+  }
+
+  isCharging(): boolean {
+    return this.charging;
+  }
+
+  getSwordIntent(): number {
+    return this.flight.swordIntent;
+  }
+
+  getCooldowns(): { bladeFan: number; swordDash: number; parry: number } {
+    return {
+      bladeFan: this.bladeFanCd,
+      swordDash: this.swordDashCd,
+      parry: this.parryCd,
+    };
+  }
+
+  // ─── Skill 1: Blade Fan (Q) ───────────────────────────
+
+  fireBladeFan(): void {
+    const cfg = CONFIG.skills.bladeFan;
+    if (this.bladeFanCd > 0) return;
+    if (!this.flight.consumeSpirit(cfg.spiritCost)) return;
+
+    this.bladeFanCd = cfg.cooldown;
+    this.sfx.bladeFan();
+
+    const origin = this.flight.position.clone();
+    const forward = this.flight.getForward();
+
+    for (let i = 0; i < cfg.bladeCount; i++) {
+      const angleOffset = (i - (cfg.bladeCount - 1) / 2) * cfg.fanAngle;
+      const dir = forward.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), angleOffset).normalize();
+      this.blades.push(new Blade(origin.clone(), dir, this.scene));
+    }
+  }
+
+  // ─── Skill 2: Sword Dash (F) ──────────────────────────
+
+  activateSwordDash(): void {
+    const cfg = CONFIG.skills.swordDash;
+    if (this.swordDashCd > 0) return;
+    if (this.flight.dashing) return;
+    if (!this.flight.consumeSpirit(cfg.spiritCost)) return;
+
+    this.swordDashCd = cfg.cooldown;
+    this.dashHitIds.clear();
+    this.sfx.swordDash();
+
+    const dir = this.flight.getForward();
+    this.flight.startDash(dir, cfg.dashDuration);
+  }
+
+  // ─── Skill 3: Parry (R) ───────────────────────────────
+
+  activateParry(): void {
+    const cfg = CONFIG.skills.parry;
+    if (this.parryCd > 0) return;
+    if (this.flight.parrying) return;
+    if (!this.flight.consumeSpirit(cfg.spiritCost)) return;
+
+    this.parryCd = cfg.cooldown;
+    this.flight.startParry();
+    this.sfx.parryActivate();
+    this.showParryShield();
+  }
+
+  tryParryReflect(): { reflected: boolean; reflectDamage: number } {
+    if (!this.flight.parrying) {
+      return { reflected: false, reflectDamage: 0 };
+    }
+    this.flight.endParry();
+    this.flight.addSwordIntent(CONFIG.skills.parry.intentOnSuccess);
+    this.sfx.parrySuccess();
+    this.flashParrySuccess();
+    return { reflected: true, reflectDamage: CONFIG.skills.parry.reflectDamage };
+  }
+
+  // ─── Skill 4: Final Strike (Left Click when 5 stacks) ─
+
+  tryFinalStrike(): boolean {
+    const cfg = CONFIG.skills.finalStrike;
+    if (this.flight.swordIntent < cfg.requiredIntent) return false;
+    if (!this.flight.consumeSpirit(cfg.spiritCost)) return false;
+    if (this.charging) return false;
+
+    this.flight.consumeSwordIntent(cfg.requiredIntent);
+    this.charging = true;
+    this.chargeTimer = cfg.chargeTime;
+    this.sfx.finalStrikeCharge();
+    return true;
+  }
+
+  releaseFinalStrike(): SkillHitResult[] {
+    this.charging = false;
+    this.chargeTimer = 0;
+    const cfg = CONFIG.skills.finalStrike;
+    const results: SkillHitResult[] = [];
+
+    const origin = this.flight.position.clone();
+    const dir = this.flight.getForward();
+
+    for (const target of this.targets) {
+      if (!target.alive) continue;
+      const toTarget = target.position.clone().sub(origin);
+      const dist = toTarget.length();
+      if (dist > cfg.range) continue;
+
+      const dot = toTarget.dot(dir);
+      if (dot < 0) continue;
+      const closest = origin.clone().add(dir.clone().multiplyScalar(dot));
+      const perpDist = closest.distanceTo(target.position);
+      if (perpDist < cfg.beamRadius + 2) {
+        results.push({ targetId: target.id, damage: cfg.damage });
+      }
+    }
+
+    this.sfx.finalStrikeRelease();
+    this.showFinalStrikeBeam(origin, dir, cfg.range);
+    return results;
+  }
+
+  // ─── Normal Beam (Left Click without 5 stacks) ────────
+
+  fireNormalBeam(): SkillHitResult | null {
+    const cfg = CONFIG.weapons.beam;
+    if (!this.flight.consumeSpirit(cfg.spiritCost)) return null;
+
+    this.sfx.shoot();
+
+    const origin = this.flight.position.clone();
+    const dir = this.flight.getForward();
+    this.raycaster.set(origin, dir);
+    this.raycaster.far = cfg.maxRange;
+
+    const meshes = this.targets.map(t => t.mesh);
+    const hits = this.raycaster.intersectObjects(meshes, false);
+
+    const endPoint = hits.length > 0
+      ? hits[0]!.point.clone()
+      : origin.clone().add(dir.clone().multiplyScalar(cfg.maxRange));
+    this.showBeamVisual(origin, endPoint);
+
+    if (hits.length > 0) {
+      const hitMesh = hits[0]!.object;
+      const target = this.targets.find(t => t.mesh.id === hitMesh.id);
+      if (target) {
+        return { targetId: target.id, damage: cfg.damage };
+      }
+    }
+    return null;
+  }
+
+  // ─── Update ────────────────────────────────────────────
+
+  update(dt: number): void {
+    if (this.bladeFanCd > 0) this.bladeFanCd = Math.max(0, this.bladeFanCd - dt);
+    if (this.swordDashCd > 0) this.swordDashCd = Math.max(0, this.swordDashCd - dt);
+    if (this.parryCd > 0) this.parryCd = Math.max(0, this.parryCd - dt);
+
+    if (this.charging) {
+      this.chargeTimer -= dt;
+    }
+
+    // Blade projectiles
+    for (let i = this.blades.length - 1; i >= 0; i--) {
+      const blade = this.blades[i]!;
+      blade.update(dt);
+
+      if (blade.expired) {
+        blade.dispose(this.scene);
+        this.blades.splice(i, 1);
+        continue;
+      }
+
+      for (const target of this.targets) {
+        if (!target.alive) continue;
+        if (blade.checkHit(target.position, CONFIG.skills.bladeFan.projectileRadius + 1.5)) {
+          blade.expired = true;
+          this.flight.addSwordIntent(CONFIG.skills.bladeFan.intentPerHit);
+          this.sfx.hit();
+          blade.hitTargetId = target.id;
+          break;
+        }
+      }
+    }
+
+    // Dash hit detection
+    this.dashHitsThisFrame = [];
+    if (this.flight.dashing) {
+      const dashCfg = CONFIG.skills.swordDash;
+      for (const target of this.targets) {
+        if (!target.alive) continue;
+        if (this.dashHitIds.has(target.id)) continue;
+        const dist = this.flight.position.distanceTo(target.position);
+        if (dist < dashCfg.hitRadius + 2) {
+          this.dashHitIds.add(target.id);
+          this.dashHitsThisFrame.push(target.id);
+          this.flight.addSwordIntent(dashCfg.intentPerHit);
+          this.sfx.hit();
+        }
+      }
+    }
+
+    // Beam visual timer
+    if (this.beamTimer > 0) {
+      this.beamTimer -= dt;
+      if (this.beamTimer <= 0 && this.beamMesh) {
+        this.scene.remove(this.beamMesh);
+        this.beamMesh.geometry.dispose();
+        (this.beamMesh.material as THREE.Material).dispose();
+        this.beamMesh = null;
+      }
+    }
+
+    // Parry shield visual
+    if (this.parryShield) {
+      if (!this.flight.parrying) {
+        this.scene.remove(this.parryShield);
+        this.parryShield = null;
+      } else {
+        this.parryShield.position.copy(this.flight.position);
+        this.parryShield.rotation.y += dt * 4;
+      }
+    }
+  }
+
+  consumeDashHits(): number[] {
+    return this.dashHitsThisFrame;
+  }
+
+  consumeBladeHits(): SkillHitResult[] {
+    const results: SkillHitResult[] = [];
+    for (const blade of this.blades) {
+      if (blade.hitTargetId >= 0) {
+        results.push({ targetId: blade.hitTargetId, damage: CONFIG.skills.bladeFan.damage });
+        blade.hitTargetId = -1;
+      }
+    }
+    return results;
+  }
+
+  // ─── Visuals ───────────────────────────────────────────
+
+  private showBeamVisual(start: THREE.Vector3, end: THREE.Vector3): void {
+    if (this.beamMesh) {
+      this.scene.remove(this.beamMesh);
+      this.beamMesh.geometry.dispose();
+      (this.beamMesh.material as THREE.Material).dispose();
+    }
+    const dir = end.clone().sub(start);
+    const length = dir.length();
+    const geo = new THREE.CylinderGeometry(0.05, 0.05, length, 4);
+    geo.rotateX(Math.PI / 2);
+    geo.translate(0, 0, -length / 2);
+    const mat = new THREE.MeshBasicMaterial({ color: CONFIG.weapons.beam.color, transparent: true, opacity: 0.8 });
+    this.beamMesh = new THREE.Mesh(geo, mat);
+    this.beamMesh.position.copy(start);
+    this.beamMesh.lookAt(end);
+    this.scene.add(this.beamMesh);
+    this.beamTimer = 0.1;
+  }
+
+  private showFinalStrikeBeam(origin: THREE.Vector3, dir: THREE.Vector3, range: number): void {
+    if (this.beamMesh) {
+      this.scene.remove(this.beamMesh);
+      this.beamMesh.geometry.dispose();
+      (this.beamMesh.material as THREE.Material).dispose();
+    }
+    const cfg = CONFIG.skills.finalStrike;
+    const end = origin.clone().add(dir.clone().multiplyScalar(range));
+    const geo = new THREE.CylinderGeometry(cfg.beamRadius, cfg.beamRadius * 0.5, range, 8);
+    geo.rotateX(Math.PI / 2);
+    geo.translate(0, 0, -range / 2);
+    const mat = new THREE.MeshBasicMaterial({ color: cfg.color, transparent: true, opacity: 0.9 });
+    this.beamMesh = new THREE.Mesh(geo, mat);
+    this.beamMesh.position.copy(origin);
+    this.beamMesh.lookAt(end);
+    this.scene.add(this.beamMesh);
+    this.beamTimer = cfg.beamDuration;
+  }
+
+  private showParryShield(): void {
+    if (this.parryShield) {
+      this.scene.remove(this.parryShield);
+    }
+    this.parryShield = new THREE.Group();
+    const mat = new THREE.MeshBasicMaterial({ color: CONFIG.skills.parry.color, transparent: true, opacity: 0.6 });
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2;
+      const swordGeo = new THREE.BoxGeometry(0.1, 0.8, 0.05);
+      const sword = new THREE.Mesh(swordGeo, mat);
+      sword.position.set(Math.cos(angle) * 2, Math.sin(angle) * 2, 0);
+      sword.rotation.z = angle;
+      this.parryShield.add(sword);
+    }
+    const ringGeo = new THREE.RingGeometry(1.8, 2.2, 24);
+    const ringMat = new THREE.MeshBasicMaterial({ color: CONFIG.skills.parry.color, transparent: true, opacity: 0.3, side: THREE.DoubleSide });
+    this.parryShield.add(new THREE.Mesh(ringGeo, ringMat));
+    this.parryShield.position.copy(this.flight.position);
+    this.scene.add(this.parryShield);
+  }
+
+  private flashParrySuccess(): void {
+    if (this.parryShield) {
+      this.parryShield.scale.setScalar(3);
+      setTimeout(() => {
+        if (this.parryShield) {
+          this.scene.remove(this.parryShield);
+          this.parryShield = null;
+        }
+      }, 150);
+    }
+  }
+
+  // ─── Dispose ───────────────────────────────────────────
+
+  dispose(): void {
+    for (const b of this.blades) b.dispose(this.scene);
+    if (this.beamMesh) {
+      this.scene.remove(this.beamMesh);
+      this.beamMesh.geometry.dispose();
+      (this.beamMesh.material as THREE.Material).dispose();
+    }
+    if (this.parryShield) {
+      this.scene.remove(this.parryShield);
+    }
+  }
+}
+
+// ─── Blade Projectile ────────────────────────────────────
+
+class Blade {
+  readonly mesh: THREE.Mesh;
+  private readonly velocity: THREE.Vector3;
+  private distanceTraveled = 0;
+  expired = false;
+  hitTargetId = -1;
+
+  constructor(origin: THREE.Vector3, direction: THREE.Vector3, scene: THREE.Scene) {
+    const cfg = CONFIG.skills.bladeFan;
+    this.velocity = direction.clone().multiplyScalar(cfg.projectileSpeed);
+
+    const geo = new THREE.BoxGeometry(0.8, 0.1, 0.3);
+    const mat = new THREE.MeshBasicMaterial({ color: cfg.color, transparent: true, opacity: 0.8 });
+    this.mesh = new THREE.Mesh(geo, mat);
+    this.mesh.position.copy(origin);
+    this.mesh.lookAt(origin.clone().add(direction));
+    scene.add(this.mesh);
+  }
+
+  update(dt: number): void {
+    const step = this.velocity.clone().multiplyScalar(dt);
+    this.mesh.position.add(step);
+    this.distanceTraveled += step.length();
+    if (this.distanceTraveled > CONFIG.skills.bladeFan.range) {
+      this.expired = true;
+    }
+    this.mesh.rotation.z += dt * 10;
+  }
+
+  checkHit(targetPos: THREE.Vector3, radius: number): boolean {
+    return this.mesh.position.distanceTo(targetPos) < radius;
+  }
+
+  dispose(scene: THREE.Scene): void {
+    scene.remove(this.mesh);
+    this.mesh.geometry.dispose();
+    (this.mesh.material as THREE.Material).dispose();
+  }
+}
