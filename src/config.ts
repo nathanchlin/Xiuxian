@@ -221,27 +221,22 @@ export const CONFIG = {
 
   // ─── Progression ───
   progression: {
-    totalLevels: 12,
-    bossLevels: [3, 6, 9, 12],
-    wavesPerLevel: 3,
-    waveRestTime: 5,
+    totalLevels: 6,
+    bossLevels: [3, 6],
+    wavesPerLevel: 4,
+    waveRestTime: 2,
     scaling: {
-      hpPerLevel: 1.15,
-      damagePerLevel: 1.10,
-      enemyCountBase: 5,
-      enemyCountPerLevel: 1,
-      speedPerLevel: 1.03,
+      hpPerLevel: 1.2,
+      damagePerLevel: 1.1,
+      enemyCountBase: 4,
+      enemyCountPerLevel: 2,
+      speedPerLevel: 1.05,
     },
     arenaScaling: {
       buildingsPerLevel: 2,
       spreadPerLevel: 30,
     },
-    unlocks: [
-      { level: 3, type: 'weapon', id: 'missile' },
-      { level: 6, type: 'upgrade', id: 'missile_dual_lock' },
-      { level: 9, type: 'upgrade', id: 'beam_pierce' },
-      { level: 12, type: 'upgrade', id: 'sword_enhanced' },
-    ] as Array<{ level: number; type: string; id: string }>,
+    unlocks: [] as Array<{ level: number; type: string; id: string }>,
   },
 
   // ─── Rendering ───

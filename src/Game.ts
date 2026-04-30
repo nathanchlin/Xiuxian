@@ -193,6 +193,7 @@ export class Game {
 
   private nextWave(): void {
     this.wave++;
+    console.log(`[WAVE] Starting wave ${this.wave}, enemies before: ${this.enemies.length}`);
     this.hud.setWave(this.wave, CONFIG.progression.wavesPerLevel);
 
     const isBossLevel = (CONFIG.progression.bossLevels as readonly number[]).includes(this.level);
@@ -212,6 +213,7 @@ export class Game {
       CONFIG.progression.scaling.enemyCountBase +
       CONFIG.progression.scaling.enemyCountPerLevel * this.level,
     );
+    console.log(`[WAVE] spawnEnemies: count=${count}, level=${this.level}, wave=${this.wave}`);
 
     const types = this.getEnemyTypesForLevel(this.level);
 
@@ -389,11 +391,13 @@ export class Game {
     const bossAlive = this.boss ? this.boss.alive : false;
 
     if (aliveEnemies === 0 && !bossAlive && this.restTimer <= 0) {
+      console.log(`[WAVE] All enemies dead. wave=${this.wave}, wavesPerLevel=${CONFIG.progression.wavesPerLevel}`);
       if (this.wave >= CONFIG.progression.wavesPerLevel) {
         this.onLevelComplete();
         return;
       } else {
         this.restTimer = CONFIG.progression.waveRestTime;
+        this.hud.showKill(`第 ${this.wave + 1} 波即将来袭...`);
       }
     }
 
@@ -402,6 +406,8 @@ export class Game {
       this.restTimer -= dt;
       if (this.restTimer <= 0) {
         this.restTimer = 0;
+        // Clear dead enemies before spawning new wave
+        this.enemies = this.enemies.filter((e) => e.alive);
         this.nextWave();
       }
     }
