@@ -74,6 +74,13 @@ export class Hud {
   private killTimer = 0;
   private bossPhaseTimer = 0;
 
+  // Skill HUD
+  private intentIcons: HTMLDivElement[] = [];
+  private intentContainer!: HTMLDivElement;
+  private skillCdContainer!: HTMLDivElement;
+  private skillCds!: { q: HTMLDivElement; f: HTMLDivElement; r: HTMLDivElement };
+  private finalStrikeHint!: HTMLDivElement;
+
   constructor() {
     // ── Root ──────────────────────────────────────────────────────────────────
     this.root = div(
@@ -183,6 +190,52 @@ export class Hud {
     this.boostBar = boostGroup.bar;
     bottomBar.appendChild(boostGroup.wrapper);
 
+    // ── Sword Intent indicator (above bottom bar) ────────────────────
+    this.intentContainer = div(
+      `${BASE}bottom:80px;left:50%;transform:translateX(-50%);` +
+        `display:flex;gap:8px;`,
+    );
+    for (let i = 0; i < 5; i++) {
+      const icon = div(
+        `width:20px;height:28px;border:2px solid #555;border-radius:2px;` +
+          `background:transparent;transition:all 0.2s;` +
+          `clip-path:polygon(50% 0%, 100% 30%, 100% 100%, 0% 100%, 0% 30%);`,
+      );
+      this.intentIcons.push(icon);
+      this.intentContainer.appendChild(icon);
+    }
+    this.root.appendChild(this.intentContainer);
+
+    // ── Skill cooldown indicators (left side) ────────────────────────
+    this.skillCdContainer = div(
+      `${BASE}bottom:90px;left:18px;display:flex;gap:6px;font-size:12px;`,
+    );
+    const makeCdBox = (label: string) => {
+      const box = div(
+        `width:36px;height:36px;border:1px solid ${GOLD};border-radius:4px;` +
+          `display:flex;align-items:center;justify-content:center;` +
+          `background:rgba(0,0,0,0.6);color:${GOLD};font-weight:bold;`,
+      );
+      box.textContent = label;
+      return box;
+    };
+    this.skillCds = {
+      q: makeCdBox('Q'),
+      f: makeCdBox('F'),
+      r: makeCdBox('R'),
+    };
+    this.skillCdContainer.append(this.skillCds.q, this.skillCds.f, this.skillCds.r);
+    this.root.appendChild(this.skillCdContainer);
+
+    // ── Final strike hint ────────────────────────────────────────────
+    this.finalStrikeHint = div(
+      `${BASE}top:55%;left:50%;transform:translateX(-50%);` +
+        `font-size:16px;color:${GOLD};letter-spacing:2px;` +
+        `text-shadow:0 0 12px rgba(255,215,0,0.8);opacity:0;transition:opacity 0.3s;`,
+    );
+    this.finalStrikeHint.textContent = '按左键 — 万剑归宗';
+    this.root.appendChild(this.finalStrikeHint);
+
     this.root.appendChild(bottomBar);
 
     // ── Damage flash overlay ──────────────────────────────────────────────────
@@ -287,6 +340,48 @@ export class Hud {
   setCrosshairLocked(locked: boolean): void {
     const color = locked ? '#e74c3c' : '#fff';
     for (const line of this.crosshairLines) line.style.background = color;
+  }
+
+  setSwordIntent(stacks: number, max: number): void {
+    const full = stacks >= max;
+    for (let i = 0; i < this.intentIcons.length; i++) {
+      const icon = this.intentIcons[i]!;
+      if (i < stacks) {
+        icon.style.background = full ? '#ffd700' : '#44ffcc';
+        icon.style.borderColor = full ? '#ffd700' : '#44ffcc';
+        icon.style.boxShadow = full ? '0 0 8px #ffd700' : 'none';
+      } else {
+        icon.style.background = 'transparent';
+        icon.style.borderColor = '#555';
+        icon.style.boxShadow = 'none';
+      }
+    }
+    if (full) {
+      this.intentContainer.style.filter = `brightness(${1 + 0.3 * Math.sin(Date.now() * 0.005)})`;
+    } else {
+      this.intentContainer.style.filter = 'none';
+    }
+  }
+
+  setSkillCooldowns(bladeFan: number, swordDash: number, parry: number): void {
+    const setCd = (el: HTMLDivElement, cd: number, label: string) => {
+      if (cd > 0) {
+        el.style.opacity = '0.4';
+        el.textContent = cd.toFixed(1);
+        el.style.color = '#888';
+      } else {
+        el.style.opacity = '1';
+        el.textContent = label;
+        el.style.color = GOLD;
+      }
+    };
+    setCd(this.skillCds.q, bladeFan, 'Q');
+    setCd(this.skillCds.f, swordDash, 'F');
+    setCd(this.skillCds.r, parry, 'R');
+  }
+
+  setFinalStrikeReady(ready: boolean): void {
+    this.finalStrikeHint.style.opacity = ready ? '1' : '0';
   }
 
   flashDamage(): void {
