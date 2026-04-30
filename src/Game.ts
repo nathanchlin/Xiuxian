@@ -6,14 +6,13 @@ import { Sfx } from './shared/Sfx';
 import { FlightController } from './player/FlightController';
 import { CameraSystem } from './core/CameraSystem';
 import { Arena } from './world/Arena';
-import { WeaponSystem } from './player/WeaponSystem';
+import { SkillSystem, type SkillHitResult } from './player/SkillSystem';
 import { Enemy } from './enemy/Enemy';
 import { Boss } from './enemy/Boss';
 import { Hud } from './ui/Hud';
 import { PlayerModel } from './player/PlayerModel';
 import { Pickup, type PickupType } from './world/Pickup';
 import type { EnemyTypeName } from './enemy/enemy-types';
-import type { WeaponHitResult } from './player/WeaponSystem';
 
 export type GameState = 'menu' | 'briefing' | 'playing' | 'paused' | 'dead' | 'level_complete' | 'game_over';
 
@@ -23,7 +22,7 @@ export class Game {
   readonly sfx: Sfx;
   readonly flight: FlightController;
   readonly cameraSystem: CameraSystem;
-  readonly weaponSystem: WeaponSystem;
+  readonly skillSystem: SkillSystem;
   readonly hud: Hud;
 
   private state: GameState = 'menu';
@@ -59,7 +58,7 @@ export class Game {
 
     this.flight = new FlightController(this.input);
     this.cameraSystem = new CameraSystem(this.engine.camera);
-    this.weaponSystem = new WeaponSystem(this.flight, this.engine.scene, this.sfx);
+    this.skillSystem = new SkillSystem(this.flight, this.engine.scene, this.sfx);
 
     // ── Key bindings ───────────────────────────────────────────────
     this.input.registerKey('v', () => {
@@ -75,15 +74,27 @@ export class Game {
 
     this.input.registerKey('f', () => {
       if (this.state !== 'playing') return;
-      // Sword dash stub — will be implemented in WeaponSystem later
-      this.sfx.swordDash();
+      this.skillSystem.activateSwordDash();
     });
 
-    // Mouse click fires Spirit Beam
+    this.input.registerKey('q', () => {
+      if (this.state !== 'playing') return;
+      this.skillSystem.fireBladeFan();
+    });
+
+    this.input.registerKey('r', () => {
+      if (this.state !== 'playing') return;
+      this.skillSystem.activateParry();
+    });
+
+    // Mouse click fires skills
     this.input.onMouseDown.push(() => {
       if (this.state !== 'playing') return;
-      const hit = this.weaponSystem.fireBeam();
-      if (hit) this.onWeaponHit(hit);
+      if (this.flight.swordIntent >= CONFIG.skills.finalStrike.requiredIntent) {
+        if (this.skillSystem.tryFinalStrike()) return;
+      }
+      const hit = this.skillSystem.fireNormalBeam();
+      if (hit) this.onSkillHit(hit);
     });
 
     // Main update loop
@@ -191,7 +202,7 @@ export class Game {
       this.spawnEnemies();
     }
 
-    this.updateWeaponTargets();
+    this.updateSkillTargets();
   }
 
   private spawnEnemies(): void {
@@ -242,7 +253,7 @@ export class Game {
         const enemy = new Enemy(this.nextEnemyId++, s, 'crow', this.level, this.engine.scene);
         this.enemies.push(enemy);
       }
-      this.updateWeaponTargets();
+      this.updateSkillTargets();
     };
 
     this.boss!.onPhaseChange = (phase) => {
@@ -314,8 +325,26 @@ export class Game {
     // 3.5 Player model (third-person visible mesh)
     if (this.playerModel) this.playerModel.update(this.flight, this.cameraSystem);
 
-    // 4. Weapon system
-    this.weaponSystem.update(dt);
+    // 4. Skill system
+    this.skillSystem.update(dt);
+
+    // Process blade hits
+    for (const hit of this.skillSystem.consumeBladeHits()) {
+      this.onSkillHit(hit);
+    }
+
+    // Process dash hits
+    for (const id of this.skillSystem.consumeDashHits()) {
+      this.onSkillHit({ targetId: id, damage: CONFIG.skills.swordDash.damage });
+    }
+
+    // Final strike release when charge completes
+    if (this.skillSystem.isCharging() && this.skillSystem.chargeTimer <= 0) {
+      const hits = this.skillSystem.releaseFinalStrike();
+      for (const hit of hits) {
+        this.onSkillHit(hit);
+      }
+    }
 
     // 5. Enemy updates + damage to player
     const playerPos = this.flight.position;
@@ -323,7 +352,14 @@ export class Game {
       if (!enemy.alive) continue;
       const result = enemy.update(dt, playerPos);
       if (result.attacked) {
-        this.applyDamageToPlayer(result.damage);
+        const parryResult = this.skillSystem.tryParryReflect();
+        if (parryResult.reflected) {
+          const killed = enemy.takeDamage(parryResult.reflectDamage);
+          if (killed) this.onEnemyKilled(enemy.typeName);
+          this.hud.flashHitMarker();
+        } else {
+          this.applyDamageToPlayer(result.damage);
+        }
       }
     }
 
@@ -331,7 +367,14 @@ export class Game {
     if (this.boss && this.boss.alive) {
       const bossResult = this.boss.update(dt, playerPos);
       if (bossResult.attacked) {
-        this.applyDamageToPlayer(bossResult.damage);
+        const parryResult = this.skillSystem.tryParryReflect();
+        if (parryResult.reflected) {
+          const killed = this.boss.takeDamage(parryResult.reflectDamage);
+          if (killed) this.onBossKilled();
+          this.hud.flashHitMarker();
+        } else {
+          this.applyDamageToPlayer(bossResult.damage);
+        }
       }
     }
 
@@ -342,38 +385,7 @@ export class Game {
         const loot = pickup.collect();
         if (loot.health > 0) this.flight.hp = Math.min(CONFIG.player.maxHealth, this.flight.hp + loot.health);
         if (loot.spirit > 0) this.flight.spirit = Math.min(CONFIG.spirit.maxSpirit, this.flight.spirit + loot.spirit);
-        if (loot.missiles > 0) this.weaponSystem.addMissileAmmo(loot.missiles);
         this.sfx.chestOpen();
-      }
-    }
-
-    // 8. Missile hit detection
-    for (let mi = this.weaponSystem.missiles.length - 1; mi >= 0; mi--) {
-      const missile = this.weaponSystem.missiles[mi]!;
-      if (missile.expired) continue;
-
-      // Check vs enemies
-      for (const enemy of this.enemies) {
-        if (!enemy.alive) continue;
-        if (missile.checkHit(enemy.position, 2.5)) {
-          const killed = enemy.takeDamage(CONFIG.weapons.missile.damage);
-          this.sfx.missileExplode();
-          this.hud.flashHitMarker();
-          if (killed) this.onEnemyKilled(enemy.typeName);
-          missile.expired = true;
-          break;
-        }
-      }
-
-      // Check vs boss
-      if (!missile.expired && this.boss && this.boss.alive) {
-        if (missile.checkHit(this.boss.position, 3.5)) {
-          const killed = this.boss.takeDamage(CONFIG.weapons.missile.damage);
-          this.sfx.missileExplode();
-          this.hud.flashHitMarker();
-          if (killed) this.onBossKilled();
-          missile.expired = true;
-        }
       }
     }
 
@@ -405,7 +417,7 @@ export class Game {
     */
 
     // 11. Update weapon targets (alive enemies + boss)
-    this.updateWeaponTargets();
+    this.updateSkillTargets();
 
     // 12. Update HUD
     this.updateHud();
@@ -422,11 +434,9 @@ export class Game {
     if (died) this.onDeath();
   }
 
-  private onWeaponHit(hit: WeaponHitResult): void {
-    this.sfx.hit();
+  private onSkillHit(hit: SkillHitResult): void {
     this.hud.flashHitMarker();
 
-    // Check enemies
     for (const enemy of this.enemies) {
       if (enemy.id === hit.targetId && enemy.alive) {
         const killed = enemy.takeDamage(hit.damage);
@@ -435,7 +445,6 @@ export class Game {
       }
     }
 
-    // Check boss
     if (this.boss && this.boss.id === hit.targetId && this.boss.alive) {
       const killed = this.boss.takeDamage(hit.damage);
       if (killed) this.onBossKilled();
@@ -519,15 +528,15 @@ export class Game {
      HELPERS
      ═══════════════════════════════════════════════════════════════════ */
 
-  private updateWeaponTargets(): void {
-    const targets: Array<{ id: number; mesh: THREE.Object3D }> = [];
+  private updateSkillTargets(): void {
+    const targets = [];
     for (const e of this.enemies) {
-      if (e.alive) targets.push({ id: e.id, mesh: e.hitbox });
+      if (e.alive) targets.push({ id: e.id, mesh: e.hitbox, position: e.position, alive: e.alive });
     }
     if (this.boss && this.boss.alive) {
-      targets.push({ id: this.boss.id, mesh: this.boss.hitbox });
+      targets.push({ id: this.boss.id, mesh: this.boss.hitbox, position: this.boss.position, alive: this.boss.alive });
     }
-    this.weaponSystem.setEnemyTargets(targets);
+    this.skillSystem.setTargets(targets);
   }
 
   private updateHud(): void {
@@ -539,16 +548,14 @@ export class Game {
     const aliveCount = this.enemies.filter((e) => e.alive).length + (this.boss?.alive ? 1 : 0);
     this.hud.setEnemyCount(aliveCount);
 
-    const weapon = this.weaponSystem.getActiveWeapon();
-    if (weapon === 'beam') {
-      this.hud.setWeapon(CONFIG.weapons.beam.name, `灵力: ${Math.floor(this.flight.spirit)}`);
-    } else if (weapon === 'missile') {
-      this.hud.setWeapon(CONFIG.weapons.missile.name, `弹药: ${this.weaponSystem.getMissileAmmo()}`);
-    } else {
-      this.hud.setWeapon(CONFIG.weapons.sword.name, '');
-    }
+    // Skill HUD
+    const intent = this.flight.swordIntent;
+    const maxIntent = CONFIG.skills.swordIntent.maxStacks;
+    this.hud.setSwordIntent(intent, maxIntent);
 
-    this.hud.setCrosshairLocked(this.weaponSystem.isLocked());
+    const cds = this.skillSystem.getCooldowns();
+    this.hud.setSkillCooldowns(cds.bladeFan, cds.swordDash, cds.parry);
+    this.hud.setFinalStrikeReady(intent >= maxIntent);
 
     // Radar
     const euler = new THREE.Euler().setFromQuaternion(this.flight.quaternion, 'YXZ');
@@ -580,7 +587,7 @@ export class Game {
     this.hud.dispose();
     this.flight.dispose();
     this.cameraSystem.dispose();
-    this.weaponSystem.dispose();
+    this.skillSystem.dispose();
     this.input.dispose();
     this.engine.dispose();
   }
