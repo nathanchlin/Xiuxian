@@ -129,6 +129,38 @@ export class Sfx {
     this.sweep(440, 880, 0.5, 'triangle', 0.4);
   }
 
+  bladeFan(): void {
+    if (!this.ready()) return;
+    this.sweep(800, 2000, 0.1, 'sawtooth', 0.5);
+    this.beep(1200, 0.05, 'sine', 0.3);
+  }
+
+  parryActivate(): void {
+    if (!this.ready()) return;
+    this.beep(600, 0.1, 'triangle', 0.5);
+    this.sweep(400, 800, 0.15, 'sine', 0.3);
+  }
+
+  parrySuccess(): void {
+    if (!this.ready()) return;
+    this.sweep(800, 200, 0.2, 'sawtooth', 0.7);
+    this.noise(0.15, 1200, 0.8);
+    this.beep(1000, 0.1, 'sine', 0.5);
+  }
+
+  finalStrikeCharge(): void {
+    if (!this.ready()) return;
+    this.sweep(100, 600, 0.5, 'sawtooth', 0.6);
+    this.beep(200, 0.3, 'triangle', 0.3);
+  }
+
+  finalStrikeRelease(): void {
+    if (!this.ready()) return;
+    this.sweep(600, 60, 0.6, 'sawtooth', 0.9);
+    this.noise(0.4, 400, 1.0);
+    this.beep(880, 0.2, 'sine', 0.5);
+  }
+
   // --- primitives --------------------------------------------------------
 
   private beep(freq: number, duration: number, type: OscType, vol = 1): void {
