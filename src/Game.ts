@@ -593,8 +593,10 @@ export class Game {
     // 10. Rest timer countdown
     if (this.restTimer > 0) {
       this.restTimer -= dt;
+      this.hud.setWaveCountdown(this.restTimer);
       if (this.restTimer <= 0) {
         this.restTimer = 0;
+        this.hud.setWaveCountdown(0);
         // Clear dead enemies before spawning new wave
         this.enemies = this.enemies.filter((e) => e.alive);
         this.nextWave();

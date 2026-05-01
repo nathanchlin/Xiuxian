@@ -407,6 +407,26 @@ export class Hud {
     this.waveEl.textContent = `波次 ${wave}/${total}`;
   }
 
+  private waveCountdownEl: HTMLDivElement | null = null;
+  setWaveCountdown(seconds: number): void {
+    if (seconds <= 0) {
+      if (this.waveCountdownEl) {
+        this.waveCountdownEl.remove();
+        this.waveCountdownEl = null;
+      }
+      return;
+    }
+    if (!this.waveCountdownEl) {
+      this.waveCountdownEl = div(
+        `position:fixed;top:22%;left:50%;transform:translateX(-50%);` +
+        `font-family:monospace;font-size:24px;font-weight:bold;color:#aaf;` +
+        `letter-spacing:2px;pointer-events:none;z-index:50;opacity:0.7;`,
+      );
+      document.body.appendChild(this.waveCountdownEl);
+    }
+    this.waveCountdownEl.textContent = `${Math.ceil(seconds)}`;
+  }
+
   setEnemyCount(count: number): void {
     this.enemyEl.textContent = `敌人: ${count}`;
   }
@@ -1076,6 +1096,9 @@ export class Hud {
     }
     if (this.damageDirEl) {
       this.damageDirEl.style.opacity = '0';
+    }
+    if (this.breakthroughFlash) {
+      this.breakthroughFlash.style.opacity = '0';
     }
   }
 
