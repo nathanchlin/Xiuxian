@@ -28,6 +28,7 @@ export class Boss {
   private hpBarFill: THREE.Mesh;
   private shieldBarFill: THREE.Mesh;
   private readonly hpBarWidth = 4;
+  private hitRecoil = 0;
 
   onSummon: ((count: number, pos: THREE.Vector3) => void) | null = null;
   onPhaseChange: ((phase: BossPhase) => void) | null = null;
@@ -137,6 +138,7 @@ export class Boss {
     // White flash on hit
     this.bodyMat.color.setHex(0xffffff);
     this.bodyMat.emissiveIntensity = 1.0;
+    this.hitRecoil = 0.2;
     setTimeout(() => {
       if (this.alive) {
         this.bodyMat.color.setHex(this.bodyColor);
@@ -252,6 +254,18 @@ export class Boss {
     if (this.shieldBarFill.visible) this.shieldBarFill.lookAt(playerPos);
 
     if (this.shieldMesh && this.shieldMesh.visible) this.shieldMesh.rotation.y += dt * 2;
+
+    // Hit recoil: scale squish + position push
+    if (this.hitRecoil > 0) {
+      this.hitRecoil -= dt;
+      const t = Math.max(0, this.hitRecoil / 0.2);
+      this.group.scale.set(1 + t * 0.25, 1 - t * 0.2, 1 + t * 0.25);
+      this.group.position.y -= t * 2.0;
+      if (this.hitRecoil <= 0) {
+        const phaseScale: Record<number, number> = { 1: 1.0, 2: 1.15, 3: 1.3 };
+        this.group.scale.setScalar(phaseScale[this.phase] ?? 1.0);
+      }
+    }
 
     return { attacked, damage, aoe };
   }
