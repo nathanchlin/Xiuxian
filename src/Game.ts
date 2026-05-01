@@ -906,9 +906,12 @@ export class Game {
     this.kills++;
     this.levelKills++;
     this.registerCombo();
-    this.sfx.enemyDie();
+    this.sfx.levelComplete();
+    this.cameraSystem.shake(1.5, 0.5);
     this.hud.showKill('妖王已诛!');
+    this.hud.showAnnouncement('妖王已诛!', '#ff4444');
     this.deathBurst.spawn(this.boss!.position, CONFIG.boss.color, 30);
+    this.deathBurst.spawn(this.boss!.position, 0xffd700, 20);
 
     if (this.boss) {
       const pos = this.boss.position.clone();
