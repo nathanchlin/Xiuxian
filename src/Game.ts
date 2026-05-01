@@ -586,13 +586,13 @@ export class Game {
       // Wave clear spirit bonus
       const spiritBonus = 10 + this.level * 3;
       this.flight.spirit = Math.min(this.getEffectiveMaxSpirit(), this.flight.spirit + spiritBonus);
-      this.hud.showKill(`波次清除! +${spiritBonus} 灵力`);
       if (this.wave >= CONFIG.progression.wavesPerLevel) {
+        this.hud.showKill(`波次清除! +${spiritBonus} 灵力`);
         this.onLevelComplete();
         return;
       } else {
         this.restTimer = CONFIG.progression.waveRestTime;
-        this.hud.showKill(`第 ${this.wave + 1} 波即将来袭...`);
+        this.hud.showKill(`波次清除! +${spiritBonus} 灵力 — 第 ${this.wave + 1} 波即将来袭`);
       }
     }
 
