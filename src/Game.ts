@@ -515,6 +515,7 @@ export class Game {
           const leveledUp = this.inventory.addCultivationExp(loot.cultivationExp);
           if (leveledUp) {
             this.hud.showKill(`修为突破 — 第${this.inventory.cultivationLevel}层`);
+            this.hud.showBreakthroughFlash();
             this.sfx.levelComplete();
           }
         } else if (loot.itemId && loot.itemType) {

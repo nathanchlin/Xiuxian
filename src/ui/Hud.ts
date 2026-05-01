@@ -624,6 +624,26 @@ export class Hud {
     }, 1500);
   }
 
+  private breakthroughFlash: HTMLDivElement | null = null;
+  showBreakthroughFlash(): void {
+    if (!this.breakthroughFlash) {
+      this.breakthroughFlash = document.createElement('div');
+      this.breakthroughFlash.style.cssText =
+        `position:fixed;top:0;left:0;width:100%;height:100%;` +
+        `background:radial-gradient(ellipse at center,rgba(255,215,0,0.4),transparent 70%);` +
+        `pointer-events:none;z-index:90;opacity:0;transition:opacity 0.3s;`;
+      document.body.appendChild(this.breakthroughFlash);
+    }
+    this.breakthroughFlash.style.transition = 'opacity 0s';
+    this.breakthroughFlash.style.opacity = '1';
+    setTimeout(() => {
+      if (this.breakthroughFlash) {
+        this.breakthroughFlash.style.transition = 'opacity 1.0s';
+        this.breakthroughFlash.style.opacity = '0';
+      }
+    }, 200);
+  }
+
   showBossPhase(phase: number): void {
     clearTimeout(this.bossPhaseTimer);
     this.bossPhaseText.textContent = `【第 ${phase} 阶段】`;
