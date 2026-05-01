@@ -627,6 +627,12 @@ export class Game {
           this.applyDamageToPlayer(bossResult.damage, this.boss.position);
         }
       }
+    } else if (this.boss && !this.boss.alive) {
+      this.boss.update(dt, playerPos);
+      if (this.boss.isDeathDone()) {
+        this.boss.dispose(this.engine.scene);
+        this.boss = null;
+      }
     }
 
     // 7. Pickup collection (pickups + talisman drops + loot drops)

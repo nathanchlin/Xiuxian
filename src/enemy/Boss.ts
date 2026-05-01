@@ -302,6 +302,8 @@ export class Boss {
     return this.baseSpeed;
   }
 
+  isDeathDone(): boolean { return !this.alive && this.deathTimer <= 0; }
+
   dispose(scene: THREE.Scene): void {
     scene.remove(this.group);
     this.group.traverse((obj) => {
