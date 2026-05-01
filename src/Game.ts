@@ -806,7 +806,8 @@ export class Game {
     if (this.playerModel) this.playerModel.group.visible = false;
 
     const elapsed = performance.now() / 1000 - this.startTime;
-    this.hud.showGameOver({ level: this.level, kills: this.kills, time: elapsed, maxCombo: this.maxCombo });
+    const isNewBest = this.saveHighScore(this.level, this.kills, elapsed);
+    this.hud.showGameOver({ level: this.level, kills: this.kills, time: elapsed, maxCombo: this.maxCombo, newBest: isNewBest });
 
     // Bind restart button (created dynamically by HUD)
     requestAnimationFrame(() => {
@@ -824,7 +825,8 @@ export class Game {
       this.sfx.levelComplete();
       this.input.exitPointerLock();
       const elapsed = performance.now() / 1000 - this.startTime;
-      this.hud.showVictory({ level: this.level, kills: this.kills, time: elapsed, maxCombo: this.maxCombo });
+      const isNewBest = this.saveHighScore(this.level, this.kills, elapsed);
+      this.hud.showVictory({ level: this.level, kills: this.kills, time: elapsed, maxCombo: this.maxCombo, newBest: isNewBest });
       requestAnimationFrame(() => {
         const btn = document.getElementById('hud-restart');
         if (btn) btn.addEventListener('click', () => this.restart());
@@ -889,6 +891,21 @@ export class Game {
   private getEnemyColor(typeName: string): number {
     const colors: Record<string, number> = { crow: 0x444444, serpent: 0x22cc44, dragon: 0xff4444 };
     return colors[typeName] ?? 0xffffff;
+  }
+
+  /** Save high score to localStorage. Returns true if new best. */
+  private saveHighScore(level: number, kills: number, time: number): boolean {
+    try {
+      const key = 'xiuxian_best';
+      const prev = JSON.parse(localStorage.getItem(key) ?? '{"level":0,"kills":0}');
+      const isNewBest = level > prev.level || (level === prev.level && kills > prev.kills);
+      if (isNewBest) {
+        localStorage.setItem(key, JSON.stringify({ level, kills, time: Math.floor(time) }));
+      }
+      return isNewBest;
+    } catch {
+      return false;
+    }
   }
 
   private getItemName(id: string): string {

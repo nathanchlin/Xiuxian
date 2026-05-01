@@ -959,7 +959,7 @@ export class Hud {
     }
   }
 
-  showGameOver(stats: { level: number; kills: number; time: number; maxCombo: number }): void {
+  showGameOver(stats: { level: number; kills: number; time: number; maxCombo: number; newBest?: boolean }): void {
     this.hideEndScreens();
     const overlay = div(
       `position:fixed;top:0;left:0;width:100%;height:100%;` +
@@ -980,6 +980,8 @@ export class Hud {
       `斩杀 <span style="color:${GOLD}">${stats.kills}</span> 敌&emsp;` +
       `最高 <span style="color:${GOLD}">${stats.maxCombo}</span> 连斩&emsp;` +
       `历时 <span style="color:${GOLD}">${mins}:${String(secs).padStart(2, '0')}</span>`;
+    const bestTag = stats.newBest ? div(`margin-top:8px;font-size:14px;color:${GOLD};letter-spacing:2px;`) : null;
+    if (bestTag) bestTag.textContent = '★ 新纪录 ★';
     const btn = document.createElement('button');
     btn.id = 'hud-restart';
     btn.textContent = '重新修炼';
@@ -987,11 +989,12 @@ export class Hud {
       `margin-top:32px;padding:12px 40px;font-size:18px;font-family:monospace;` +
       `background:rgba(192,57,43,0.7);color:#fff;border:2px solid #c0392b;` +
       `border-radius:6px;cursor:pointer;letter-spacing:2px;pointer-events:auto;`;
-    overlay.append(title, info, btn);
+    if (bestTag) overlay.append(title, info, bestTag, btn);
+    else overlay.append(title, info, btn);
     document.body.appendChild(overlay);
   }
 
-  showVictory(stats: { level: number; kills: number; time: number; maxCombo: number }): void {
+  showVictory(stats: { level: number; kills: number; time: number; maxCombo: number; newBest?: boolean }): void {
     this.hideEndScreens();
     const overlay = div(
       `position:fixed;top:0;left:0;width:100%;height:100%;` +
@@ -1017,6 +1020,8 @@ export class Hud {
       `斩杀 <span style="color:${GOLD}">${stats.kills}</span> 敌&emsp;` +
       `最高 <span style="color:${GOLD}">${stats.maxCombo}</span> 连斩&emsp;` +
       `历时 <span style="color:${GOLD}">${mins}:${String(secs).padStart(2, '0')}</span>`;
+    const bestTag = stats.newBest ? div(`margin-top:8px;font-size:14px;color:${GOLD};letter-spacing:2px;`) : null;
+    if (bestTag) bestTag.textContent = '★ 新纪录 ★';
     const btn = document.createElement('button');
     btn.id = 'hud-restart';
     btn.textContent = '再入轮回';
@@ -1024,7 +1029,8 @@ export class Hud {
       `margin-top:32px;padding:12px 40px;font-size:18px;font-family:monospace;` +
       `background:rgba(255,215,0,0.15);color:${GOLD};border:2px solid rgba(255,215,0,0.6);` +
       `border-radius:6px;cursor:pointer;letter-spacing:2px;pointer-events:auto;`;
-    overlay.append(title, subtitle, info, btn);
+    if (bestTag) overlay.append(title, subtitle, info, bestTag, btn);
+    else overlay.append(title, subtitle, info, btn);
     document.body.appendChild(overlay);
   }
 
