@@ -29,8 +29,7 @@ export class SkillSystem {
 
   private targets: EnemyTarget[] = [];
 
-  private beamMesh: THREE.Mesh | null = null;
-  private beamTimer = 0;
+  private beamTrails: Array<{ mesh: THREE.Mesh; timer: number }> = [];
   private parryShield: THREE.Group | null = null;
 
   constructor(
@@ -264,14 +263,18 @@ export class SkillSystem {
       }
     }
 
-    // Beam visual timer
-    if (this.beamTimer > 0) {
-      this.beamTimer -= dt;
-      if (this.beamTimer <= 0 && this.beamMesh) {
-        this.scene.remove(this.beamMesh);
-        this.beamMesh.geometry.dispose();
-        (this.beamMesh.material as THREE.Material).dispose();
-        this.beamMesh = null;
+    // Beam trail timers
+    for (let i = this.beamTrails.length - 1; i >= 0; i--) {
+      const trail = this.beamTrails[i]!;
+      trail.timer -= dt;
+      // Fade out
+      const mat = trail.mesh.material as THREE.MeshBasicMaterial;
+      mat.opacity = Math.max(0, trail.timer / 0.25) * 0.8;
+      if (trail.timer <= 0) {
+        this.scene.remove(trail.mesh);
+        trail.mesh.geometry.dispose();
+        mat.dispose();
+        this.beamTrails.splice(i, 1);
       }
     }
 
@@ -305,40 +308,50 @@ export class SkillSystem {
   // ─── Visuals ───────────────────────────────────────────
 
   private showBeamVisual(start: THREE.Vector3, end: THREE.Vector3): void {
-    if (this.beamMesh) {
-      this.scene.remove(this.beamMesh);
-      this.beamMesh.geometry.dispose();
-      (this.beamMesh.material as THREE.Material).dispose();
-    }
-    const length = end.clone().sub(start).length();
+    // Quadratic bezier — control point offset sideways/upward for arc
     const mid = start.clone().add(end).multiplyScalar(0.5);
-    const geo = new THREE.CylinderGeometry(0.05, 0.05, length, 4);
-    const mat = new THREE.MeshBasicMaterial({ color: CONFIG.weapons.beam.color, transparent: true, opacity: 0.8 });
-    this.beamMesh = new THREE.Mesh(geo, mat);
-    this.beamMesh.position.copy(mid);
-    this.beamMesh.lookAt(end);
-    this.beamMesh.rotateX(Math.PI / 2);
-    this.scene.add(this.beamMesh);
-    this.beamTimer = 0.1;
+    const dist = start.distanceTo(end);
+    // Random lateral + upward offset for organic arc feel
+    const right = new THREE.Vector3().crossVectors(
+      end.clone().sub(start).normalize(),
+      new THREE.Vector3(0, 1, 0),
+    ).normalize();
+    const arcHeight = dist * (0.15 + Math.random() * 0.1);
+    const lateralOffset = dist * (Math.random() - 0.5) * 0.12;
+    const control = mid.clone()
+      .addScaledVector(new THREE.Vector3(0, 1, 0), arcHeight)
+      .addScaledVector(right, lateralOffset);
+
+    const curve = new THREE.QuadraticBezierCurve3(start, control, end);
+    const segments = Math.max(12, Math.floor(dist / 3));
+    const geo = new THREE.TubeGeometry(curve, segments, 0.08, 4, false);
+    const mat = new THREE.MeshBasicMaterial({
+      color: CONFIG.weapons.beam.color,
+      transparent: true,
+      opacity: 0.8,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    this.scene.add(mesh);
+    this.beamTrails.push({ mesh, timer: 0.25 });
   }
 
   private showFinalStrikeBeam(origin: THREE.Vector3, dir: THREE.Vector3, range: number): void {
-    if (this.beamMesh) {
-      this.scene.remove(this.beamMesh);
-      this.beamMesh.geometry.dispose();
-      (this.beamMesh.material as THREE.Material).dispose();
-    }
     const cfg = CONFIG.skills.finalStrike;
     const end = origin.clone().add(dir.clone().multiplyScalar(range));
+
+    // Dramatic wide arc for ultimate beam
     const mid = origin.clone().add(end).multiplyScalar(0.5);
-    const geo = new THREE.CylinderGeometry(cfg.beamRadius, cfg.beamRadius * 0.5, range, 8);
+    const right = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0)).normalize();
+    const control = mid.clone()
+      .addScaledVector(new THREE.Vector3(0, 1, 0), range * 0.08)
+      .addScaledVector(right, range * 0.03);
+
+    const curve = new THREE.QuadraticBezierCurve3(origin, control, end);
+    const geo = new THREE.TubeGeometry(curve, 32, cfg.beamRadius, 8, false);
     const mat = new THREE.MeshBasicMaterial({ color: cfg.color, transparent: true, opacity: 0.9 });
-    this.beamMesh = new THREE.Mesh(geo, mat);
-    this.beamMesh.position.copy(mid);
-    this.beamMesh.lookAt(end);
-    this.beamMesh.rotateX(Math.PI / 2);
-    this.scene.add(this.beamMesh);
-    this.beamTimer = cfg.beamDuration;
+    const mesh = new THREE.Mesh(geo, mat);
+    this.scene.add(mesh);
+    this.beamTrails.push({ mesh, timer: cfg.beamDuration });
   }
 
   private showParryShield(): void {
@@ -378,11 +391,12 @@ export class SkillSystem {
 
   dispose(): void {
     for (const b of this.blades) b.dispose(this.scene);
-    if (this.beamMesh) {
-      this.scene.remove(this.beamMesh);
-      this.beamMesh.geometry.dispose();
-      (this.beamMesh.material as THREE.Material).dispose();
+    for (const trail of this.beamTrails) {
+      this.scene.remove(trail.mesh);
+      trail.mesh.geometry.dispose();
+      (trail.mesh.material as THREE.Material).dispose();
     }
+    this.beamTrails = [];
     if (this.parryShield) {
       this.scene.remove(this.parryShield);
     }
