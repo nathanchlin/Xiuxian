@@ -30,6 +30,7 @@ export class FlightController {
   dashing = false;
   dashInvincible = false;
   private dashInvincibleTimerId = 0;
+  hitInvincibleTimer = 0;
 
   // External stat bonus (set by Game from inventory)
   speedBonus = 0;
@@ -139,7 +140,9 @@ export class FlightController {
 
   takeDamage(amount: number): boolean {
     if (!this.alive || this.dashInvincible) return false;
+    if (this.hitInvincibleTimer > 0) return false;
     this.hp = Math.max(0, this.hp - amount);
+    this.hitInvincibleTimer = 0.5;
     if (this.hp <= 0) {
       this.alive = false;
       return true;
@@ -151,6 +154,9 @@ export class FlightController {
     if (!this.alive) return;
 
     const cfg = CONFIG.flight;
+
+    // Hit invincibility decay
+    if (this.hitInvincibleTimer > 0) this.hitInvincibleTimer -= dt;
 
     // Spirit regen (cap respects bonus)
     const effectiveMaxSpirit = CONFIG.spirit.maxSpirit * (1 + this.spiritBonus);

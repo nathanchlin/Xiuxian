@@ -75,7 +75,8 @@ export class PlayerModel {
   update(flight: FlightController, camera: CameraSystem, dt: number): void {
     this.group.position.copy(flight.position);
     this.group.quaternion.copy(flight.quaternion);
-    this.group.visible = camera.getMode() === 'third_person';
+    this.group.visible = camera.getMode() === 'third_person'
+      && (flight.hitInvincibleTimer <= 0 || Math.sin(performance.now() * 0.03) > 0);
 
     const speed = flight.getSpeed();
     const trailMat = this.swordTrail.material as THREE.MeshBasicMaterial;
