@@ -233,6 +233,7 @@ export class Sfx {
     gain.gain.linearRampToValueAtTime(0, now + duration);
     osc.connect(gain);
     gain.connect(master);
+    osc.onended = () => { osc.disconnect(); gain.disconnect(); };
     osc.start(now);
     osc.stop(now + duration + 0.05);
   }
@@ -251,6 +252,7 @@ export class Sfx {
     gain.gain.linearRampToValueAtTime(0, now + duration);
     osc.connect(gain);
     gain.connect(master);
+    osc.onended = () => { osc.disconnect(); gain.disconnect(); };
     osc.start(now);
     osc.stop(now + duration + 0.05);
   }
