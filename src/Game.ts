@@ -131,10 +131,10 @@ export class Game {
     this.input.onMouseDown.push(() => {
       if (this.state !== 'playing') return;
       if (this.flight.swordIntent >= CONFIG.skills.finalStrike.requiredIntent) {
-        if (this.skillSystem.tryFinalStrike()) return;
+        if (this.skillSystem.tryFinalStrike()) { this.hud.pulseCrosshair(); return; }
       }
       const hit = this.skillSystem.fireNormalBeam();
-      if (hit) this.onSkillHit(hit);
+      if (hit) { this.onSkillHit(hit); this.hud.pulseCrosshair(); }
     });
 
     // Main update loop

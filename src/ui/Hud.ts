@@ -46,6 +46,7 @@ export class Hud {
 
   // Crosshair lines
   private crosshairLines: HTMLDivElement[] = [];
+  private crosshairSpread = 0;
   private finalStrikeDot: HTMLDivElement;
 
   // Bottom-left weapon info
@@ -521,7 +522,24 @@ export class Hud {
 
   setCrosshairLocked(locked: boolean): void {
     const color = locked ? '#e74c3c' : '#fff';
-    for (const line of this.crosshairLines) line.style.background = color;
+    // Decay crosshair spread
+    if (this.crosshairSpread > 0) {
+      this.crosshairSpread = Math.max(0, this.crosshairSpread - 1 / 60);
+    }
+    const s = this.crosshairSpread * 5; // max 5px spread
+    const styles = [
+      `position:absolute;background:${color};top:${-s}px;left:50%;transform:translateX(-50%);width:2px;height:${8 + s}px;`,
+      `position:absolute;background:${color};bottom:${-s}px;left:50%;transform:translateX(-50%);width:2px;height:${8 + s}px;`,
+      `position:absolute;background:${color};left:${-s}px;top:50%;transform:translateY(-50%);width:${8 + s}px;height:2px;`,
+      `position:absolute;background:${color};right:${-s}px;top:50%;transform:translateY(-50%);width:${8 + s}px;height:2px;`,
+    ];
+    for (let i = 0; i < this.crosshairLines.length; i++) {
+      this.crosshairLines[i]!.style.cssText = styles[i]!;
+    }
+  }
+
+  pulseCrosshair(): void {
+    this.crosshairSpread = 1;
   }
 
   setSwordIntent(stacks: number, max: number): void {
