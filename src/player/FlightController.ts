@@ -34,6 +34,22 @@ export class FlightController {
   swordIntent = 0;
   private intentDecayTimer = 0;
 
+  // ─── Skill Growth ───
+  skillKills: Record<string, number> = { bladeFan: 0, swordDash: 0, parry: 0, finalStrike: 0 };
+
+  getSkillLevel(skill: string): number {
+    const kills = this.skillKills[skill] ?? 0;
+    return Math.min(CONFIG.skills.growth.maxLevel, Math.floor(kills / CONFIG.skills.growth.killsPerLevel));
+  }
+
+  addSkillKill(skill: string): boolean {
+    if (!(skill in this.skillKills)) return false;
+    this.skillKills[skill]! += 1;
+    const prev = Math.floor((this.skillKills[skill]! - 1) / CONFIG.skills.growth.killsPerLevel);
+    const curr = this.getSkillLevel(skill);
+    return curr > prev;
+  }
+
   // ─── Parry ───
   parrying = false;
   private parryTimer = 0;
@@ -274,6 +290,7 @@ export class FlightController {
     this.position.set(x, y, z);
     this.velocity.set(0, 0, 0);
     this.angularVelocity.set(0, 0, 0);
+    // Don't reset skillKills here — it persists across levels, only reset in Game.restart()
   }
 
   dispose(): void {}

@@ -61,6 +61,20 @@ export class SkillSystem {
     };
   }
 
+  private scaleDamage(base: number, skill: string): number {
+    const level = this.flight.getSkillLevel(skill);
+    return Math.floor(base * (1 + level * CONFIG.skills.growth.damagePerLevel));
+  }
+
+  private scaleCooldown(base: number, skill: string): number {
+    const level = this.flight.getSkillLevel(skill);
+    return Math.max(CONFIG.skills.growth.minCooldown, base * (1 - level * CONFIG.skills.growth.cooldownPerLevel));
+  }
+
+  getScaledSwordDashDamage(): number {
+    return this.scaleDamage(CONFIG.skills.swordDash.damage, 'swordDash');
+  }
+
   // ─── Skill 1: Blade Fan (Q) ───────────────────────────
 
   fireBladeFan(): void {
@@ -68,7 +82,7 @@ export class SkillSystem {
     if (this.bladeFanCd > 0) return;
     if (!this.flight.consumeSpirit(cfg.spiritCost)) return;
 
-    this.bladeFanCd = cfg.cooldown;
+    this.bladeFanCd = this.scaleCooldown(cfg.cooldown, 'bladeFan');
     this.sfx.bladeFan();
 
     const origin = this.flight.position.clone();
@@ -89,7 +103,7 @@ export class SkillSystem {
     if (this.flight.dashing) return;
     if (!this.flight.consumeSpirit(cfg.spiritCost)) return;
 
-    this.swordDashCd = cfg.cooldown;
+    this.swordDashCd = this.scaleCooldown(cfg.cooldown, 'swordDash');
     this.dashHitIds.clear();
     this.sfx.swordDash();
 
@@ -105,7 +119,7 @@ export class SkillSystem {
     if (this.flight.parrying) return;
     if (!this.flight.consumeSpirit(cfg.spiritCost)) return;
 
-    this.parryCd = cfg.cooldown;
+    this.parryCd = this.scaleCooldown(cfg.cooldown, 'parry');
     this.flight.startParry();
     this.sfx.parryActivate();
     this.showParryShield();
@@ -119,7 +133,7 @@ export class SkillSystem {
     this.flight.addSwordIntent(CONFIG.skills.parry.intentOnSuccess);
     this.sfx.parrySuccess();
     this.flashParrySuccess();
-    return { reflected: true, reflectDamage: CONFIG.skills.parry.reflectDamage };
+    return { reflected: true, reflectDamage: this.scaleDamage(CONFIG.skills.parry.reflectDamage, 'parry') };
   }
 
   // ─── Skill 4: Final Strike (Left Click when 5 stacks) ─
@@ -132,7 +146,7 @@ export class SkillSystem {
 
     this.flight.consumeSwordIntent(cfg.requiredIntent);
     this.charging = true;
-    this.chargeTimer = cfg.chargeTime;
+    this.chargeTimer = this.scaleCooldown(cfg.chargeTime, 'finalStrike');
     this.sfx.finalStrikeCharge();
     return true;
   }
@@ -157,7 +171,7 @@ export class SkillSystem {
       const closest = origin.clone().add(dir.clone().multiplyScalar(dot));
       const perpDist = closest.distanceTo(target.position);
       if (perpDist < cfg.beamRadius + 2) {
-        results.push({ targetId: target.id, damage: cfg.damage });
+        results.push({ targetId: target.id, damage: this.scaleDamage(cfg.damage, 'finalStrike') });
       }
     }
 
@@ -279,7 +293,7 @@ export class SkillSystem {
     const results: SkillHitResult[] = [];
     for (const blade of this.blades) {
       if (blade.hitTargetId >= 0) {
-        results.push({ targetId: blade.hitTargetId, damage: CONFIG.skills.bladeFan.damage });
+        results.push({ targetId: blade.hitTargetId, damage: this.scaleDamage(CONFIG.skills.bladeFan.damage, 'bladeFan') });
         blade.hitTargetId = -1;
       }
     }
