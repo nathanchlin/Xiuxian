@@ -70,6 +70,7 @@ export class Game {
   private level = 1;
   private wave = 0;
   private kills = 0;
+  private levelKills = 0;
   private startTime = 0;
   private nextEnemyId = 1;
 
@@ -78,6 +79,7 @@ export class Game {
   private comboTimer = 0;
   private comboMultiplier = 1.0;
   private maxCombo = 0;
+  private levelMaxCombo = 0;
 
   private restTimer = 0;
   private briefingTimer = 0;
@@ -189,6 +191,8 @@ export class Game {
     this.level = 1;
     this.wave = 0;
     this.kills = 0;
+    this.levelKills = 0;
+    this.levelMaxCombo = 0;
     this.comboCount = 0;
     this.comboTimer = 0;
     this.comboMultiplier = 1.0;
@@ -255,6 +259,8 @@ export class Game {
   private initLevel(level: number): void {
     this.level = level;
     this.wave = 0;
+    this.levelKills = 0;
+    this.levelMaxCombo = 0;
     this.restTimer = 0;
 
     // Dispose old pickups
@@ -850,6 +856,7 @@ export class Game {
 
   private onEnemyKilled(typeName: string, position?: THREE.Vector3): void {
     this.kills++;
+    this.levelKills++;
     this.registerCombo();
     this.sfx.enemyDie();
     this.hud.showKill(`${this.getEnemyName(typeName)} 已斩`);
@@ -871,6 +878,7 @@ export class Game {
 
   private onBossKilled(): void {
     this.kills++;
+    this.levelKills++;
     this.registerCombo();
     this.sfx.enemyDie();
     this.hud.showKill('妖王已诛!');
@@ -890,6 +898,7 @@ export class Game {
   private registerCombo(): void {
     this.comboCount++;
     if (this.comboCount > this.maxCombo) this.maxCombo = this.comboCount;
+    if (this.comboCount > this.levelMaxCombo) this.levelMaxCombo = this.comboCount;
     this.comboTimer = CONFIG.skills.combo.timeout;
     this.comboMultiplier = Math.min(
       CONFIG.skills.combo.maxMultiplier,
@@ -1014,7 +1023,7 @@ export class Game {
     else if (hpPct >= 0.4) grade = 'B';
     else grade = 'C';
 
-    this.hud.showLevelComplete(this.level, grade, { kills: this.kills, maxCombo: this.maxCombo });
+    this.hud.showLevelComplete(this.level, grade, { kills: this.levelKills, maxCombo: this.levelMaxCombo });
 
     // Bind next-level button
     requestAnimationFrame(() => {
