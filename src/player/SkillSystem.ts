@@ -564,6 +564,9 @@ export class SkillSystem {
     this.bladeFanCd = 0;
     this.swordDashCd = 0;
     this.parryCd = 0;
+    this.bladeFanCdMax = 0;
+    this.swordDashCdMax = 0;
+    this.parryCdMax = 0;
     this.charging = false;
     this.chargeTimer = 0;
     this.dashHitIds.clear();
