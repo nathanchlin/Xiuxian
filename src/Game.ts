@@ -265,6 +265,9 @@ export class Game {
     this.wave = 0;
     this.levelKills = 0;
     this.levelMaxCombo = 0;
+    this.comboCount = 0;
+    this.comboTimer = 0;
+    this.comboMultiplier = 1.0;
     this.restTimer = 0;
 
     // Dispose old pickups
