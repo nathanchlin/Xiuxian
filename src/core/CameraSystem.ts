@@ -135,7 +135,7 @@ export class CameraSystem {
     const dashFov = baseFov + 8;
     let targetFov: number = baseFov;
     if (flight.getBoostState().active) targetFov = boostFov;
-    else if (flight.dashInvincible) targetFov = dashFov;
+    else if (flight.dashing) targetFov = dashFov;
     this.camera.fov += (targetFov - this.camera.fov) * Math.min(1, 6 * dt);
     this.camera.updateProjectionMatrix();
   }
