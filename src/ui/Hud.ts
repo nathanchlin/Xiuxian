@@ -858,6 +858,42 @@ export class Hud {
     document.body.appendChild(overlay);
   }
 
+  showVictory(stats: { level: number; kills: number; time: number }): void {
+    this.hideEndScreens();
+    const overlay = div(
+      `position:fixed;top:0;left:0;width:100%;height:100%;` +
+        `background:rgba(0,0,0,0.85);display:flex;flex-direction:column;` +
+        `align-items:center;justify-content:center;z-index:200;pointer-events:auto;` +
+        `font-family:monospace;color:#fff;`,
+      'hud-end-victory',
+    );
+    const title = div(
+      `font-size:48px;font-weight:bold;color:${GOLD};letter-spacing:6px;margin-bottom:8px;` +
+        `text-shadow:0 0 20px rgba(255,215,0,0.6),0 0 40px rgba(255,215,0,0.3);`,
+    );
+    title.textContent = '飞升成功';
+    const subtitle = div(
+      `font-size:18px;color:rgba(255,215,0,0.7);letter-spacing:3px;margin-bottom:32px;`,
+    );
+    subtitle.textContent = '道途圆满，大道已成';
+    const info = div(`font-size:16px;color:#ccc;line-height:2.2;text-align:center;`);
+    const mins = Math.floor(stats.time / 60);
+    const secs = Math.floor(stats.time % 60);
+    info.innerHTML =
+      `通关 <span style="color:${GOLD}">${stats.level}</span> 关&emsp;` +
+      `斩杀 <span style="color:${GOLD}">${stats.kills}</span> 敌&emsp;` +
+      `历时 <span style="color:${GOLD}">${mins}:${String(secs).padStart(2, '0')}</span>`;
+    const btn = document.createElement('button');
+    btn.id = 'hud-restart';
+    btn.textContent = '再入轮回';
+    btn.style.cssText =
+      `margin-top:32px;padding:12px 40px;font-size:18px;font-family:monospace;` +
+      `background:rgba(255,215,0,0.15);color:${GOLD};border:2px solid rgba(255,215,0,0.6);` +
+      `border-radius:6px;cursor:pointer;letter-spacing:2px;pointer-events:auto;`;
+    overlay.append(title, subtitle, info, btn);
+    document.body.appendChild(overlay);
+  }
+
   showLevelComplete(level: number, grade: string): void {
     this.hideEndScreens();
     const overlay = div(

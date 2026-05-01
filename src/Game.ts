@@ -702,7 +702,7 @@ export class Game {
       this.sfx.levelComplete();
       this.input.exitPointerLock();
       const elapsed = performance.now() / 1000 - this.startTime;
-      this.hud.showGameOver({ level: this.level, kills: this.kills, time: elapsed });
+      this.hud.showVictory({ level: this.level, kills: this.kills, time: elapsed });
       requestAnimationFrame(() => {
         const btn = document.getElementById('hud-restart');
         if (btn) btn.addEventListener('click', () => this.restart());
