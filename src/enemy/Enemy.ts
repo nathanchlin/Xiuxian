@@ -278,6 +278,15 @@ export class Enemy {
 
     this.position.addScaledVector(this.velocity, dt);
     if (this.position.y < 20) this.position.y = 20;
+
+    // Clamp to world boundary
+    const maxR = 220;
+    const distXZ = Math.sqrt(this.position.x ** 2 + this.position.z ** 2);
+    if (distXZ > maxR) {
+      const s = maxR / distXZ;
+      this.position.x *= s;
+      this.position.z *= s;
+    }
     this.group.position.copy(this.position);
     if (this.velocity.lengthSq() > 0.1 && this.state !== 'attack') {
       this.group.lookAt(this.position.clone().add(this.velocity));
