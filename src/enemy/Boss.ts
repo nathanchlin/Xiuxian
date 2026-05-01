@@ -208,8 +208,7 @@ export class Boss {
     if (this.hitFlashTimer > 0) {
       this.hitFlashTimer -= dt;
       if (this.hitFlashTimer <= 0 && this.alive) {
-        this.bodyMat.color.setHex(this.bodyColor);
-        this.bodyMat.emissiveIntensity = 0.3;
+        this.updateVisualsForPhase(this.phase);
       }
     }
 
