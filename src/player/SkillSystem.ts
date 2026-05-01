@@ -93,7 +93,7 @@ export class SkillSystem {
       const dir = forward.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), angleOffset).normalize();
       // Assign target: round-robin among alive enemies
       const target = aliveTargets.length > 0 ? aliveTargets[i % aliveTargets.length]! : null;
-      this.blades.push(new Blade(origin.clone(), dir, this.scene, target?.position.clone() ?? null));
+      this.blades.push(new Blade(origin.clone(), dir, this.scene, target?.position ?? null));
     }
   }
 
