@@ -510,10 +510,12 @@ export class Game {
         if (loot.health > 0) {
             this.flight.hp = Math.min(this.getEffectiveMaxHealth(), this.flight.hp + loot.health);
             this.damageNumbers.spawn(this.flight.position.clone(), loot.health, 0x44ff44, '+');
+            this.sfx.pickup();
           }
           if (loot.spirit > 0) {
             this.flight.spirit = Math.min(this.getEffectiveMaxSpirit(), this.flight.spirit + loot.spirit);
             this.damageNumbers.spawn(this.flight.position.clone(), loot.spirit, 0x44aaff, '+');
+            this.sfx.pickup();
           }
         if (loot.talismanType) {
           this.equipTalisman(loot.talismanType);
@@ -535,14 +537,14 @@ export class Game {
       }
     }
     this.talismanDrops = this.talismanDrops.filter(d => {
-      if (d.collected || d.expireTimer <= 0) {
+      if (d.collected) {
         d.dispose(this.engine.scene);
         return false;
       }
       return true;
     });
     this.lootDrops = this.lootDrops.filter(d => {
-      if (d.collected || d.expireTimer <= 0) {
+      if (d.collected) {
         d.dispose(this.engine.scene);
         return false;
       }

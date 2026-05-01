@@ -71,6 +71,12 @@ export class Sfx {
     this.beep(880, 0.15, 'sine', 0.3);
   }
 
+  pickup(): void {
+    if (!this.ready()) return;
+    this.beep(660, 0.06, 'sine', 0.4);
+    this.beep(990, 0.08, 'sine', 0.3);
+  }
+
   floorTransition(): void {
     if (!this.ready()) return;
     this.sweep(200, 800, 0.5, 'sine', 0.5);
