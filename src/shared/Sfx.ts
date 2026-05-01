@@ -46,18 +46,22 @@ export class Sfx {
   }
 
   empty(): void {
+    if (!this.ready()) return;
     this.beep(220, 0.04, 'square', 0.3);
   }
 
   damage(): void {
+    if (!this.ready()) return;
     this.sweep(220, 80, 0.25, 'triangle', 0.6);
   }
 
   death(): void {
+    if (!this.ready()) return;
     this.sweep(440, 55, 0.8, 'sawtooth', 0.8);
   }
 
   enemyDie(): void {
+    if (!this.ready()) return;
     this.sweep(180, 40, 0.5, 'square', 0.5);
     this.noise(0.12, 600, 0.8);
   }
