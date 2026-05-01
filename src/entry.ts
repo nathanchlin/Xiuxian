@@ -22,7 +22,8 @@ startBtn.addEventListener('click', () => {
       game.input.setTouchControls(tc);
     }
   } else {
-    // Resume from ESC pause
+    // Resume from ESC / tab-hide pause
+    game.resume();
     game.input.requestPointerLock();
   }
 });

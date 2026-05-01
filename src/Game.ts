@@ -135,6 +135,14 @@ export class Game {
 
     // Main update loop
     this.engine.addUpdater((dt) => this.update(dt));
+
+    // Pause when tab is hidden
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && this.state === 'playing') {
+        this.state = 'paused';
+        this.input.exitPointerLock();
+      }
+    });
   }
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -197,6 +205,13 @@ export class Game {
     this.initLevel(1);
     this.state = 'briefing';
     this.briefingTimer = 1.0;
+  }
+
+  /** Resume from paused state (tab hidden, ESC, etc.) */
+  resume(): void {
+    if (this.state === 'paused') {
+      this.state = 'playing';
+    }
   }
 
   /* ═══════════════════════════════════════════════════════════════════
