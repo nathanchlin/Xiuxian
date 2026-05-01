@@ -140,15 +140,17 @@ export class Pickup {
     }
   }
 
-  /** Pull toward player when within magnet range */
+  /** Pull toward player when within magnet range (XZ only — avoids vertical yanking) */
   attract(playerPos: THREE.Vector3, dt: number): void {
     if (this.collected) return;
     const magnetRadius = 18;
-    const dist = this.position.distanceTo(playerPos);
-    if (dist < magnetRadius && dist > 0.1) {
-      const pullStrength = (1 - dist / magnetRadius) * 40; // stronger when closer
-      const dir = playerPos.clone().sub(this.position).normalize();
-      this.position.addScaledVector(dir, pullStrength * dt);
+    const dx = playerPos.x - this.position.x;
+    const dz = playerPos.z - this.position.z;
+    const distXZ = Math.sqrt(dx * dx + dz * dz);
+    if (distXZ < magnetRadius && distXZ > 0.1) {
+      const pullStrength = (1 - distXZ / magnetRadius) * 40;
+      this.position.x += (dx / distXZ) * pullStrength * dt;
+      this.position.z += (dz / distXZ) * pullStrength * dt;
     }
   }
 
