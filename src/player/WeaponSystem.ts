@@ -83,6 +83,7 @@ export class WeaponSystem {
     if (this.beamLine) {
       this.scene.remove(this.beamLine);
       this.beamLine.geometry.dispose();
+      (this.beamLine.material as THREE.Material).dispose();
     }
     const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
     const material = new THREE.LineBasicMaterial({ color: CONFIG.weapons.beam.color, transparent: true, opacity: 0.8 });

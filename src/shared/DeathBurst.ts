@@ -93,6 +93,7 @@ export class DeathBurst {
 
       if (p.timer <= 0) {
         this.scene.remove(p.mesh);
+        p.mesh.geometry.dispose();
         (p.mesh.material as THREE.Material).dispose();
         this.particles.splice(i, 1);
       }
@@ -102,6 +103,7 @@ export class DeathBurst {
   dispose(): void {
     for (const p of this.particles) {
       this.scene.remove(p.mesh);
+      p.mesh.geometry.dispose();
       (p.mesh.material as THREE.Material).dispose();
     }
     this.particles = [];
