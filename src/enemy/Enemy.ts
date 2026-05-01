@@ -230,9 +230,11 @@ export class Enemy {
       this.state = 'flee';
       const fleeDir = toPlayer.normalize().negate();
       this.velocity.lerp(fleeDir.multiplyScalar(this.speed), Math.min(1, 3 * dt));
-      // Auto-die if fled too far from player
+      // Auto-die if fled too far from player (skip death animation)
       if (dist > 150) {
-        this.die();
+        this.alive = false;
+        this.state = 'dead';
+        this.deathTimer = 0;
         return { attacked: false, damage: 0 };
       }
     } else if (dist < CONFIG.enemies.engageDistance && this.attackCooldown <= 0) {
