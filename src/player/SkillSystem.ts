@@ -238,7 +238,7 @@ export class SkillSystem {
     if (closest) {
       const endPoint = closest.position.clone();
       this.showBeamVisual(origin, endPoint);
-      return { targetId: closest.id, damage: cfg.damage };
+      return { targetId: closest.id, damage: this.scaleDamage(cfg.damage, 'beam') };
     }
 
     // No target in range — fire forward into empty space
