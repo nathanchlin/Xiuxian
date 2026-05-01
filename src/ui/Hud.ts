@@ -41,6 +41,7 @@ export class Hud {
   private levelEl: HTMLDivElement;
   private waveEl: HTMLDivElement;
   private enemyEl: HTMLDivElement;
+  private killEl: HTMLDivElement;
 
   // Crosshair lines
   private crosshairLines: HTMLDivElement[] = [];
@@ -119,7 +120,9 @@ export class Hud {
     this.waveEl.textContent = '波次 1/3';
     this.enemyEl = div(`color:#f88;`);
     this.enemyEl.textContent = '敌人: 0';
-    topBar.append(this.levelEl, this.waveEl, this.enemyEl);
+    this.killEl = div(`color:${GOLD};`);
+    this.killEl.textContent = '击杀: 0';
+    topBar.append(this.levelEl, this.waveEl, this.enemyEl, this.killEl);
     this.root.appendChild(topBar);
 
     // ── Crosshair ─────────────────────────────────────────────────────────────
@@ -381,6 +384,10 @@ export class Hud {
 
   setEnemyCount(count: number): void {
     this.enemyEl.textContent = `敌人: ${count}`;
+  }
+
+  setKillCount(count: number): void {
+    this.killEl.textContent = `击杀: ${count}`;
   }
 
   setHp(hp: number, max: number): void {

@@ -819,6 +819,7 @@ export class Game {
 
     const aliveCount = this.enemies.filter((e) => e.alive).length + (this.boss?.alive ? 1 : 0);
     this.hud.setEnemyCount(aliveCount);
+    this.hud.setKillCount(this.kills);
 
     // Crosshair lock: check if any enemy is in the forward aim cone
     const origin = this.flight.position;
