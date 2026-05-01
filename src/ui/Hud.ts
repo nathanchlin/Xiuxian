@@ -487,10 +487,29 @@ export class Hud {
     this.lowHpVignette.style.opacity = pct < 30 ? `${1 - pct / 30}` : '0';
   }
 
+  private spiritPrev = 0;
+  private spiritFlashTimer = 0;
+
   setSpirit(spirit: number, max: number): void {
     const pct = Math.max(0, Math.min(1, spirit / max)) * 100;
     this.spiritBar.style.width = `${pct}%`;
     this.spiritText.textContent = `${Math.floor(spirit)}`;
+
+    // Flash cyan glow on spirit gain
+    if (spirit > this.spiritPrev + 1) {
+      this.spiritFlashTimer = 0.35;
+      this.spiritBar.style.boxShadow = '0 0 12px #44aaff, 0 0 4px #ffffff';
+      this.spiritBar.style.filter = 'brightness(1.8)';
+    }
+    this.spiritPrev = spirit;
+    if (this.spiritFlashTimer > 0) {
+      this.spiritFlashTimer -= 1 / 60;
+      if (this.spiritFlashTimer <= 0) {
+        this.spiritBar.style.boxShadow = 'none';
+        this.spiritBar.style.filter = 'none';
+      }
+    }
+
     // Pulse warning when below 25%
     if (pct < 25) {
       const pulse = Math.sin(performance.now() * 0.008) * 0.3 + 0.7;
