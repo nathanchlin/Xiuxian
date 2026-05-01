@@ -16,6 +16,7 @@ export class Boss {
   phase: BossPhase = 1;
 
   private bodyMat: THREE.MeshStandardMaterial;
+  private readonly bodyColor: number;
   private shieldMesh: THREE.Mesh | null = null;
   private shieldHp = 0;
   private attackCooldown = 0;
@@ -43,6 +44,7 @@ export class Boss {
       color: CONFIG.boss.color, roughness: 0.3, metalness: 0.2,
       emissive: CONFIG.boss.color, emissiveIntensity: 0.3,
     });
+    this.bodyColor = CONFIG.boss.color;
 
     // Torso
     const torsoGeo = new THREE.BoxGeometry(2, 3, 1.5);
@@ -116,12 +118,31 @@ export class Boss {
     if (this.shieldHp > 0) {
       this.shieldHp -= amount;
       this.updateShieldBar();
+      // Shield hit flash
+      if (this.shieldMesh) {
+        const sm = this.shieldMesh.material as THREE.MeshBasicMaterial;
+        sm.opacity = 0.7;
+        sm.color.setHex(0xffffff);
+        setTimeout(() => {
+          if (this.shieldMesh) {
+            sm.opacity = 0.3;
+            sm.color.setHex(0x8800ff);
+          }
+        }, 80);
+      }
       if (this.shieldHp <= 0) { this.shieldHp = 0; if (this.shieldMesh) this.shieldMesh.visible = false; this.shieldBarFill.visible = false; }
       return false;
     }
     this.hp -= amount;
+    // White flash on hit
+    this.bodyMat.color.setHex(0xffffff);
     this.bodyMat.emissiveIntensity = 1.0;
-    setTimeout(() => { if (this.alive) this.bodyMat.emissiveIntensity = 0.3; }, 100);
+    setTimeout(() => {
+      if (this.alive) {
+        this.bodyMat.color.setHex(this.bodyColor);
+        this.bodyMat.emissiveIntensity = 0.3;
+      }
+    }, 100);
 
     const hpPct = this.hp / this.maxHp;
     if (this.phase === 1 && hpPct <= CONFIG.boss.phase1Threshold) { this.phase = 2; this.onPhaseChange?.(2); }
