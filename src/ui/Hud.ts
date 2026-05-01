@@ -46,6 +46,7 @@ export class Hud {
 
   // Crosshair lines
   private crosshairLines: HTMLDivElement[] = [];
+  private finalStrikeDot: HTMLDivElement;
 
   // Bottom-left weapon info
   private weaponNameEl: HTMLDivElement;
@@ -146,6 +147,13 @@ export class Hud {
       this.crosshairLines.push(line);
       crossContainer.appendChild(line);
     }
+    // Final strike ready indicator (center dot)
+    this.finalStrikeDot = div(
+      `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);` +
+        `width:6px;height:6px;border-radius:50%;background:transparent;` +
+        `box-shadow:none;transition:all 0.2s;`,
+    );
+    crossContainer.appendChild(this.finalStrikeDot);
     this.root.appendChild(crossContainer);
 
     // ── Bottom-left: weapon info (hidden — replaced by skill cooldowns) ────────
@@ -512,8 +520,12 @@ export class Hud {
     }
     if (full) {
       this.intentContainer.style.filter = `brightness(${1 + 0.3 * Math.sin(Date.now() * 0.005)})`;
+      this.finalStrikeDot.style.background = '#ffd700';
+      this.finalStrikeDot.style.boxShadow = '0 0 8px #ffd700, 0 0 16px rgba(255,215,0,0.4)';
     } else {
       this.intentContainer.style.filter = 'none';
+      this.finalStrikeDot.style.background = 'transparent';
+      this.finalStrikeDot.style.boxShadow = 'none';
     }
   }
 
