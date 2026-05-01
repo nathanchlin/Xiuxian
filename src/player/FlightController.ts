@@ -32,6 +32,7 @@ export class FlightController {
 
   // External stat bonus (set by Game from inventory)
   speedBonus = 0;
+  parryWindowBonus = 0;
 
   // ─── Sword Intent ───
   swordIntent = 0;
@@ -112,7 +113,7 @@ export class FlightController {
   startParry(): void {
     if (this.parrying) return;
     this.parrying = true;
-    this.parryTimer = CONFIG.skills.parry.parryWindow;
+    this.parryTimer = CONFIG.skills.parry.parryWindow + this.parryWindowBonus;
   }
 
   endParry(): void {
