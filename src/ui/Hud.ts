@@ -340,6 +340,13 @@ export class Hud {
     );
     this.root.appendChild(this.damageOverlay);
 
+    // ── Combo tier border glow ────────────────────────────────────────────
+    this.comboBorderGlow = div(
+      `${BASE}top:0;left:0;width:100%;height:100%;pointer-events:none;` +
+        `box-shadow:inset 0 0 60px transparent;opacity:0;transition:opacity 0.3s,box-shadow 0.3s;`,
+    );
+    this.root.appendChild(this.comboBorderGlow);
+
     // ── Low HP vignette (persistent, fades in when HP < 30%) ──────────────
     this.lowHpVignette = div(
       `${BASE}top:0;left:0;width:100%;height:100%;` +
@@ -461,12 +468,14 @@ export class Hud {
   }
 
   private comboContainer: HTMLDivElement | null = null;
+  private comboBorderGlow: HTMLDivElement;
   setCombo(count: number, multiplier: number): void {
     if (count <= 1) {
       if (this.comboContainer) {
         this.comboContainer.remove();
         this.comboContainer = null;
       }
+      this.comboBorderGlow.style.opacity = '0';
       return;
     }
     if (!this.comboContainer) {
@@ -486,6 +495,18 @@ export class Hud {
       if (this.comboContainer) this.comboContainer.style.transform = 'translateX(-50%) scale(1)';
       this.comboAnimTimer = 0;
     }, 100);
+    // Combo tier screen border glow
+    if (count >= 10) {
+      const pulse = 0.4 + 0.3 * Math.sin(performance.now() * 0.006);
+      this.comboBorderGlow.style.opacity = `${pulse}`;
+      this.comboBorderGlow.style.boxShadow = 'inset 0 0 80px rgba(255,50,0,0.5)';
+    } else if (count >= 5) {
+      const pulse = 0.3 + 0.2 * Math.sin(performance.now() * 0.005);
+      this.comboBorderGlow.style.opacity = `${pulse}`;
+      this.comboBorderGlow.style.boxShadow = 'inset 0 0 60px rgba(255,170,0,0.4)';
+    } else {
+      this.comboBorderGlow.style.opacity = '0';
+    }
   }
 
   private hpPrev = 0;
