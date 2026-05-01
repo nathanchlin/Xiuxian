@@ -9,14 +9,21 @@ const startBtn = document.getElementById('start') as HTMLButtonElement;
 const game = new Game(container);
 const isMobile = Input.isTouchDevice();
 
+let started = false;
 startBtn.addEventListener('click', () => {
   overlay.style.display = 'none';
-  game.start();
 
-  if (isMobile) {
-    const tc = new TouchControls(game.input);
-    tc.onBagPress = () => game.toggleInventoryPanel();
-    game.input.setTouchControls(tc);
+  if (!started) {
+    started = true;
+    game.start();
+    if (isMobile) {
+      const tc = new TouchControls(game.input);
+      tc.onBagPress = () => game.toggleInventoryPanel();
+      game.input.setTouchControls(tc);
+    }
+  } else {
+    // Resume from ESC pause
+    game.input.requestPointerLock();
   }
 });
 
