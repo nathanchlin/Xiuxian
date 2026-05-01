@@ -145,8 +145,8 @@ export class Boss {
     }, 100);
 
     const hpPct = this.hp / this.maxHp;
-    if (this.phase === 1 && hpPct <= CONFIG.boss.phase1Threshold) { this.phase = 2; this.onPhaseChange?.(2); }
-    else if (this.phase === 2 && hpPct <= CONFIG.boss.phase2Threshold) { this.phase = 3; this.onPhaseChange?.(3); this.activateShield(); }
+    if (this.phase === 1 && hpPct <= CONFIG.boss.phase1Threshold) { this.phase = 2; this.onPhaseChange?.(2); this.updateVisualsForPhase(2); }
+    else if (this.phase === 2 && hpPct <= CONFIG.boss.phase2Threshold) { this.phase = 3; this.onPhaseChange?.(3); this.activateShield(); this.updateVisualsForPhase(3); }
 
     if (this.hp <= 0) { this.die(); return true; }
     return false;
@@ -165,6 +165,17 @@ export class Boss {
       this.group.add(this.shieldMesh);
     }
     this.shieldMesh.visible = true;
+  }
+
+  /** Update boss visual appearance based on phase */
+  private updateVisualsForPhase(phase: BossPhase): void {
+    // Phase colors: 1=base red, 2=orange enraged, 3=dark crimson
+    const phaseColors: Record<number, number> = { 1: this.bodyColor, 2: 0xff6622, 3: 0x880022 };
+    const phaseScale: Record<number, number> = { 1: 1.0, 2: 1.15, 3: 1.3 };
+    this.bodyMat.color.setHex(phaseColors[phase] ?? this.bodyColor);
+    this.bodyMat.emissive.setHex(phaseColors[phase] ?? this.bodyColor);
+    this.bodyMat.emissiveIntensity = 0.3 + (phase - 1) * 0.2;
+    this.group.scale.setScalar(phaseScale[phase] ?? 1.0);
   }
 
   private die(): void {
