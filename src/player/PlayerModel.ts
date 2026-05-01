@@ -13,6 +13,7 @@ export class PlayerModel {
   private bodyMeshes: THREE.Mesh[] = [];
   private bodyMats: THREE.MeshStandardMaterial[] = [];
   private damageFlashTimer = 0;
+  private intentRing: THREE.Mesh;
 
   constructor(private readonly scene: THREE.Scene) {
     const bodyMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.4 });
@@ -54,6 +55,17 @@ export class PlayerModel {
     this.swordTrail.rotation.x = Math.PI / 2;
     this.group.add(this.swordTrail);
 
+    // Sword intent aura ring
+    const intentGeo = new THREE.RingGeometry(1.5, 2.0, 24);
+    const intentMat = new THREE.MeshBasicMaterial({
+      color: 0x44ffcc, transparent: true, opacity: 0, side: THREE.DoubleSide,
+    });
+    this.intentRing = new THREE.Mesh(intentGeo, intentMat);
+    this.intentRing.position.y = -0.5;
+    this.intentRing.rotation.x = -Math.PI / 2;
+    this.intentRing.renderOrder = 997;
+    this.group.add(this.intentRing);
+
     scene.add(this.group);
   }
 
@@ -83,6 +95,23 @@ export class PlayerModel {
           mat.emissiveIntensity = 0;
         }
       }
+    }
+
+    // Sword intent aura ring
+    const intent = flight.swordIntent;
+    const ringMat = this.intentRing.material as THREE.MeshBasicMaterial;
+    if (intent > 0) {
+      const maxStacks = 5; // CONFIG.skills.swordIntent.maxStacks
+      const ratio = intent / maxStacks;
+      ringMat.opacity = 0.15 + ratio * 0.45;
+      this.intentRing.rotation.z += dt * (1 + ratio * 3);
+      if (intent >= maxStacks) {
+        ringMat.color.setHex(0xffd700);
+      } else {
+        ringMat.color.setHex(0x44ffcc);
+      }
+    } else {
+      ringMat.opacity = 0;
     }
   }
 
