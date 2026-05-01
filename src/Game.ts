@@ -770,6 +770,11 @@ export class Game {
     this.sfx.death();
     this.input.exitPointerLock();
 
+    // Death burst particles at player position
+    this.deathBurst.spawn(this.flight.position.clone(), 0x4488ff, 20);
+    // Hide player model so burst is visible
+    if (this.playerModel) this.playerModel.group.visible = false;
+
     const elapsed = performance.now() / 1000 - this.startTime;
     this.hud.showGameOver({ level: this.level, kills: this.kills, time: elapsed });
 
