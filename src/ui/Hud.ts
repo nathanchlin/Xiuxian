@@ -781,6 +781,21 @@ export class Hud {
   setBossHp(hp: number, maxHp: number): void {
     const pct = Math.max(0, Math.min(100, (hp / maxHp) * 100));
     this.bossHpFill.style.width = `${pct}%`;
+    // Color shifts: red → orange → bright crimson as health drops
+    if (pct > 50) {
+      this.bossHpFill.style.background = 'linear-gradient(90deg,#c0392b,#e74c3c)';
+    } else if (pct > 25) {
+      this.bossHpFill.style.background = 'linear-gradient(90deg,#e67e22,#f39c12)';
+    } else {
+      this.bossHpFill.style.background = 'linear-gradient(90deg,#ff2200,#ff4422)';
+    }
+    // Pulse urgency below 30%
+    if (pct < 30) {
+      const pulse = Math.sin(performance.now() * 0.008) * 0.3 + 0.7;
+      this.bossHpFill.style.opacity = `${pulse}`;
+    } else {
+      this.bossHpFill.style.opacity = '1';
+    }
   }
 
   /** Show a large centered announcement (level start, wave, etc.) */
