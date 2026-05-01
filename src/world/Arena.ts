@@ -163,10 +163,11 @@ export class Arena {
       island.position.set(ix, iy, iz);
       this.group.add(island);
       this.pickupSpots.push(new THREE.Vector3(ix, iy + ir * 0.5, iz));
-      // Collision: flattened sphere AABB
+      // Collision: flattened sphere AABB with min Y thickness to prevent tunneling
+      const halfY = Math.max(ir * 0.4, 3);
       this.colliders.push({
         minX: ix - ir, maxX: ix + ir,
-        minY: iy - ir * 0.4, maxY: iy + ir * 0.4,
+        minY: iy - halfY, maxY: iy + halfY,
         minZ: iz - ir, maxZ: iz + ir,
       });
     }
