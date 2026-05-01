@@ -828,7 +828,7 @@ export class Game {
     this.registerCombo();
     this.sfx.enemyDie();
     this.hud.showKill(`${typeName} 已斩`);
-    if (position) this.deathBurst.spawn(position, this.getEnemyColor(typeName));
+    if (position) this.deathBurst.spawn(position, this.getEnemyColor(typeName), 12, typeName);
 
     if (position) {
       // Talisman drops (existing system)
