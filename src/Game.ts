@@ -1068,10 +1068,20 @@ export class Game {
     this.input.exitPointerLock();
 
     const hpPct = this.flight.hp / this.getEffectiveMaxHealth();
+
+    // Score: 0-100 combining kills, combo, and survival
+    const enemiesPerWave = CONFIG.progression.scaling.enemyCountBase +
+      CONFIG.progression.scaling.enemyCountPerLevel * this.level;
+    const totalExpected = enemiesPerWave * CONFIG.progression.wavesPerLevel;
+    const killScore = Math.min(1, this.levelKills / totalExpected) * 40;       // 0-40 pts
+    const comboScore = Math.min(1, this.levelMaxCombo / 20) * 30;               // 0-30 pts
+    const hpScore = hpPct * 30;                                                  // 0-30 pts
+    const score = killScore + comboScore + hpScore;
+
     let grade: string;
-    if (hpPct >= 0.9) grade = 'S';
-    else if (hpPct >= 0.7) grade = 'A';
-    else if (hpPct >= 0.4) grade = 'B';
+    if (score >= 85) grade = 'S';
+    else if (score >= 65) grade = 'A';
+    else if (score >= 40) grade = 'B';
     else grade = 'C';
 
     this.hud.showLevelComplete(this.level, grade, { kills: this.levelKills, maxCombo: this.levelMaxCombo });
