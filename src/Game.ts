@@ -220,6 +220,7 @@ export class Game {
     for (const d of this.lootDrops) d.dispose(this.engine.scene);
     this.lootDrops = [];
     this.inventory.reset();
+    this.sfx.startWind();
 
     this.flight.skillKills = { bladeFan: 0, swordDash: 0, parry: 0, finalStrike: 0 };
 
