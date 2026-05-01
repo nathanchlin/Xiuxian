@@ -826,7 +826,7 @@ export class Game {
           if (leveledUp) {
             const level = this.flight.getSkillLevel(skillName);
             const names: Record<string, string> = {
-              bladeFan: '灵刃散射', swordDash: '御剑突刺',
+              bladeFan: '万剑齐发', swordDash: '御剑突刺',
               parry: '剑气护体', finalStrike: '万剑归宗',
             };
             this.hud.showSkillLevelUp(names[skillName] ?? skillName, level);
@@ -1272,7 +1272,7 @@ export class Game {
       const killsNeeded = CONFIG.skills.growth.killsPerLevel;
       this.flight.skillKills[bookCfg.skill] = (this.flight.skillKills[bookCfg.skill] ?? 0) + killsNeeded;
       const names: Record<string, string> = {
-        bladeFan: '灵刃散射', swordDash: '御剑突刺',
+        bladeFan: '万剑齐发', swordDash: '御剑突刺',
         parry: '剑气护体', finalStrike: '万剑归宗',
       };
       this.hud.showSkillLevelUp(names[bookCfg.skill] ?? bookCfg.skill, this.flight.getSkillLevel(bookCfg.skill));
