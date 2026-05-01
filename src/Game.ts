@@ -838,7 +838,10 @@ export class Game {
     const targetBoss = (!targetEnemy && this.boss?.id === hit.targetId && this.boss.alive) ? this.boss : null;
     const targetPos = targetEnemy?.position ?? targetBoss?.position;
     if (targetPos) {
-      this.damageNumbers.spawn(targetPos, finalDamage, isCrit ? 0xffd700 : 0xff4444);
+      // Purple damage number when hitting boss shield (absorbed damage)
+      const shielded = targetBoss && targetBoss.currentShieldHp > 0;
+      const dmgColor = shielded ? 0xbb44ff : (isCrit ? 0xffd700 : 0xff4444);
+      this.damageNumbers.spawn(targetPos, finalDamage, dmgColor);
       if (isCrit) {
         this.cameraSystem.shake(0.3, 0.1);
         this.sfx.critHit();
