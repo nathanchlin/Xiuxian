@@ -174,6 +174,8 @@ export class Enemy {
     this.state = 'dead';
     this.deathTimer = 2.0;
     this.bodyMat.color.setHex(0x666666);
+    this.bodyMat.emissive.setHex(0x000000);
+    this.bodyMat.emissiveIntensity = 0;
     this.bodyMat.opacity = 0.5;
     this.bodyMat.transparent = true;
     this.hpBarBg.visible = false;
