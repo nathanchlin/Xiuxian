@@ -1005,7 +1005,11 @@ export class Game {
     this.hud.setSwordIntent(intent, maxIntent);
 
     const cds = this.skillSystem.getCooldowns();
-    this.hud.setSkillCooldowns(cds.bladeFan, cds.swordDash, cds.parry);
+    this.hud.setSkillCooldowns(cds.bladeFan, cds.swordDash, cds.parry, {
+      bladeFan: CONFIG.skills.bladeFan.spiritCost,
+      swordDash: CONFIG.skills.swordDash.spiritCost,
+      parry: CONFIG.skills.parry.spiritCost,
+    });
     this.hud.setFinalStrikeReady(intent >= maxIntent);
 
     // Skill levels

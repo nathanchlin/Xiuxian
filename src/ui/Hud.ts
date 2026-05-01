@@ -529,21 +529,21 @@ export class Hud {
     }
   }
 
-  setSkillCooldowns(bladeFan: number, swordDash: number, parry: number): void {
-    const setCd = (el: HTMLDivElement, cd: number, label: string) => {
+  setSkillCooldowns(bladeFan: number, swordDash: number, parry: number, costs: { bladeFan: number; swordDash: number; parry: number }): void {
+    const setCd = (el: HTMLDivElement, cd: number, key: string, cost: number) => {
       if (cd > 0) {
         el.style.opacity = '0.4';
         el.textContent = cd.toFixed(1);
         el.style.color = '#888';
       } else {
         el.style.opacity = '1';
-        el.textContent = label;
+        el.textContent = `${key} ⬡${cost}`;
         el.style.color = GOLD;
       }
     };
-    setCd(this.skillCds.q, bladeFan, '1');
-    setCd(this.skillCds.f, swordDash, '2');
-    setCd(this.skillCds.r, parry, '3');
+    setCd(this.skillCds.q, bladeFan, '1', costs.bladeFan);
+    setCd(this.skillCds.f, swordDash, '2', costs.swordDash);
+    setCd(this.skillCds.r, parry, '3', costs.parry);
   }
 
   setFinalStrikeReady(ready: boolean): void {
