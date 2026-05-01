@@ -101,6 +101,7 @@ export class Inventory {
     if (emptyIdx < 0) return false;
 
     this.equipped[emptyIdx] = { id };
+    this.removeItem(id);
     return true;
   }
 
@@ -108,6 +109,7 @@ export class Inventory {
     const eq = this.equipped[slotIdx];
     if (!eq) return null;
     this.equipped[slotIdx] = null;
+    this.addItem(eq.id, 'treasure');
     return eq.id;
   }
 
