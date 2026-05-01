@@ -129,10 +129,13 @@ export class CameraSystem {
       this.camera.position.y += (Math.random() - 0.5) * factor * 2;
     }
 
-    // Dynamic FOV — widen when boosting for speed sensation
-    const baseFov = cfg.fov;
+    // Dynamic FOV — widen when boosting or dashing for speed sensation
+    const baseFov: number = cfg.fov;
     const boostFov = baseFov + 12;
-    const targetFov = flight.getBoostState().active ? boostFov : baseFov;
+    const dashFov = baseFov + 8;
+    let targetFov: number = baseFov;
+    if (flight.getBoostState().active) targetFov = boostFov;
+    else if (flight.dashInvincible) targetFov = dashFov;
     this.camera.fov += (targetFov - this.camera.fov) * Math.min(1, 6 * dt);
     this.camera.updateProjectionMatrix();
   }
