@@ -102,7 +102,7 @@ export class Game {
       this.skillSystem.activateParry();
     });
 
-    this.input.registerKey('tab', () => {
+    this.input.registerKey('b', () => {
       if (this.state !== 'playing' && this.state !== 'paused') return;
       this.toggleInventoryPanel();
     });
