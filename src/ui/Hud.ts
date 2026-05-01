@@ -697,6 +697,7 @@ export class Hud {
     playerYaw: number,
     enemies: EnemyBlip[],
     pickups: PickupBlip[],
+    boss?: { x: number; z: number },
   ): void {
     const ctx = this.radarCtx;
     const R = 75; // canvas radius
@@ -765,6 +766,29 @@ export class Hud {
       ctx.closePath();
       ctx.fillStyle = '#e74c3c';
       ctx.fill();
+    }
+
+    // Boss (large purple diamond)
+    if (boss) {
+      const [bx, by] = toBlip(boss.x, boss.z);
+      if ((bx - cx) ** 2 + (by - cy) ** 2 <= R * R) {
+        const s = 7;
+        ctx.beginPath();
+        ctx.moveTo(bx, by - s);
+        ctx.lineTo(bx + s, by);
+        ctx.lineTo(bx, by + s);
+        ctx.lineTo(bx - s, by);
+        ctx.closePath();
+        ctx.fillStyle = '#bb44ff';
+        ctx.fill();
+        // Pulsing glow ring
+        const pulse = 0.5 + 0.5 * Math.sin(performance.now() * 0.005);
+        ctx.strokeStyle = `rgba(187,68,255,${0.3 + pulse * 0.4})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(bx, by, s + 2 + pulse * 2, 0, Math.PI * 2);
+        ctx.stroke();
+      }
     }
 
     // Player dot (gold, center)

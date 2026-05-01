@@ -962,9 +962,9 @@ export class Game {
     const enemyBlips = this.enemies
       .filter((e) => e.alive)
       .map((e) => ({ x: e.position.x, z: e.position.z }));
-    if (this.boss?.alive) {
-      enemyBlips.push({ x: this.boss.position.x, z: this.boss.position.z });
-    }
+    const bossBlip = this.boss?.alive
+      ? { x: this.boss.position.x, z: this.boss.position.z }
+      : undefined;
     const pickupBlips = [...this.pickups, ...this.talismanDrops, ...this.lootDrops]
       .filter(p => !p.collected)
       .map((p) => ({ x: p.position.x, z: p.position.z }));
@@ -974,6 +974,7 @@ export class Game {
       euler.y,
       enemyBlips,
       pickupBlips,
+      bossBlip,
     );
 
     // Enemy tracker arrows — show when few enemies remain
