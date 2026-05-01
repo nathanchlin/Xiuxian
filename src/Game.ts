@@ -86,6 +86,7 @@ export class Game {
   private briefingTimer = 0;
   private deathCamTimer = 0;
   private heartbeatTimer = 0;
+  private autoConsumeCd = 0;
   private visibilityHandler: (() => void) | null = null;
 
   constructor(container: HTMLElement) {
@@ -223,6 +224,7 @@ export class Game {
     this.enemyProjectiles.length = 0;
     this.startTime = performance.now() / 1000;
     this.heartbeatTimer = 0;
+    this.autoConsumeCd = 0;
 
     // Reset player
     this.flight.hp = this.getEffectiveMaxHealth();
@@ -1142,6 +1144,8 @@ export class Game {
   }
 
   private autoUseConsumables(): void {
+    if (this.autoConsumeCd > 0) { this.autoConsumeCd -= 1 / 60; return; }
+
     const hpPct = this.flight.hp / this.getEffectiveMaxHealth();
     const spPct = this.flight.spirit / this.getEffectiveMaxSpirit();
 
@@ -1155,6 +1159,8 @@ export class Game {
         this.hud.showKill('自动服用 回血丹');
         this.damageNumbers.spawn(this.flight.position.clone(), cfg.value, 0x44ff44, '+');
         this.sfx.pickup();
+        this.autoConsumeCd = 1.0;
+        return;
       }
     }
 
@@ -1168,6 +1174,8 @@ export class Game {
         this.hud.showKill('自动服用 聚灵丹');
         this.damageNumbers.spawn(this.flight.position.clone(), cfg.value, 0x44aaff, '+');
         this.sfx.pickup();
+        this.autoConsumeCd = 1.0;
+        return;
       }
     }
   }
