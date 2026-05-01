@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { CONFIG } from '../config';
 
-export type PickupType = 'spirit' | 'health' | 'missile' | 'chest' | 'talisman_drop';
+export type PickupType = 'spirit' | 'health' | 'missile' | 'chest' | 'talisman_drop'
+  | 'cultivation_orb' | 'skill_book' | 'treasure_drop' | 'consumable_drop';
 
 export type TalismanTypeName = 'soulseeker' | 'thunderbolt' | 'ironguard';
 
@@ -9,6 +10,16 @@ const TALISMAN_TYPES: TalismanTypeName[] = ['soulseeker', 'thunderbolt', 'irongu
 
 export function randomTalismanType(): TalismanTypeName {
   return TALISMAN_TYPES[Math.floor(Math.random() * TALISMAN_TYPES.length)]!;
+}
+
+export interface LootData {
+  spirit: number;
+  health: number;
+  missiles: number;
+  talismanType: TalismanTypeName | null;
+  cultivationExp: number;
+  itemId: string | null;
+  itemType: 'skill_book' | 'treasure' | 'consumable' | null;
 }
 
 export class Pickup {
@@ -19,10 +30,23 @@ export class Pickup {
   talismanType: TalismanTypeName | null = null;
   expireTimer = -1;
 
-  constructor(type: PickupType, position: THREE.Vector3, scene: THREE.Scene, talismanType?: TalismanTypeName) {
+  // For new loot types
+  itemId: string | null = null;
+  itemType: 'skill_book' | 'treasure' | 'consumable' | null = null;
+  cultivationExp = 0;
+
+  constructor(type: PickupType, position: THREE.Vector3, scene: THREE.Scene, extra?: {
+    talismanType?: TalismanTypeName;
+    itemId?: string;
+    itemType?: 'skill_book' | 'treasure' | 'consumable';
+    cultivationExp?: number;
+  }) {
     this.type = type;
     this.position = position.clone();
-    this.talismanType = talismanType ?? null;
+    this.talismanType = extra?.talismanType ?? null;
+    this.itemId = extra?.itemId ?? null;
+    this.itemType = extra?.itemType ?? null;
+    this.cultivationExp = extra?.cultivationExp ?? 0;
 
     let color: number;
     let size: number;
@@ -53,6 +77,27 @@ export class Pickup {
         useBox = true;
         this.expireTimer = CONFIG.talismans.dropExpireTime;
         break;
+      case 'cultivation_orb':
+        color = 0xffd700;
+        size = 0.4;
+        break;
+      case 'skill_book':
+        color = this.getItemColor();
+        size = 0.8;
+        useBox = true;
+        this.expireTimer = 15;
+        break;
+      case 'treasure_drop':
+        color = this.getItemColor();
+        size = 0.9;
+        useBox = true;
+        this.expireTimer = 15;
+        break;
+      case 'consumable_drop':
+        color = this.getItemColor();
+        size = 0.5;
+        this.expireTimer = 15;
+        break;
     }
 
     const geo = useBox
@@ -65,6 +110,17 @@ export class Pickup {
     this.mesh = new THREE.Mesh(geo, mat);
     this.mesh.position.copy(position);
     scene.add(this.mesh);
+  }
+
+  private getItemColor(): number {
+    if (!this.itemId) return 0xffffff;
+    const books = CONFIG.items.skillBooks as Record<string, { color: number }>;
+    const treasures = CONFIG.items.treasures as Record<string, { color: number }>;
+    const consumables = CONFIG.items.consumables as Record<string, { color: number }>;
+    return books[this.itemId]?.color
+      ?? treasures[this.itemId]?.color
+      ?? consumables[this.itemId]?.color
+      ?? 0xffffff;
   }
 
   update(dt: number): void {
@@ -83,23 +139,26 @@ export class Pickup {
 
   checkCollect(playerPos: THREE.Vector3, playerRadius: number): boolean {
     if (this.collected) return false;
-    const collectRadius = this.type === 'chest' ? 2.0 : 1.0;
+    const collectRadius = this.type === 'cultivation_orb' ? 3.0 : this.type === 'chest' ? 2.0 : 1.5;
     return this.mesh.position.distanceTo(playerPos) < playerRadius + collectRadius;
   }
 
-  collect(): { spirit: number; health: number; missiles: number; talismanType: TalismanTypeName | null } {
+  collect(): LootData {
     this.collected = true;
     this.mesh.visible = false;
+    const empty: LootData = { spirit: 0, health: 0, missiles: 0, talismanType: null, cultivationExp: 0, itemId: null, itemType: null };
+
     switch (this.type) {
-      case 'spirit': return { spirit: CONFIG.pickups.spiritOrb.value, health: 0, missiles: 0, talismanType: null };
-      case 'health': return { spirit: 0, health: CONFIG.pickups.healthPill.value, missiles: 0, talismanType: null };
-      case 'missile': return { spirit: 0, health: 0, missiles: CONFIG.pickups.missileBox.value, talismanType: null };
-      case 'chest': {
-        const t = randomTalismanType();
-        return { spirit: 0, health: 0, missiles: 0, talismanType: t };
-      }
-      case 'talisman_drop':
-        return { spirit: 0, health: 0, missiles: 0, talismanType: this.talismanType };
+      case 'spirit': return { ...empty, spirit: CONFIG.pickups.spiritOrb.value };
+      case 'health': return { ...empty, health: CONFIG.pickups.healthPill.value };
+      case 'missile': return { ...empty, missiles: CONFIG.pickups.missileBox.value };
+      case 'chest': return { ...empty, talismanType: randomTalismanType() };
+      case 'talisman_drop': return { ...empty, talismanType: this.talismanType };
+      case 'cultivation_orb': return { ...empty, cultivationExp: this.cultivationExp };
+      case 'skill_book':
+      case 'treasure_drop':
+      case 'consumable_drop':
+        return { ...empty, itemId: this.itemId, itemType: this.itemType };
     }
   }
 

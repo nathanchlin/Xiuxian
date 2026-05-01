@@ -13,6 +13,8 @@ import { Hud } from './ui/Hud';
 import { PlayerModel } from './player/PlayerModel';
 import { TalismanSystem } from './player/TalismanSystem';
 import { Pickup, type PickupType, randomTalismanType, type TalismanTypeName } from './world/Pickup';
+import { Inventory } from './player/Inventory';
+import { InventoryPanel } from './ui/InventoryPanel';
 import type { EnemyTypeName } from './enemy/enemy-types';
 
 export type GameState = 'menu' | 'briefing' | 'playing' | 'paused' | 'dead' | 'level_complete' | 'game_over';
@@ -36,6 +38,9 @@ export class Game {
   private boss: Boss | null = null;
   private pickups: Pickup[] = [];
   readonly talismanSystem: TalismanSystem;
+  readonly inventory: Inventory;
+  readonly inventoryPanel: InventoryPanel;
+  private lootDrops: Pickup[] = [];
   private talismanDrops: Pickup[] = [];
 
   private level = 1;
@@ -66,6 +71,9 @@ export class Game {
     this.cameraSystem = new CameraSystem(this.engine.camera);
     this.skillSystem = new SkillSystem(this.flight, this.engine.scene, this.sfx);
     this.talismanSystem = new TalismanSystem(this.flight, this.engine.scene, this.sfx);
+    this.inventory = new Inventory();
+    this.inventoryPanel = new InventoryPanel();
+    this.setupInventoryCallbacks();
 
     // ── Key bindings ───────────────────────────────────────────────
     this.input.registerKey('v', () => {
@@ -92,6 +100,11 @@ export class Game {
     this.input.registerKey('3', () => {
       if (this.state !== 'playing') return;
       this.skillSystem.activateParry();
+    });
+
+    this.input.registerKey('tab', () => {
+      if (this.state !== 'playing' && this.state !== 'paused') return;
+      this.toggleInventoryPanel();
     });
 
     // Mouse click fires skills
@@ -148,6 +161,9 @@ export class Game {
     this.talismanSystem.reset();
     for (const d of this.talismanDrops) d.dispose(this.engine.scene);
     this.talismanDrops = [];
+    for (const d of this.lootDrops) d.dispose(this.engine.scene);
+    this.lootDrops = [];
+    this.inventory.reset();
 
     this.flight.skillKills = { bladeFan: 0, swordDash: 0, parry: 0, finalStrike: 0 };
 
@@ -170,6 +186,8 @@ export class Game {
     this.pickups = [];
     for (const d of this.talismanDrops) d.dispose(this.engine.scene);
     this.talismanDrops = [];
+    for (const d of this.lootDrops) d.dispose(this.engine.scene);
+    this.lootDrops = [];
 
     // Dispose old arena
     if (this.arena) this.arena.dispose(this.engine.scene);
@@ -314,6 +332,9 @@ export class Game {
      ═══════════════════════════════════════════════════════════════════ */
 
   private update(dt: number): void {
+    // Paused (inventory open)
+    if (this.state === 'paused') return;
+
     // Briefing countdown
     if (this.state === 'briefing') {
       this.briefingTimer -= dt;
@@ -423,8 +444,8 @@ export class Game {
       }
     }
 
-    // 7. Pickup collection (pickups + talisman drops)
-    const allPickups = [...this.pickups, ...this.talismanDrops];
+    // 7. Pickup collection (pickups + talisman drops + loot drops)
+    const allPickups = [...this.pickups, ...this.talismanDrops, ...this.lootDrops];
     for (const pickup of allPickups) {
       pickup.update(dt);
       if (pickup.checkCollect(this.flight.position, CONFIG.flight.playerRadius)) {
@@ -433,12 +454,30 @@ export class Game {
         if (loot.spirit > 0) this.flight.spirit = Math.min(CONFIG.spirit.maxSpirit, this.flight.spirit + loot.spirit);
         if (loot.talismanType) {
           this.equipTalisman(loot.talismanType);
+        } else if (loot.cultivationExp > 0) {
+          const leveledUp = this.inventory.addCultivationExp(loot.cultivationExp);
+          if (leveledUp) {
+            this.hud.showKill(`修为突破 — 第${this.inventory.cultivationLevel}层`);
+            this.sfx.levelComplete();
+          }
+        } else if (loot.itemId && loot.itemType) {
+          this.inventory.addItem(loot.itemId, loot.itemType);
+          const itemName = this.getItemName(loot.itemId);
+          this.hud.showKill(`获得 ${itemName}`);
+          this.sfx.chestOpen();
         } else {
           this.sfx.chestOpen();
         }
       }
     }
     this.talismanDrops = this.talismanDrops.filter(d => {
+      if (d.collected || d.expireTimer <= 0) {
+        d.dispose(this.engine.scene);
+        return false;
+      }
+      return true;
+    });
+    this.lootDrops = this.lootDrops.filter(d => {
       if (d.collected || d.expireTimer <= 0) {
         d.dispose(this.engine.scene);
         return false;
@@ -539,12 +578,16 @@ export class Game {
     this.hud.showKill(`${typeName} 已斩`);
 
     if (position) {
+      // Talisman drops (existing system)
       const dropRate = CONFIG.talismans.dropRates[typeName] ?? 0;
       if (Math.random() < dropRate) {
         const tType = randomTalismanType();
-        const drop = new Pickup('talisman_drop', position, this.engine.scene, tType);
+        const drop = new Pickup('talisman_drop', position, this.engine.scene, { talismanType: tType });
         this.talismanDrops.push(drop);
       }
+
+      // New loot drops
+      this.spawnLootDrops(typeName, position);
     }
   }
 
@@ -554,9 +597,48 @@ export class Game {
     this.hud.showKill('妖王已诛!');
 
     if (this.boss) {
+      const pos = this.boss.position.clone();
       const tType = randomTalismanType();
-      const drop = new Pickup('talisman_drop', this.boss.position.clone(), this.engine.scene, tType);
+      const drop = new Pickup('talisman_drop', pos, this.engine.scene, { talismanType: tType });
       this.talismanDrops.push(drop);
+
+      // Boss always drops good loot
+      this.spawnLootDrops('boss', pos);
+    }
+  }
+
+  private spawnLootDrops(typeName: string, position: THREE.Vector3): void {
+    const table = CONFIG.items.dropTable[typeName];
+    if (!table) return;
+    const offset = () => new THREE.Vector3((Math.random() - 0.5) * 6, Math.random() * 2, (Math.random() - 0.5) * 6);
+
+    // Cultivation exp orb (always drops)
+    const expAmount = CONFIG.items.cultivation.dropAmounts[typeName] ?? 5;
+    const orbPos = position.clone().add(offset());
+    this.lootDrops.push(new Pickup('cultivation_orb', orbPos, this.engine.scene, { cultivationExp: expAmount }));
+
+    // Skill book
+    if (Math.random() < table.skillBook) {
+      const bookKeys = Object.keys(CONFIG.items.skillBooks);
+      const bookId = bookKeys[Math.floor(Math.random() * bookKeys.length)]!;
+      const dropPos = position.clone().add(offset());
+      this.lootDrops.push(new Pickup('skill_book', dropPos, this.engine.scene, { itemId: bookId, itemType: 'skill_book' }));
+    }
+
+    // Treasure
+    if (Math.random() < table.treasure) {
+      const treasureKeys = Object.keys(CONFIG.items.treasures);
+      const treasureId = treasureKeys[Math.floor(Math.random() * treasureKeys.length)]!;
+      const dropPos = position.clone().add(offset());
+      this.lootDrops.push(new Pickup('treasure_drop', dropPos, this.engine.scene, { itemId: treasureId, itemType: 'treasure' }));
+    }
+
+    // Consumable
+    if (Math.random() < table.consumable) {
+      const conKeys = Object.keys(CONFIG.items.consumables);
+      const conId = conKeys[Math.floor(Math.random() * conKeys.length)]!;
+      const dropPos = position.clone().add(offset());
+      this.lootDrops.push(new Pickup('consumable_drop', dropPos, this.engine.scene, { itemId: conId, itemType: 'consumable' }));
     }
   }
 
@@ -647,6 +729,13 @@ export class Game {
     this.talismanSystem.setTargets(targets.map(t => ({ id: t.id, position: t.position, alive: t.alive })));
   }
 
+  private getItemName(id: string): string {
+    const books = CONFIG.items.skillBooks as Record<string, { name: string }>;
+    const treasures = CONFIG.items.treasures as Record<string, { name: string }>;
+    const consumables = CONFIG.items.consumables as Record<string, { name: string }>;
+    return books[id]?.name ?? treasures[id]?.name ?? consumables[id]?.name ?? id;
+  }
+
   private updateHud(): void {
     this.hud.setHp(this.flight.hp, CONFIG.player.maxHealth);
     this.hud.setSpirit(this.flight.spirit, CONFIG.spirit.maxSpirit);
@@ -735,6 +824,62 @@ export class Game {
   }
 
   /* ═══════════════════════════════════════════════════════════════════
+     INVENTORY PANEL
+     ═══════════════════════════════════════════════════════════════════ */
+
+  toggleInventoryPanel(): void {
+    if (this.inventoryPanel.isVisible()) {
+      this.inventoryPanel.hide();
+      this.state = 'playing';
+    } else {
+      this.inventoryPanel.show(this.inventory, this.flight);
+      this.state = 'paused';
+    }
+  }
+
+  private setupInventoryCallbacks(): void {
+    this.inventoryPanel.onUseSkillBook = (bookId: string) => {
+      const bookCfg = (CONFIG.items.skillBooks as Record<string, { skill: string }>)[bookId];
+      if (!bookCfg) return;
+      if (!this.inventory.removeItem(bookId)) return;
+      // Add kills to trigger level-up through existing system
+      const killsNeeded = CONFIG.skills.growth.killsPerLevel;
+      this.flight.skillKills[bookCfg.skill] = (this.flight.skillKills[bookCfg.skill] ?? 0) + killsNeeded;
+      const names: Record<string, string> = {
+        bladeFan: '灵刃散射', swordDash: '御剑突刺',
+        parry: '剑气护体', finalStrike: '万剑归宗',
+      };
+      this.hud.showSkillLevelUp(names[bookCfg.skill] ?? bookCfg.skill, this.flight.getSkillLevel(bookCfg.skill));
+    };
+
+    this.inventoryPanel.onUseConsumable = (itemId: string) => {
+      const cfg = (CONFIG.items.consumables as Record<string, { effect: string; value: number }>)[itemId];
+      if (!cfg) return;
+      if (!this.inventory.removeItem(itemId)) return;
+      switch (cfg.effect) {
+        case 'hp':
+          this.flight.hp = Math.min(CONFIG.player.maxHealth, this.flight.hp + cfg.value);
+          break;
+        case 'spirit':
+          this.flight.spirit = Math.min(CONFIG.spirit.maxSpirit, this.flight.spirit + cfg.value);
+          break;
+        case 'invincible':
+          this.flight.dashInvincible = true;
+          setTimeout(() => { this.flight.dashInvincible = false; }, cfg.value * 1000);
+          break;
+      }
+    };
+
+    this.inventoryPanel.onEquipTreasure = (itemId: string) => {
+      this.inventory.equipTreasure(itemId);
+    };
+
+    this.inventoryPanel.onUnequipTreasure = (slotIdx: number) => {
+      this.inventory.unequipTreasure(slotIdx);
+    };
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
      DISPOSE
      ═══════════════════════════════════════════════════════════════════ */
 
@@ -743,8 +888,10 @@ export class Game {
     for (const p of this.pickups) p.dispose(this.engine.scene);
     this.talismanSystem.dispose();
     for (const d of this.talismanDrops) d.dispose(this.engine.scene);
+    for (const d of this.lootDrops) d.dispose(this.engine.scene);
     if (this.arena) this.arena.dispose(this.engine.scene);
     this.playerModel?.dispose();
+    this.inventoryPanel.dispose();
     this.hud.dispose();
     this.flight.dispose();
     this.cameraSystem.dispose();

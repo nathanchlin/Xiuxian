@@ -15,6 +15,7 @@ startBtn.addEventListener('click', () => {
 
   if (isMobile) {
     const tc = new TouchControls(game.input);
+    tc.onBagPress = () => game.toggleInventoryPanel();
     game.input.setTouchControls(tc);
   }
 });

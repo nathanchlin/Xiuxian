@@ -55,6 +55,9 @@ export class TouchControls {
   private boostBtn: HTMLDivElement;
   private ascendBtn: HTMLDivElement;
   private descendBtn: HTMLDivElement;
+  private bagBtn: HTMLDivElement;
+
+  onBagPress: (() => void) | null = null;
 
   private activeTouches = new Map<number, string>(); // touchId -> action
 
@@ -131,6 +134,16 @@ export class TouchControls {
     this.descendBtn = btn('↓', BLUE, 44);
     this.descendBtn.style.cssText += `position:absolute;bottom:${40 + JOYSTICK_SIZE + 16}px;left:${30 + 44 + BUTTON_GAP}px;width:44px;height:44px;font-size:18px;`;
     this.root.appendChild(this.descendBtn);
+
+    // Bag button (top-right corner)
+    this.bagBtn = btn('包', '#daa520', 40);
+    this.bagBtn.style.cssText += 'position:absolute;top:16px;right:16px;width:40px;height:40px;font-size:12px;';
+    this.bagBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.onBagPress?.();
+    }, { passive: false });
+    this.root.appendChild(this.bagBtn);
 
     document.body.appendChild(this.root);
 

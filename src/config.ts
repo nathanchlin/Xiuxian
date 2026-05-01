@@ -308,4 +308,44 @@ export const CONFIG = {
     radarRadius: 200,
     radarSize: 150,
   },
+
+  // ─── Items & Loot ───
+  items: {
+    skillBooks: {
+      skill_bladefan:  { name: '灵刃秘卷', skill: 'bladeFan',   color: 0x44ffcc, description: '灵刃散射 +1级' },
+      skill_sworddash: { name: '御剑心法', skill: 'swordDash',  color: 0x00ffcc, description: '御剑突刺 +1级' },
+      skill_parry:     { name: '护体剑诀', skill: 'parry',      color: 0xffd700, description: '剑气护体 +1级' },
+      skill_final:     { name: '归宗真解', skill: 'finalStrike', color: 0xffd700, description: '万剑归宗 +1级' },
+    } as Record<string, { name: string; skill: string; color: number; description: string }>,
+    treasures: {
+      sword_purple:  { name: '紫电剑', quality: 'rare',   color: 0x8844ff, description: '攻击+15%',     stat: 'damage',     value: 0.15 },
+      shield_turtle: { name: '玄龟盾', quality: 'rare',   color: 0x44aaff, description: '护盾时间+0.5s', stat: 'parryWindow', value: 0.5 },
+      wind_pearl:    { name: '风灵珠', quality: 'rare',   color: 0x88ffaa, description: '移速+10%',     stat: 'speed',      value: 0.10 },
+      fire_ring:     { name: '焚天环', quality: 'epic',   color: 0xff6644, description: '攻击+25%',     stat: 'damage',     value: 0.25 },
+      jade_pendant:  { name: '碧玉坠', quality: 'common', color: 0xaaffaa, description: 'HP上限+15%',   stat: 'hp',         value: 0.15 },
+      spirit_gourd:  { name: '聚灵葫', quality: 'common', color: 0x6688ff, description: '灵力上限+15%', stat: 'spirit',     value: 0.15 },
+    } as Record<string, { name: string; quality: string; color: number; description: string; stat: string; value: number }>,
+    consumables: {
+      pill_hp:     { name: '回血丹', color: 0xff4444, description: '恢复50生命', effect: 'hp',      value: 50 },
+      pill_spirit: { name: '聚灵丹', color: 0x4488ff, description: '恢复40灵力', effect: 'spirit',  value: 40 },
+      pill_shield: { name: '无敌符', color: 0xffdd00, description: '3秒无敌',   effect: 'invincible', value: 3 },
+    } as Record<string, { name: string; color: number; description: string; effect: string; value: number }>,
+    cultivation: {
+      expPerLevel: [0, 50, 120, 220, 360, 550, 800, 1100, 1500, 2000],
+      maxLevel: 10,
+      bonusPerLevel: 0.05,
+      dropAmounts: { crow: 5, serpent: 15, dragon: 30, boss: 100 } as Record<string, number>,
+    },
+    dropTable: {
+      crow:    { cultivationExp: 1.0, consumable: 0.20, skillBook: 0.0,  treasure: 0.0  },
+      serpent: { cultivationExp: 1.0, consumable: 0.25, skillBook: 0.05, treasure: 0.05 },
+      dragon:  { cultivationExp: 1.0, consumable: 0.30, skillBook: 0.10, treasure: 0.10 },
+      boss:    { cultivationExp: 1.0, consumable: 0.50, skillBook: 1.0,  treasure: 0.50 },
+    } as Record<string, { cultivationExp: number; consumable: number; skillBook: number; treasure: number }>,
+    qualityColors: {
+      common: 0xcccccc,
+      rare: 0x4488ff,
+      epic: 0xffd700,
+    } as Record<string, number>,
+  },
 } as const;
