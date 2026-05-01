@@ -957,11 +957,13 @@ export class Game {
     if (!table) return;
     const offset = () => new THREE.Vector3((Math.random() - 0.5) * 6, Math.random() * 2, (Math.random() - 0.5) * 6);
 
-    // Cultivation exp orb (always drops)
-    const baseExp = CONFIG.items.cultivation.dropAmounts[typeName] ?? 5;
-    const expAmount = Math.round(baseExp * (1 + this.level * 0.3));
-    const orbPos = position.clone().add(offset());
-    this.lootDrops.push(new Pickup('cultivation_orb', orbPos, this.engine.scene, { cultivationExp: expAmount }));
+    // Cultivation exp orb (skip if maxed)
+    if (this.inventory.cultivationLevel < CONFIG.items.cultivation.maxLevel) {
+      const baseExp = CONFIG.items.cultivation.dropAmounts[typeName] ?? 5;
+      const expAmount = Math.round(baseExp * (1 + this.level * 0.3));
+      const orbPos = position.clone().add(offset());
+      this.lootDrops.push(new Pickup('cultivation_orb', orbPos, this.engine.scene, { cultivationExp: expAmount }));
+    }
 
     // Skill book
     if (Math.random() < table.skillBook) {
