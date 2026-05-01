@@ -793,6 +793,7 @@ export class Game {
     const bonuses = this.inventory.getStatBonuses();
     this.skillSystem.setDamageBonus(bonuses.damage);
     this.flight.speedBonus = bonuses.speed;
+    this.flight.spiritBonus = bonuses.spirit;
     this.flight.parryWindowBonus = bonuses.parryWindow;
     this.hud.setHp(this.flight.hp, this.getEffectiveMaxHealth());
     this.hud.setSpirit(this.flight.spirit, this.getEffectiveMaxSpirit());

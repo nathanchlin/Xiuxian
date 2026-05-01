@@ -32,6 +32,7 @@ export class FlightController {
 
   // External stat bonus (set by Game from inventory)
   speedBonus = 0;
+  spiritBonus = 0;
   parryWindowBonus = 0;
 
   // ─── Sword Intent ───
@@ -143,8 +144,9 @@ export class FlightController {
 
     const cfg = CONFIG.flight;
 
-    // Spirit regen
-    this.spirit = Math.min(CONFIG.spirit.maxSpirit, this.spirit + CONFIG.spirit.regenRate * dt);
+    // Spirit regen (cap respects bonus)
+    const effectiveMaxSpirit = CONFIG.spirit.maxSpirit * (1 + this.spiritBonus);
+    this.spirit = Math.min(effectiveMaxSpirit, this.spirit + CONFIG.spirit.regenRate * dt);
 
     // Sword intent decay
     if (this.swordIntent > 0) {
