@@ -30,6 +30,7 @@ export class Boss {
   private readonly hpBarWidth = 4;
   private hitRecoil = 0;
   private hitFlashTimer = 0;
+  private shieldFlashTimer = 0;
 
   onSummon: ((count: number, pos: THREE.Vector3) => void) | null = null;
   onPhaseChange: ((phase: BossPhase) => void) | null = null;
@@ -125,12 +126,7 @@ export class Boss {
         const sm = this.shieldMesh.material as THREE.MeshBasicMaterial;
         sm.opacity = 0.7;
         sm.color.setHex(0xffffff);
-        setTimeout(() => {
-          if (this.shieldMesh) {
-            sm.opacity = 0.3;
-            sm.color.setHex(0x8800ff);
-          }
-        }, 80);
+        this.shieldFlashTimer = 0.08;
       }
       if (this.shieldHp <= 0) { this.shieldHp = 0; if (this.shieldMesh) this.shieldMesh.visible = false; this.shieldBarFill.visible = false; }
       return false;
@@ -211,6 +207,16 @@ export class Boss {
       if (this.hitFlashTimer <= 0 && this.alive) {
         this.bodyMat.color.setHex(this.bodyColor);
         this.bodyMat.emissiveIntensity = 0.3;
+      }
+    }
+
+    // Shield hit flash decay
+    if (this.shieldFlashTimer > 0) {
+      this.shieldFlashTimer -= dt;
+      if (this.shieldFlashTimer <= 0 && this.shieldMesh) {
+        const sm = this.shieldMesh.material as THREE.MeshBasicMaterial;
+        sm.opacity = 0.3;
+        sm.color.setHex(0x8800ff);
       }
     }
 
