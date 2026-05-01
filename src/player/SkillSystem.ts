@@ -466,11 +466,15 @@ class Blade {
   private targetPos: THREE.Vector3 | null;
   private distanceTraveled = 0;
   private readonly trackingLerp = 5;
+  private scene: THREE.Scene;
+  private trails: Array<{ mesh: THREE.Mesh; life: number }> = [];
+  private trailTimer = 0;
   expired = false;
   hitTargetId = -1;
 
   constructor(origin: THREE.Vector3, direction: THREE.Vector3, scene: THREE.Scene, targetPos: THREE.Vector3 | null) {
     const cfg = CONFIG.skills.bladeFan;
+    this.scene = scene;
     this.velocity = direction.clone().multiplyScalar(cfg.projectileSpeed);
     this.targetPos = targetPos;
 
@@ -502,6 +506,35 @@ class Blade {
     // Face movement direction
     const ahead = this.mesh.position.clone().add(this.velocity);
     this.mesh.lookAt(ahead);
+
+    // Spawn trail ghost
+    this.trailTimer += dt;
+    if (this.trailTimer > 0.02) {
+      this.trailTimer = 0;
+      const cfg = CONFIG.skills.bladeFan;
+      const tGeo = new THREE.BoxGeometry(0.5, 0.06, 0.2);
+      const tMat = new THREE.MeshBasicMaterial({ color: cfg.color, transparent: true, opacity: 0.4 });
+      const tMesh = new THREE.Mesh(tGeo, tMat);
+      tMesh.position.copy(this.mesh.position);
+      tMesh.quaternion.copy(this.mesh.quaternion);
+      this.scene.add(tMesh);
+      this.trails.push({ mesh: tMesh, life: 0.2 });
+    }
+
+    // Decay trail ghosts
+    for (let i = this.trails.length - 1; i >= 0; i--) {
+      const t = this.trails[i]!;
+      t.life -= dt;
+      const mat = t.mesh.material as THREE.MeshBasicMaterial;
+      mat.opacity = Math.max(0, t.life / 0.2) * 0.4;
+      t.mesh.scale.multiplyScalar(0.92);
+      if (t.life <= 0) {
+        this.scene.remove(t.mesh);
+        t.mesh.geometry.dispose();
+        mat.dispose();
+        this.trails.splice(i, 1);
+      }
+    }
   }
 
   checkHit(targetPos: THREE.Vector3, radius: number): boolean {
@@ -512,5 +545,10 @@ class Blade {
     scene.remove(this.mesh);
     this.mesh.geometry.dispose();
     (this.mesh.material as THREE.Material).dispose();
+    for (const t of this.trails) {
+      scene.remove(t.mesh);
+      t.mesh.geometry.dispose();
+      (t.mesh.material as THREE.Material).dispose();
+    }
   }
 }
