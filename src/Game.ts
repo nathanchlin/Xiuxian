@@ -1227,8 +1227,10 @@ export class Game {
     if (this.boss && this.boss.alive) {
       this.hud.setBossHpVisible(true);
       this.hud.setBossHp(this.boss.hp, this.boss.maxHp);
+      this.hud.setBossShield(this.boss.currentShieldHp, CONFIG.boss.shieldHp);
     } else {
       this.hud.setBossHpVisible(false);
+      this.hud.setBossShield(0, 0);
     }
 
     // Skill HUD

@@ -19,6 +19,7 @@ export class Boss {
   private readonly bodyColor: number;
   private shieldMesh: THREE.Mesh | null = null;
   private shieldHp = 0;
+  get currentShieldHp(): number { return this.shieldHp; }
   private attackCooldown = 0;
   private dashCooldown = 0;
   private readonly baseSpeed = 30;

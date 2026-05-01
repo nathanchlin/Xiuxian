@@ -85,6 +85,8 @@ export class Hud {
   private bossHpContainer: HTMLDivElement;
   private bossHpBar: HTMLDivElement;
   private bossHpFill: HTMLDivElement;
+  private bossShieldBar: HTMLDivElement;
+  private bossShieldFill: HTMLDivElement;
 
   // Timers
   private damageTimer = 0;
@@ -404,8 +406,12 @@ export class Hud {
     this.bossHpBar = div(`width:100%;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;`);
     this.bossHpFill = div(`width:100%;height:100%;background:linear-gradient(90deg,#c0392b,#e74c3c);border-radius:4px;transition:width 0.2s;`);
     this.bossHpBar.appendChild(this.bossHpFill);
+    this.bossShieldBar = div(`width:100%;height:5px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;display:none;`);
+    this.bossShieldFill = div(`width:100%;height:100%;background:linear-gradient(90deg,#9b59b6,#8e44ad);border-radius:3px;transition:width 0.15s;`);
+    this.bossShieldBar.appendChild(this.bossShieldFill);
     this.bossHpContainer.appendChild(bossLabel);
     this.bossHpContainer.appendChild(this.bossHpBar);
+    this.bossHpContainer.appendChild(this.bossShieldBar);
     this.root.appendChild(this.bossHpContainer);
 
     document.body.appendChild(this.root);
@@ -910,6 +916,16 @@ export class Hud {
     } else {
       this.bossHpFill.style.opacity = '1';
     }
+  }
+
+  setBossShield(shield: number, maxShield: number): void {
+    if (shield <= 0) {
+      this.bossShieldBar.style.display = 'none';
+      return;
+    }
+    this.bossShieldBar.style.display = 'block';
+    const pct = Math.max(0, Math.min(100, (shield / maxShield) * 100));
+    this.bossShieldFill.style.width = `${pct}%`;
   }
 
   /** Show a large centered announcement (level start, wave, etc.) */
