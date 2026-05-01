@@ -37,7 +37,8 @@ export class Input {
   }
 
   static isTouchDevice(): boolean {
-    return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    return ('ontouchstart' in window || navigator.maxTouchPoints > 0)
+      && window.innerWidth < 1024;
   }
 
   requestPointerLock(): void {

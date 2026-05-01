@@ -44,7 +44,8 @@
     <button id="start">点击开始</button>
   </div>
   <script>
-    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+    var isMobile = ('ontouchstart' in window || navigator.maxTouchPoints > 0) && window.innerWidth < 1024;
+    if (isMobile) {
       document.getElementById('desktop-controls').style.display = 'none';
       document.getElementById('mobile-controls').style.display = 'grid';
     }
