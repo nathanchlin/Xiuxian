@@ -22,7 +22,7 @@ export class Enemy {
   private readonly attackDamage: number;
   private readonly color: number;
   private attackCooldown = 0;
-  private readonly attackCooldownTime = 2.0;
+  private readonly attackCooldownTime = 3.5;
   private bodyMat: THREE.MeshStandardMaterial;
   private deathTimer = 0;
   private patrolTarget = new THREE.Vector3();

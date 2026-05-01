@@ -91,6 +91,9 @@ export class Hud {
   private skillLevelUpEl!: HTMLDivElement;
   private skillLevelUpTimer = 0;
 
+  // Enemy tracker arrows (screen-edge indicators)
+  private trackerArrows: HTMLDivElement[] = [];
+
   constructor() {
     // ── Root ──────────────────────────────────────────────────────────────────
     this.root = div(
@@ -631,6 +634,98 @@ export class Hud {
     ctx.strokeStyle = `rgba(218,165,32,0.5)`;
     ctx.lineWidth = 1;
     ctx.stroke();
+  }
+
+  /**
+   * Show screen-edge arrows pointing toward off-screen enemies.
+   * Called every frame when alive enemy count <= threshold (e.g. 3).
+   * Each entry: screenX/screenY in NDC (-1..1), isOnScreen, distance in world units.
+   */
+  updateTrackers(
+    trackers: Array<{ ndcX: number; ndcY: number; isOnScreen: boolean; distance: number }>,
+  ): void {
+    // Ensure we have enough arrow DOM elements
+    while (this.trackerArrows.length < trackers.length) {
+      const arrow = div(
+        `${BASE}font-size:13px;font-weight:bold;color:#e74c3c;` +
+          `text-shadow:0 0 6px rgba(231,76,60,0.8);transition:opacity 0.15s;`,
+      );
+      this.root.appendChild(arrow);
+      this.trackerArrows.push(arrow);
+    }
+    // Hide excess arrows
+    for (let i = trackers.length; i < this.trackerArrows.length; i++) {
+      this.trackerArrows[i]!.style.opacity = '0';
+    }
+
+    const margin = 50; // px from screen edge
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    for (let i = 0; i < trackers.length; i++) {
+      const t = trackers[i]!;
+      const arrow = this.trackerArrows[i]!;
+
+      if (t.isOnScreen) {
+        // Enemy is on screen — show a subtle diamond marker above it
+        const sx = ((t.ndcX + 1) / 2) * vw;
+        const sy = ((1 - t.ndcY) / 2) * vh;
+        arrow.style.left = `${sx}px`;
+        arrow.style.top = `${sy - 30}px`;
+        arrow.style.transform = 'translate(-50%,-50%)';
+        arrow.innerHTML =
+          `<span style="color:#f88;font-size:10px;">${Math.floor(t.distance)}m</span>`;
+        arrow.style.opacity = '0.7';
+      } else {
+        // Enemy is off-screen — clamp to edge with directional arrow
+        const angle = Math.atan2(-t.ndcY, t.ndcX);
+
+        // Clamp to screen edges with margin
+        const halfW = vw / 2 - margin;
+        const halfH = vh / 2 - margin;
+
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        const absCos = Math.abs(cos);
+        const absSin = Math.abs(sin);
+
+        let ex: number, ey: number;
+        if (absCos * halfH > absSin * halfW) {
+          // Hits left or right edge
+          ex = vw / 2 + Math.sign(cos) * halfW;
+          ey = vh / 2 - (sin / absCos) * halfW;
+        } else {
+          // Hits top or bottom edge
+          ex = vw / 2 + (cos / absSin) * halfH;
+          ey = vh / 2 - Math.sign(sin) * halfH;
+        }
+        // Clamp within screen
+        ex = Math.max(margin, Math.min(vw - margin, ex));
+        ey = Math.max(margin, Math.min(vh - margin, ey));
+
+        // Unicode arrow rotation — pick closest arrow character
+        const deg = angle * (180 / Math.PI);
+        const arrows = ['→', '↗', '↑', '↖', '←', '↙', '↓', '↘'];
+        const idx = Math.round(((deg % 360) + 360) % 360 / 45) % 8;
+
+        arrow.style.left = `${ex}px`;
+        arrow.style.top = `${ey}px`;
+        arrow.style.transform = 'translate(-50%,-50%)';
+        arrow.innerHTML =
+          `<span style="font-size:20px;">${arrows[idx]}</span>` +
+          `<br><span style="font-size:11px;">${Math.floor(t.distance)}m</span>`;
+        arrow.style.textAlign = 'center';
+        // Pulse opacity for urgency
+        const pulse = 0.7 + 0.3 * Math.sin(Date.now() * 0.006);
+        arrow.style.opacity = `${pulse}`;
+      }
+    }
+  }
+
+  hideTrackers(): void {
+    for (const arrow of this.trackerArrows) {
+      arrow.style.opacity = '0';
+    }
   }
 
   showGameOver(stats: { level: number; kills: number; time: number }): void {

@@ -111,9 +111,9 @@ export const CONFIG = {
     parry: {
       name: '剑气护体',
       spiritCost: 15,
-      cooldown: 5,
-      parryWindow: 0.8,
-      reflectDamage: 50,
+      cooldown: 4,
+      parryWindow: 1.5,
+      reflectDamage: 70,
       intentOnSuccess: 3,
       color: 0xffd700,
     },

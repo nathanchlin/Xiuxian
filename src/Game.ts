@@ -690,6 +690,41 @@ export class Game {
       enemyBlips,
       pickupBlips,
     );
+
+    // Enemy tracker arrows — show when few enemies remain
+    const aliveEnemyList = this.enemies.filter(e => e.alive);
+    const allTargets: Array<{ position: THREE.Vector3 }> = [...aliveEnemyList];
+    if (this.boss?.alive) allTargets.push(this.boss);
+
+    if (allTargets.length > 0 && allTargets.length <= 3) {
+      const camera = this.engine.camera;
+      const trackers: Array<{ ndcX: number; ndcY: number; isOnScreen: boolean; distance: number }> = [];
+
+      for (const target of allTargets) {
+        const pos = target.position.clone();
+        const dist = pos.distanceTo(this.flight.position);
+
+        // Project to NDC
+        const ndc = pos.clone().project(camera);
+
+        const isOnScreen =
+          ndc.x >= -1 && ndc.x <= 1 &&
+          ndc.y >= -1 && ndc.y <= 1 &&
+          ndc.z > 0 && ndc.z < 1;
+
+        if (!isOnScreen && ndc.z < 0) {
+          // Behind camera — flip to show correct direction
+          ndc.x = -ndc.x;
+          ndc.y = -ndc.y;
+        }
+
+        trackers.push({ ndcX: ndc.x, ndcY: ndc.y, isOnScreen, distance: dist });
+      }
+
+      this.hud.updateTrackers(trackers);
+    } else {
+      this.hud.hideTrackers();
+    }
   }
 
   /* ═══════════════════════════════════════════════════════════════════

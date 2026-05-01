@@ -255,12 +255,42 @@ export class TalismanSystem {
   private showLightning(targetPos: THREE.Vector3): void {
     const topY = 150;
     const length = topY - targetPos.y;
-    const geo = new THREE.CylinderGeometry(0.3, 0.1, length, 6);
-    const mat = new THREE.MeshBasicMaterial({ color: 0xffffaa, transparent: true, opacity: 0.9 });
+
+    // Main thick bolt
+    const geo = new THREE.CylinderGeometry(0.6, 0.2, length, 6);
+    const mat = new THREE.MeshBasicMaterial({ color: 0xffffcc, transparent: true, opacity: 0.95 });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(targetPos.x, targetPos.y + length / 2, targetPos.z);
     this.scene.add(mesh);
-    this.effects.push({ mesh, timer: 0.2 });
+    this.effects.push({ mesh, timer: 0.4 });
+
+    // Inner bright core
+    const coreGeo = new THREE.CylinderGeometry(0.15, 0.05, length, 4);
+    const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1.0 });
+    const core = new THREE.Mesh(coreGeo, coreMat);
+    core.position.set(targetPos.x, targetPos.y + length / 2, targetPos.z);
+    this.scene.add(core);
+    this.effects.push({ mesh: core, timer: 0.3 });
+
+    // Impact ring at target
+    const ringGeo = new THREE.RingGeometry(0.5, 4, 16);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xaa88ff, transparent: true, opacity: 0.7, side: THREE.DoubleSide });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.position.copy(targetPos);
+    ring.rotation.x = -Math.PI / 2;
+    this.scene.add(ring);
+    this.effects.push({ mesh: ring, timer: 0.5 });
+
+    // Point light flash
+    const light = new THREE.PointLight(0xaa88ff, 5, 20);
+    light.position.copy(targetPos);
+    this.scene.add(light);
+    // Wrap light in a dummy mesh for effects cleanup
+    const lightHolder = new THREE.Mesh(new THREE.SphereGeometry(0.01), new THREE.MeshBasicMaterial({ visible: false }));
+    lightHolder.add(light);
+    lightHolder.position.copy(targetPos);
+    this.scene.add(lightHolder);
+    this.effects.push({ mesh: lightHolder, timer: 0.4 });
   }
 
   private showHealGlow(): void {
@@ -301,20 +331,38 @@ class SoulseekerBolt {
   private distanceTraveled = 0;
   expired = false;
 
+  // Trail
+  private trail: THREE.Line;
+  private trailPositions: THREE.Vector3[] = [];
+  private readonly maxTrailPoints = 12;
+
   constructor(origin: THREE.Vector3, direction: THREE.Vector3, targetPos: THREE.Vector3, scene: THREE.Scene) {
     const cfg = CONFIG.talismans.types.soulseeker;
     this.velocity = direction.multiplyScalar(cfg.projectileSpeed);
     this.targetPos = targetPos;
 
-    const geo = new THREE.SphereGeometry(0.2, 6, 6);
-    const mat = new THREE.MeshBasicMaterial({ color: cfg.color, transparent: true, opacity: 0.9 });
+    // Larger glowing sphere
+    const geo = new THREE.SphereGeometry(0.4, 8, 8);
+    const mat = new THREE.MeshBasicMaterial({ color: cfg.color, transparent: true, opacity: 0.95 });
     this.mesh = new THREE.Mesh(geo, mat);
     this.mesh.position.copy(origin);
     scene.add(this.mesh);
+
+    // Point light for glow
+    const light = new THREE.PointLight(cfg.color, 2, 8);
+    this.mesh.add(light);
+
+    // Trail line
+    for (let i = 0; i < this.maxTrailPoints; i++) {
+      this.trailPositions.push(origin.clone());
+    }
+    const trailGeo = new THREE.BufferGeometry().setFromPoints(this.trailPositions);
+    const trailMat = new THREE.LineBasicMaterial({ color: cfg.color, transparent: true, opacity: 0.6 });
+    this.trail = new THREE.Line(trailGeo, trailMat);
+    scene.add(this.trail);
   }
 
   update(dt: number): void {
-    // Light tracking
     const toTarget = this.targetPos.clone().sub(this.mesh.position).normalize();
     const currentDir = this.velocity.clone().normalize();
     currentDir.lerp(toTarget, Math.min(1, CONFIG.talismans.types.soulseeker.trackingLerp * dt));
@@ -328,12 +376,27 @@ class SoulseekerBolt {
     if (this.distanceTraveled > CONFIG.talismans.types.soulseeker.range) {
       this.expired = true;
     }
+
+    // Update trail
+    this.trailPositions.pop();
+    this.trailPositions.unshift(this.mesh.position.clone());
+    const positions = new Float32Array(this.trailPositions.length * 3);
+    for (let i = 0; i < this.trailPositions.length; i++) {
+      positions[i * 3] = this.trailPositions[i]!.x;
+      positions[i * 3 + 1] = this.trailPositions[i]!.y;
+      positions[i * 3 + 2] = this.trailPositions[i]!.z;
+    }
+    this.trail.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    this.trail.geometry.attributes['position']!.needsUpdate = true;
   }
 
   dispose(scene: THREE.Scene): void {
     scene.remove(this.mesh);
     this.mesh.geometry.dispose();
     (this.mesh.material as THREE.Material).dispose();
+    scene.remove(this.trail);
+    this.trail.geometry.dispose();
+    (this.trail.material as THREE.Material).dispose();
   }
 }
 
