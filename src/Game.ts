@@ -556,6 +556,7 @@ export class Game {
         if (loot.talismanType) {
           this.equipTalisman(loot.talismanType);
         } else if (loot.cultivationExp > 0) {
+          this.sfx.pickup();
           const leveledUp = this.inventory.addCultivationExp(loot.cultivationExp);
           if (leveledUp) {
             this.hud.showKill(`修为突破 — 第${this.inventory.cultivationLevel}层`);
