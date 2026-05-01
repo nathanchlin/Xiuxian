@@ -17,6 +17,7 @@ export interface EnemyTarget {
 
 export class SkillSystem {
   private bladeFanCd = 0;
+  private parrySparks: { mesh: THREE.Mesh; vel: THREE.Vector3; life: number }[] = [];
   private swordDashCd = 0;
   private parryCd = 0;
 
@@ -300,6 +301,22 @@ export class SkillSystem {
         this.parryShield.rotation.y += dt * 4;
       }
     }
+
+    // Parry spark decay
+    for (let i = this.parrySparks.length - 1; i >= 0; i--) {
+      const s = this.parrySparks[i]!;
+      s.life -= dt;
+      s.mesh.position.addScaledVector(s.vel, dt);
+      s.vel.multiplyScalar(0.92);
+      const t = Math.max(0, s.life / 0.4);
+      s.mesh.scale.setScalar(t);
+      (s.mesh.material as THREE.MeshBasicMaterial).opacity = t;
+      if (s.life <= 0) {
+        this.scene.remove(s.mesh);
+        (s.mesh.material as THREE.Material).dispose();
+        this.parrySparks.splice(i, 1);
+      }
+    }
   }
 
   consumeDashHits(): number[] {
@@ -396,6 +413,25 @@ export class SkillSystem {
           this.parryShield = null;
         }
       }, 150);
+    }
+
+    // Spark burst at player position
+    const pos = this.flight.position;
+    const geo = new THREE.BoxGeometry(0.15, 0.15, 0.15);
+    for (let i = 0; i < 10; i++) {
+      const mat = new THREE.MeshBasicMaterial({
+        color: 0xffee44, transparent: true, opacity: 1, depthTest: false,
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.copy(pos);
+      mesh.renderOrder = 999;
+      this.scene.add(mesh);
+      const vel = new THREE.Vector3(
+        (Math.random() - 0.5) * 2,
+        (Math.random() - 0.5) * 2,
+        (Math.random() - 0.5) * 2,
+      ).normalize().multiplyScalar(12 + Math.random() * 8);
+      this.parrySparks.push({ mesh, vel, life: 0.4 });
     }
   }
 
