@@ -15,6 +15,7 @@ import { TalismanSystem } from './player/TalismanSystem';
 import { Pickup, type PickupType, randomTalismanType, type TalismanTypeName } from './world/Pickup';
 import { Inventory } from './player/Inventory';
 import { InventoryPanel } from './ui/InventoryPanel';
+import { DamageNumbers } from './ui/DamageNumbers';
 import type { EnemyTypeName } from './enemy/enemy-types';
 
 export type GameState = 'menu' | 'briefing' | 'playing' | 'paused' | 'dead' | 'level_complete' | 'game_over';
@@ -40,6 +41,7 @@ export class Game {
   readonly talismanSystem: TalismanSystem;
   readonly inventory: Inventory;
   readonly inventoryPanel: InventoryPanel;
+  private damageNumbers!: DamageNumbers;
   private lootDrops: Pickup[] = [];
   private talismanDrops: Pickup[] = [];
 
@@ -73,6 +75,7 @@ export class Game {
     this.talismanSystem = new TalismanSystem(this.flight, this.engine.scene, this.sfx);
     this.inventory = new Inventory();
     this.inventoryPanel = new InventoryPanel();
+    this.damageNumbers = new DamageNumbers(this.engine.scene);
     this.setupInventoryCallbacks();
 
     // ── Key bindings ───────────────────────────────────────────────
@@ -515,6 +518,9 @@ export class Game {
     // 11.5 Auto-use consumables when HP/Spirit low
     this.autoUseConsumables();
 
+    // 11.6 Update damage numbers
+    this.damageNumbers.update(dt);
+
     // 12. Update HUD
     this.updateHud();
   }
@@ -532,6 +538,14 @@ export class Game {
 
   private onSkillHit(hit: SkillHitResult, skillName?: string): void {
     this.hud.flashHitMarker();
+
+    // Show damage number at the target's position
+    const targetEnemy = this.enemies.find(e => e.id === hit.targetId && e.alive);
+    const targetBoss = (!targetEnemy && this.boss?.id === hit.targetId && this.boss.alive) ? this.boss : null;
+    const targetPos = targetEnemy?.position ?? targetBoss?.position;
+    if (targetPos) {
+      this.damageNumbers.spawn(targetPos, hit.damage);
+    }
 
     for (const enemy of this.enemies) {
       if (enemy.id === hit.targetId && enemy.alive) {
@@ -937,6 +951,7 @@ export class Game {
     if (this.arena) this.arena.dispose(this.engine.scene);
     this.playerModel?.dispose();
     this.inventoryPanel.dispose();
+    this.damageNumbers.dispose();
     this.hud.dispose();
     this.flight.dispose();
     this.cameraSystem.dispose();
