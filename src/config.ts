@@ -190,13 +190,13 @@ export const CONFIG = {
 
   // ─── Boss ───
   boss: {
-    baseHp: 400,
+    baseHp: 250,
     phase1Threshold: 0.6,
     phase2Threshold: 0.3,
     phase2SpeedBoost: 1.5,
     phase3SpeedBoost: 1.3,
     summonCount: 2,
-    shieldHp: 100,
+    shieldHp: 80,
     color: 0xcc00ff,
   },
 
