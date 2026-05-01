@@ -532,7 +532,7 @@ export class Hud {
   setHp(hp: number, max: number): void {
     const pct = Math.max(0, Math.min(1, hp / max)) * 100;
     this.hpBar.style.width = `${pct}%`;
-    this.hpText.textContent = `${Math.ceil(hp)}`;
+    this.hpText.textContent = `${Math.ceil(hp)}/${Math.ceil(max)}`;
 
     // Green glow flash on HP gain (mirrors spirit bar cyan flash)
     if (hp > this.hpPrev + 1) {
@@ -571,7 +571,7 @@ export class Hud {
   setSpirit(spirit: number, max: number): void {
     const pct = Math.max(0, Math.min(1, spirit / max)) * 100;
     this.spiritBar.style.width = `${pct}%`;
-    this.spiritText.textContent = `${Math.floor(spirit)}`;
+    this.spiritText.textContent = `${Math.floor(spirit)}/${Math.ceil(max)}`;
 
     // Flash cyan glow on spirit gain
     if (spirit > this.spiritPrev + 1) {
