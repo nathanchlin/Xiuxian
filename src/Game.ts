@@ -415,6 +415,9 @@ export class Game {
     );
     this.flight.position.set(resolved.x, resolved.y, resolved.z);
 
+    // 2b. Animate arena particles
+    this.arena.update(dt);
+
     // 3. Camera
     this.cameraSystem.update(dt, this.flight);
 

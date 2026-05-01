@@ -17,6 +17,9 @@ export class Arena {
   readonly pickupSpots: THREE.Vector3[] = [];
   private skybox: Skybox | null = null;
   private config: LevelConfig;
+  private particlePos: Float32Array | null = null;
+  private particleMat: THREE.PointsMaterial | null = null;
+  private particleSpread = 0;
 
   constructor(scene: THREE.Scene, level: number) {
     this.config = this.getLevelConfig(level);
@@ -140,7 +143,7 @@ export class Arena {
     cloud.position.y = 0;
     this.group.add(cloud);
 
-    // Atmosphere particles
+    // Atmosphere particles (spirit motes)
     const particleCount = 200;
     const particleGeo = new THREE.BufferGeometry();
     const positions = new Float32Array(particleCount * 3);
@@ -152,6 +155,9 @@ export class Arena {
     particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     const particleMat = new THREE.PointsMaterial({ color: 0xaaccff, size: 0.5, transparent: true, opacity: 0.6 });
     this.group.add(new THREE.Points(particleGeo, particleMat));
+    this.particlePos = positions;
+    this.particleMat = particleMat;
+    this.particleSpread = cfg.spread;
 
     // Lighting
     this.group.add(new THREE.AmbientLight(CONFIG.render.ambientColor, CONFIG.render.ambientIntensity));
@@ -192,6 +198,28 @@ export class Arena {
 
   resolveSphereVsBuildings(x: number, y: number, z: number, radius: number): { x: number; y: number; z: number; vx: number; vy: number; vz: number } {
     return resolveSphereVsAABB3Ds(x, y, z, radius, this.colliders);
+  }
+
+  update(dt: number): void {
+    if (!this.particlePos || !this.particleMat) return;
+    const t = performance.now() * 0.001;
+    const halfSpread = this.particleSpread;
+    for (let i = 0; i < this.particlePos.length; i += 3) {
+      // Drift upward
+      this.particlePos[i + 1] += 3 * dt;
+      // Wrap to bottom when too high
+      if (this.particlePos[i + 1] > 150) {
+        this.particlePos[i + 1] = 0;
+        this.particlePos[i] = (Math.random() - 0.5) * halfSpread * 2;
+        this.particlePos[i + 2] = (Math.random() - 0.5) * halfSpread * 2;
+      }
+      // Gentle horizontal sway
+      this.particlePos[i] += Math.sin(t + i) * 0.3 * dt;
+    }
+    const pts = this.group.children.find(c => c instanceof THREE.Points) as THREE.Points | undefined;
+    if (pts) (pts.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true;
+    // Global opacity pulse
+    this.particleMat.opacity = 0.4 + 0.2 * Math.sin(t * 0.8);
   }
 
   dispose(scene: THREE.Scene): void {
