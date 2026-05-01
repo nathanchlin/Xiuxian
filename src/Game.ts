@@ -211,6 +211,7 @@ export class Game {
     this.flight.hp = this.getEffectiveMaxHealth();
     this.flight.spirit = this.getEffectiveMaxSpirit();
     this.flight.alive = true;
+    this.flight.resetDashState();
     this.flight.teleportTo(0, CONFIG.player.startHeight, 0);
 
     // Snap camera to player — eliminates spring-catch-up lag after teleport
@@ -271,6 +272,7 @@ export class Game {
     this.flight.hp = this.getEffectiveMaxHealth();
     this.flight.spirit = this.getEffectiveMaxSpirit();
     this.flight.alive = true;
+    this.flight.resetDashState();
     this.flight.teleportTo(0, CONFIG.player.startHeight, 0);
 
     // Snap camera to player — eliminates spring-catch-up lag after teleport
@@ -1293,7 +1295,7 @@ export class Game {
           break;
         case 'invincible':
           this.flight.dashInvincible = true;
-          setTimeout(() => { this.flight.dashInvincible = false; }, cfg.value * 1000);
+          this.flight.setDashInvincibleTimer(cfg.value * 1000);
           break;
       }
     };

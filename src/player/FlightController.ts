@@ -29,6 +29,7 @@ export class FlightController {
 
   dashing = false;
   dashInvincible = false;
+  private dashInvincibleTimerId = 0;
 
   // External stat bonus (set by Game from inventory)
   speedBonus = 0;
@@ -180,9 +181,7 @@ export class FlightController {
       this.dashTimer -= dt;
       if (this.dashTimer <= 0) {
         this.dashing = false;
-        setTimeout(() => {
-          this.dashInvincible = false;
-        }, (CONFIG.skills.swordDash.invincibleDuration - CONFIG.skills.swordDash.dashDuration) * 1000);
+        this.setDashInvincibleTimer((CONFIG.skills.swordDash.invincibleDuration - CONFIG.skills.swordDash.dashDuration) * 1000);
       }
     }
 
@@ -305,6 +304,28 @@ export class FlightController {
     this.velocity.set(0, 0, 0);
     this.angularVelocity.set(0, 0, 0);
     // Don't reset skillKills here — it persists across levels, only reset in Game.restart()
+  }
+
+  private clearDashInvincibleTimer(): void {
+    if (this.dashInvincibleTimerId) {
+      clearTimeout(this.dashInvincibleTimerId);
+      this.dashInvincibleTimerId = 0;
+    }
+  }
+
+  setDashInvincibleTimer(durationMs: number): void {
+    this.clearDashInvincibleTimer();
+    this.dashInvincibleTimerId = window.setTimeout(() => {
+      this.dashInvincible = false;
+      this.dashInvincibleTimerId = 0;
+    }, durationMs);
+  }
+
+  resetDashState(): void {
+    this.clearDashInvincibleTimer();
+    this.dashing = false;
+    this.dashInvincible = false;
+    this.dashTimer = 0;
   }
 
   dispose(): void {}
