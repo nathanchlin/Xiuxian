@@ -298,11 +298,8 @@ export class TalismanSystem {
     this.scene.add(ring);
     this.effects.push({ mesh: ring, timer: 0.5 });
 
-    // Point light flash
+    // Point light flash (parented to lightHolder for auto-cleanup)
     const light = new THREE.PointLight(0xaa88ff, 5, 20);
-    light.position.copy(targetPos);
-    this.scene.add(light);
-    // Wrap light in a dummy mesh for effects cleanup
     const lightHolder = new THREE.Mesh(new THREE.SphereGeometry(0.01), new THREE.MeshBasicMaterial({ visible: false }));
     lightHolder.add(light);
     lightHolder.position.copy(targetPos);
