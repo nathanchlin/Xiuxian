@@ -630,7 +630,15 @@ export class Game {
       pickup.attract(this.flight.position, dt);
       pickup.update(dt);
       if (pickup.checkCollect(this.flight.position, CONFIG.flight.playerRadius)) {
+        const collectPos = pickup.mesh.position.clone();
         const loot = pickup.collect();
+        // Collection burst — color by type
+        const burstColors: Record<string, number> = {
+          spirit: 0x4488ff, health: 0x44ff88, cultivation_orb: 0xffd700,
+          chest: 0xdaa520, talisman_drop: 0xffaa00, skill_book: 0xff66ff,
+          treasure_drop: 0xffd700, consumable_drop: 0x88ffaa,
+        };
+        this.deathBurst.spawn(collectPos, burstColors[pickup.type] ?? 0xffffff, 6);
         if (loot.health > 0) {
             this.flight.hp = Math.min(this.getEffectiveMaxHealth(), this.flight.hp + loot.health);
             this.damageNumbers.spawn(this.flight.position.clone(), loot.health, 0x44ff44, '+');
