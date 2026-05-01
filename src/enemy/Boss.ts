@@ -42,8 +42,8 @@ export class Boss {
     this.id = id;
     this.position.copy(spawn);
 
-    const scaling = CONFIG.progression.scaling;
-    this.hp = Math.round(CONFIG.boss.baseHp * Math.pow(scaling.hpPerLevel, level));
+    // Linear HP scaling instead of exponential — avoids damage sponge at high levels
+    this.hp = Math.round(CONFIG.boss.baseHp * (1 + CONFIG.enemies.scaling.hpPerLevel * level));
     this.maxHp = this.hp;
 
     this.bodyMat = new THREE.MeshStandardMaterial({
