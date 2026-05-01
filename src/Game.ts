@@ -706,6 +706,13 @@ export class Game {
         }
       }
     }
+    this.pickups = this.pickups.filter(d => {
+      if (d.collected) {
+        d.dispose(this.engine.scene);
+        return false;
+      }
+      return true;
+    });
     this.talismanDrops = this.talismanDrops.filter(d => {
       if (d.collected) {
         d.dispose(this.engine.scene);
