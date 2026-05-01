@@ -1,3 +1,5 @@
+import { CONFIG } from '../config';
+
 /**
  * Flight HUD — DOM-based flight instrument overlay.
  * Builds all elements in JavaScript; no HTML template dependency.
@@ -631,9 +633,9 @@ export class Hud {
         el.style.color = GOLD;
       }
     };
-    setCd(this.skillCds.q, this.skillCdOverlays.q, bladeFan, 5, '1', costs.bladeFan);
-    setCd(this.skillCds.f, this.skillCdOverlays.f, swordDash, 4, '2', costs.swordDash);
-    setCd(this.skillCds.r, this.skillCdOverlays.r, parry, 6, '3', costs.parry);
+    setCd(this.skillCds.q, this.skillCdOverlays.q, bladeFan, CONFIG.skills.bladeFan.cooldown, '1', costs.bladeFan);
+    setCd(this.skillCds.f, this.skillCdOverlays.f, swordDash, CONFIG.skills.swordDash.cooldown, '2', costs.swordDash);
+    setCd(this.skillCds.r, this.skillCdOverlays.r, parry, CONFIG.skills.parry.cooldown, '3', costs.parry);
   }
 
   setFinalStrikeReady(ready: boolean): void {
