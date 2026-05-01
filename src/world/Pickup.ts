@@ -27,6 +27,7 @@ export class Pickup {
   readonly type: PickupType;
   readonly position: THREE.Vector3;
   collected = false;
+  expired = false; // true when expireTimer ran out (vs player pickup)
   talismanType: TalismanTypeName | null = null;
   expireTimer = -1;
 
@@ -197,6 +198,7 @@ export class Pickup {
       }
       if (this.expireTimer <= 0) {
         this.collected = true;
+        this.expired = true;
         this.mesh.visible = false;
       }
     }

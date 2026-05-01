@@ -725,6 +725,9 @@ export class Game {
     }
     this.pickups = this.pickups.filter(d => {
       if (d.collected) {
+        if (d.expired) {
+          this.deathBurst.spawn(d.position.clone(), 0x888888, 4);
+        }
         d.dispose(this.engine.scene);
         return false;
       }
