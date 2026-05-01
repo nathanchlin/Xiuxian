@@ -152,7 +152,17 @@ export class Enemy {
 
     this.attackCooldown = Math.max(0, this.attackCooldown - dt);
     const toPlayer = playerPos.clone().sub(this.position);
+
+    // Attack telegraph: red pulsing glow when about to attack
     const dist = toPlayer.length();
+    if (this.spawnFlashTimer <= 0 && this.attackCooldown > 0 && this.attackCooldown < 0.6 && dist < CONFIG.enemies.engageDistance) {
+      const pulse = 0.5 + 0.5 * Math.sin(performance.now() * 0.02);
+      this.bodyMat.emissive.setHex(0xff2222);
+      this.bodyMat.emissiveIntensity = pulse * 1.2;
+    } else if (this.spawnFlashTimer <= 0 && this.state !== 'attack') {
+      this.bodyMat.emissive.setHex(0x000000);
+      this.bodyMat.emissiveIntensity = 0;
+    }
     const fleeThreshold = this.maxHp * CONFIG.enemies.fleeHpPercent;
 
     let attacked = false;
