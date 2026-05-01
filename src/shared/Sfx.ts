@@ -218,6 +218,16 @@ export class Sfx {
     this.windGain = null;
   }
 
+  dispose(): void {
+    this.stopWind();
+    if (this.ctx) {
+      void this.ctx.close();
+      this.ctx = null;
+      this.master = null;
+    }
+    this.unlocked = false;
+  }
+
   // --- primitives --------------------------------------------------------
 
   private beep(freq: number, duration: number, type: OscType, vol = 1): void {

@@ -1477,7 +1477,7 @@ export class Game {
       this.visibilityHandler = null;
     }
     this.clearEnemies();
-    this.sfx.stopWind();
+    this.sfx.dispose();
     // Clean up particle arrays (restart() also does this; dispose must too)
     for (const ai of this.dashAfterimages) {
       this.engine.scene.remove(ai.mesh);
