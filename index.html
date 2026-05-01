@@ -2,11 +2,11 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>仙侠空战</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { overflow: hidden; background: #000; font-family: 'Courier New', monospace; }
+    body { overflow: hidden; background: #000; font-family: 'Courier New', monospace; touch-action: none; -webkit-touch-callout: none; }
     #game { width: 100vw; height: 100vh; }
     #overlay {
       position: fixed; inset: 0; display: flex; flex-direction: column;
@@ -26,7 +26,7 @@
   <div id="overlay">
     <h1>仙侠空战</h1>
     <div class="subtitle">御剑飞行 · 斩妖除魔</div>
-    <div class="controls">
+    <div class="controls" id="desktop-controls">
       <span>W/A/S/D</span><span>前后左右推力</span>
       <span>Space / Shift</span><span>上升 / 下降</span>
       <span>Q / E</span><span>翻滚</span>
@@ -36,8 +36,20 @@
       <span>Tab</span><span>加力</span>
       <span>F</span><span>飞剑冲刺</span>
     </div>
+    <div class="controls" id="mobile-controls" style="display:none;">
+      <span>左摇杆</span><span>移动方向</span>
+      <span>右侧滑动</span><span>控制镜头</span>
+      <span>技能按钮</span><span>1/2/3 技能</span>
+      <span>攻击按钮</span><span>灵力射线</span>
+    </div>
     <button id="start">点击开始</button>
   </div>
+  <script>
+    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+      document.getElementById('desktop-controls').style.display = 'none';
+      document.getElementById('mobile-controls').style.display = 'grid';
+    }
+  </script>
   <script type="module" src="/src/entry.ts"></script>
 </body>
 </html>
