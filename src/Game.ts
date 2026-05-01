@@ -475,6 +475,9 @@ export class Game {
       CONFIG.flight.playerRadius,
     );
     this.flight.position.set(resolved.x, resolved.y, resolved.z);
+    this.flight.velocity.x += resolved.vx;
+    this.flight.velocity.y += resolved.vy;
+    this.flight.velocity.z += resolved.vz;
 
     // 2b. Animate arena particles
     this.arena.update(dt);
