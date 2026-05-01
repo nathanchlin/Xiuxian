@@ -326,6 +326,7 @@ export class Game {
     } else {
       this.spawnEnemies();
       this.hud.showAnnouncement(`第 ${this.wave} 波`, '#88aaff');
+      this.sfx.parryActivate();
     }
 
     this.updateSkillTargets();
