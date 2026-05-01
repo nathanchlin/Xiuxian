@@ -155,6 +155,7 @@ export class Game {
 
   start(): void {
     this.sfx.unlock();
+    this.sfx.startWind();
     this.input.requestPointerLock();
     this.startTime = performance.now() / 1000;
     this.kills = 0;
@@ -902,6 +903,7 @@ export class Game {
   private onDeathCamEnd(): void {
     this.state = 'dead';
     this.input.exitPointerLock();
+    this.sfx.stopWind();
 
     const elapsed = performance.now() / 1000 - this.startTime;
     const isNewBest = this.saveHighScore(this.level, this.kills, elapsed);
@@ -1050,6 +1052,7 @@ export class Game {
     this.hud.setSpirit(this.flight.spirit, this.getEffectiveMaxSpirit());
     this.hud.setAltitude(this.flight.getAltitude());
     this.hud.setSpeed(this.flight.getSpeed());
+    this.sfx.updateWind(this.flight.getSpeed());
     // Cultivation level + exp progress
     const nextExp = this.inventory.getExpForNextLevel();
     const curExp = this.inventory.cultivationExp;
@@ -1251,6 +1254,7 @@ export class Game {
 
   dispose(): void {
     this.clearEnemies();
+    this.sfx.stopWind();
     for (const p of this.pickups) p.dispose(this.engine.scene);
     this.talismanSystem.dispose();
     for (const d of this.talismanDrops) d.dispose(this.engine.scene);

@@ -10,6 +10,10 @@ export class Sfx {
   private master: GainNode | null = null;
   private unlocked = false;
 
+  // Wind ambient
+  private windGain: GainNode | null = null;
+  private windSource: AudioBufferSourceNode | null = null;
+
   unlock(): void {
     if (this.unlocked) return;
     try {
@@ -184,6 +188,48 @@ export class Sfx {
     this.noise(0.3, 300, 0.9);
     this.sweep(200, 50, 0.4, 'sawtooth', 0.7);
     this.beep(100, 0.15, 'square', 0.5);
+  }
+
+  // --- wind ambient -------------------------------------------------------
+
+  startWind(): void {
+    if (!this.ready() || this.windSource) return;
+    const ctx = this.ctx!, master = this.master!;
+    // Create a 4-second looping noise buffer
+    const dur = 4;
+    const bufferSize = Math.floor(ctx.sampleRate * dur);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    src.loop = true;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 400;
+    filter.Q.value = 0.5;
+    this.windGain = ctx.createGain();
+    this.windGain.gain.value = 0.02;
+    src.connect(filter);
+    filter.connect(this.windGain);
+    this.windGain.connect(master);
+    src.start();
+    this.windSource = src;
+  }
+
+  updateWind(speed: number): void {
+    if (!this.windGain) return;
+    // Speed 0-100 → volume 0.01-0.12, bandpass 300-800Hz
+    const t = Math.min(1, speed / 80);
+    this.windGain.gain.value = 0.01 + t * 0.11;
+  }
+
+  stopWind(): void {
+    if (this.windSource) {
+      this.windSource.stop();
+      this.windSource = null;
+    }
+    this.windGain = null;
   }
 
   // --- primitives --------------------------------------------------------
