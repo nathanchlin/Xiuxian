@@ -844,7 +844,7 @@ export class Game {
     this.kills++;
     this.registerCombo();
     this.sfx.enemyDie();
-    this.hud.showKill(`${typeName} 已斩`);
+    this.hud.showKill(`${this.getEnemyName(typeName)} 已斩`);
     if (position) this.deathBurst.spawn(position, this.getEnemyColor(typeName), 12, typeName);
 
     if (position) {
@@ -1052,6 +1052,11 @@ export class Game {
   private getEnemyColor(typeName: string): number {
     const colors: Record<string, number> = { crow: 0x444444, serpent: 0x22cc44, dragon: 0xff4444 };
     return colors[typeName] ?? 0xffffff;
+  }
+
+  private getEnemyName(typeName: string): string {
+    const cfg = CONFIG.enemies.types[typeName as keyof typeof CONFIG.enemies.types];
+    return cfg?.name ?? typeName;
   }
 
   /** Save high score to localStorage. Returns true if new best. */
