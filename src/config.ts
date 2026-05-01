@@ -143,6 +143,12 @@ export const CONFIG = {
     },
   },
 
+  // ─── Combat ───
+  combat: {
+    critChance: 0.15,
+    critMultiplier: 1.75,
+  },
+
   // ─── Player ───
   player: {
     maxHealth: 200,

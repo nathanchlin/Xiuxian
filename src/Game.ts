@@ -783,8 +783,8 @@ export class Game {
 
     // Apply combo multiplier + critical hit chance
     let baseDamage = hit.damage * this.comboMultiplier;
-    const isCrit = Math.random() < 0.15;
-    if (isCrit) baseDamage *= 1.75;
+    const isCrit = Math.random() < CONFIG.combat.critChance;
+    if (isCrit) baseDamage *= CONFIG.combat.critMultiplier;
     const finalDamage = Math.round(baseDamage);
 
     // Show damage number at the target's position
