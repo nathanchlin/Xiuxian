@@ -20,6 +20,7 @@ export class Arena {
   private particlePos: Float32Array | null = null;
   private particleMat: THREE.PointsMaterial | null = null;
   private particleSpread = 0;
+  private lanternLights: THREE.PointLight[] = [];
 
   constructor(scene: THREE.Scene, level: number) {
     this.config = this.getLevelConfig(level);
@@ -81,6 +82,19 @@ export class Arena {
       const roofEdges = new THREE.LineSegments(new THREE.EdgesGeometry(roofGeo), outlineMat);
       roofEdges.position.copy(roof.position);
       this.group.add(roofEdges);
+
+      // Spirit lantern on rooftop
+      const lanternGeo = new THREE.BoxGeometry(0.4, 0.6, 0.4);
+      const lanternMat = new THREE.MeshStandardMaterial({
+        color: 0xffcc44, emissive: 0xffaa22, emissiveIntensity: 1.5, roughness: 0.2,
+      });
+      const lantern = new THREE.Mesh(lanternGeo, lanternMat);
+      lantern.position.set(anchor.x, baseY + h + 3.5, anchor.z);
+      this.group.add(lantern);
+      const lanternLight = new THREE.PointLight(0xffcc44, 1.0, 25);
+      lanternLight.position.copy(lantern.position);
+      this.group.add(lanternLight);
+      this.lanternLights.push(lanternLight);
 
       // Bottom rocks
       const rockGeo = new THREE.BoxGeometry(w * 0.6, 8, d * 0.6);
@@ -225,6 +239,10 @@ export class Arena {
     if (pts) (pts.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true;
     // Global opacity pulse
     this.particleMat.opacity = 0.4 + 0.2 * Math.sin(t * 0.8);
+    // Pulse lantern glow
+    for (let i = 0; i < this.lanternLights.length; i++) {
+      this.lanternLights[i].intensity = 0.8 + 0.4 * Math.sin(t * 1.5 + i * 1.7);
+    }
   }
 
   dispose(scene: THREE.Scene): void {
