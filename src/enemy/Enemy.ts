@@ -28,6 +28,10 @@ export class Enemy {
   private spawnFlashTimer = 0.3;
   private hitRecoil = 0;
   private hitFlashTimer = 0;
+  private wingL: THREE.Mesh | null = null;
+  private wingR: THREE.Mesh | null = null;
+  private tailMesh: THREE.Mesh | null = null;
+  private hoodMesh: THREE.Mesh | null = null;
   private patrolTarget = new THREE.Vector3();
   private patrolTimer = 0;
   private hpBarBg: THREE.Mesh;
@@ -62,6 +66,7 @@ export class Enemy {
       const hood = new THREE.Mesh(hoodGeo, wingMat);
       hood.position.set(0, 0.4 * scale, -1.0 * scale);
       this.group.add(hood);
+      this.hoodMesh = hood;
       // Green eyes
       const eyeMat = new THREE.MeshStandardMaterial({ color: 0x44ff44, emissive: 0x44ff44, emissiveIntensity: 2.0 });
       const eyeGeo = new THREE.SphereGeometry(0.18 * scale, 6, 6);
@@ -78,10 +83,12 @@ export class Enemy {
       const lw = new THREE.Mesh(wGeo, wingMat); lw.position.set(-1.8 * scale, 0.3 * scale, 0); lw.rotation.z = 0.25;
       const rw = new THREE.Mesh(wGeo, wingMat); rw.position.set(1.8 * scale, 0.3 * scale, 0); rw.rotation.z = -0.25;
       this.group.add(lw, rw);
+      this.wingL = lw; this.wingR = rw;
       // Tail
       const tailGeo = new THREE.BoxGeometry(0.3 * scale, 0.3 * scale, 1.8 * scale);
       const tail = new THREE.Mesh(tailGeo, this.bodyMat); tail.position.z = 1.8 * scale;
       this.group.add(tail);
+      this.tailMesh = tail;
       // Horns + cyan eyes
       const hornGeo = new THREE.ConeGeometry(0.12 * scale, 0.6 * scale, 4);
       const hornMat = new THREE.MeshStandardMaterial({ color: 0xccccdd, roughness: 0.3 });
@@ -102,7 +109,7 @@ export class Enemy {
       const lw = new THREE.Mesh(wGeo, wingMat); lw.position.x = -1.4 * scale;
       const rw = new THREE.Mesh(wGeo, wingMat); rw.position.x = 1.4 * scale;
       this.group.add(lw, rw);
-      // Beak
+      this.wingL = lw; this.wingR = rw;
       const beakGeo = new THREE.ConeGeometry(0.12 * scale, 0.4 * scale, 4);
       const beak = new THREE.Mesh(beakGeo, this.bodyMat);
       beak.position.set(0, 0, -1.0 * scale); beak.rotation.x = Math.PI / 2;
@@ -274,6 +281,20 @@ export class Enemy {
       this.group.scale.set(1 + t * 0.2, 1 - t * 0.15, 1 + t * 0.2);
       this.group.position.y -= t * 1.5;
       if (this.hitRecoil <= 0) this.group.scale.set(1, 1, 1);
+    }
+
+    // Idle part animation
+    const t = performance.now() * 0.001;
+    if (this.wingL && this.wingR) {
+      const flap = Math.sin(t * 6 + this.id * 2) * 0.3;
+      this.wingL.rotation.z = 0.25 + flap;
+      this.wingR.rotation.z = -0.25 - flap;
+    }
+    if (this.hoodMesh) {
+      this.hoodMesh.rotation.x = Math.sin(t * 3 + this.id) * 0.15;
+    }
+    if (this.tailMesh) {
+      this.tailMesh.rotation.y = Math.sin(t * 4 + this.id) * 0.3;
     }
 
     // Update health bar
