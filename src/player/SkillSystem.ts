@@ -17,11 +17,14 @@ export interface EnemyTarget {
 
 export class SkillSystem {
   private bladeFanCd = 0;
+  private bladeFanCdMax = 0;
   private parrySparks: { mesh: THREE.Mesh; vel: THREE.Vector3; life: number }[] = [];
   private parryShieldTimerId = 0;
   private runeTrails: { mesh: THREE.Mesh; life: number }[] = [];
   private swordDashCd = 0;
+  private swordDashCdMax = 0;
   private parryCd = 0;
+  private parryCdMax = 0;
 
   private charging = false;
   chargeTimer = 0;
@@ -61,11 +64,14 @@ export class SkillSystem {
     return this.flight.swordIntent;
   }
 
-  getCooldowns(): { bladeFan: number; swordDash: number; parry: number } {
+  getCooldowns(): { bladeFan: number; swordDash: number; parry: number; bladeFanTotal: number; swordDashTotal: number; parryTotal: number } {
     return {
       bladeFan: this.bladeFanCd,
       swordDash: this.swordDashCd,
       parry: this.parryCd,
+      bladeFanTotal: this.bladeFanCdMax || CONFIG.skills.bladeFan.cooldown,
+      swordDashTotal: this.swordDashCdMax || CONFIG.skills.swordDash.cooldown,
+      parryTotal: this.parryCdMax || CONFIG.skills.parry.cooldown,
     };
   }
 
@@ -91,6 +97,7 @@ export class SkillSystem {
     if (!this.flight.consumeSpirit(cfg.spiritCost)) return false;
 
     this.bladeFanCd = this.scaleCooldown(cfg.cooldown, 'bladeFan');
+    this.bladeFanCdMax = this.bladeFanCd;
     this.sfx.bladeFan();
 
     const origin = this.flight.position.clone();
@@ -118,6 +125,7 @@ export class SkillSystem {
     if (!this.flight.consumeSpirit(cfg.spiritCost)) return false;
 
     this.swordDashCd = this.scaleCooldown(cfg.cooldown, 'swordDash');
+    this.swordDashCdMax = this.swordDashCd;
     this.dashHitIds.clear();
     this.sfx.swordDash();
 
@@ -135,6 +143,7 @@ export class SkillSystem {
     if (!this.flight.consumeSpirit(cfg.spiritCost)) return false;
 
     this.parryCd = this.scaleCooldown(cfg.cooldown, 'parry');
+    this.parryCdMax = this.parryCd;
     this.flight.startParry();
     this.sfx.parryActivate();
     this.showParryShield();

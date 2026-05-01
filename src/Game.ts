@@ -1189,6 +1189,9 @@ export class Game {
       bladeFan: CONFIG.skills.bladeFan.spiritCost,
       swordDash: CONFIG.skills.swordDash.spiritCost,
       parry: CONFIG.skills.parry.spiritCost,
+      bladeFanTotal: cds.bladeFanTotal,
+      swordDashTotal: cds.swordDashTotal,
+      parryTotal: cds.parryTotal,
     });
     this.hud.setFinalStrikeReady(intent >= maxIntent);
 

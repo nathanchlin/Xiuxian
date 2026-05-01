@@ -646,7 +646,7 @@ export class Hud {
     }
   }
 
-  setSkillCooldowns(bladeFan: number, swordDash: number, parry: number, costs: { bladeFan: number; swordDash: number; parry: number }): void {
+  setSkillCooldowns(bladeFan: number, swordDash: number, parry: number, opts: { bladeFan: number; swordDash: number; parry: number; bladeFanTotal?: number; swordDashTotal?: number; parryTotal?: number }): void {
     const setCd = (el: HTMLDivElement, overlay: HTMLDivElement, cd: number, totalCd: number, key: string, cost: number) => {
       if (cd > 0) {
         const pct = cd / totalCd;
@@ -663,9 +663,9 @@ export class Hud {
         el.style.color = GOLD;
       }
     };
-    setCd(this.skillCds.q, this.skillCdOverlays.q, bladeFan, CONFIG.skills.bladeFan.cooldown, '1', costs.bladeFan);
-    setCd(this.skillCds.f, this.skillCdOverlays.f, swordDash, CONFIG.skills.swordDash.cooldown, '2', costs.swordDash);
-    setCd(this.skillCds.r, this.skillCdOverlays.r, parry, CONFIG.skills.parry.cooldown, '3', costs.parry);
+    setCd(this.skillCds.q, this.skillCdOverlays.q, bladeFan, opts.bladeFanTotal ?? CONFIG.skills.bladeFan.cooldown, '1', opts.bladeFan);
+    setCd(this.skillCds.f, this.skillCdOverlays.f, swordDash, opts.swordDashTotal ?? CONFIG.skills.swordDash.cooldown, '2', opts.swordDash);
+    setCd(this.skillCds.r, this.skillCdOverlays.r, parry, opts.parryTotal ?? CONFIG.skills.parry.cooldown, '3', opts.parry);
   }
 
   setFinalStrikeReady(ready: boolean): void {
