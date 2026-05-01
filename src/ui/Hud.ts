@@ -377,12 +377,26 @@ export class Hud {
     const pct = Math.max(0, Math.min(1, hp / max)) * 100;
     this.hpBar.style.width = `${pct}%`;
     this.hpText.textContent = `${Math.ceil(hp)}`;
+    // Pulse warning when below 25%
+    if (pct < 25) {
+      const pulse = Math.sin(performance.now() * 0.008) * 0.3 + 0.7;
+      this.hpBar.style.opacity = `${pulse}`;
+    } else {
+      this.hpBar.style.opacity = '1';
+    }
   }
 
   setSpirit(spirit: number, max: number): void {
     const pct = Math.max(0, Math.min(1, spirit / max)) * 100;
     this.spiritBar.style.width = `${pct}%`;
     this.spiritText.textContent = `${Math.floor(spirit)}`;
+    // Pulse warning when below 25%
+    if (pct < 25) {
+      const pulse = Math.sin(performance.now() * 0.008) * 0.3 + 0.7;
+      this.spiritBar.style.opacity = `${pulse}`;
+    } else {
+      this.spiritBar.style.opacity = '1';
+    }
   }
 
   setAltitude(alt: number): void {
