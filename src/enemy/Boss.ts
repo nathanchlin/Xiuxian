@@ -268,6 +268,15 @@ export class Boss {
     this.velocity.multiplyScalar(0.95);
     if (this.position.y < 30) this.position.y = 30;
 
+    // Clamp to world boundary — prevents softlock from dash overshooting
+    const maxR = 220;
+    const distXZ = Math.sqrt(this.position.x ** 2 + this.position.z ** 2);
+    if (distXZ > maxR) {
+      const scale = maxR / distXZ;
+      this.position.x *= scale;
+      this.position.z *= scale;
+    }
+
     this.group.position.copy(this.position);
     if (dist > 1) this.group.lookAt(playerPos);
 
