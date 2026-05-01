@@ -543,7 +543,7 @@ export class Hud {
   private hpPrev = 0;
   private hpFlashTimer = 0;
 
-  setHp(hp: number, max: number): void {
+  setHp(hp: number, max: number, dt = 1 / 60): void {
     const pct = Math.max(0, Math.min(1, hp / max)) * 100;
     this.hpBar.style.width = `${pct}%`;
     this.hpText.textContent = `${Math.ceil(hp)}/${Math.ceil(max)}`;
@@ -556,7 +556,7 @@ export class Hud {
     }
     this.hpPrev = hp;
     if (this.hpFlashTimer > 0) {
-      this.hpFlashTimer -= 1 / 60;
+      this.hpFlashTimer -= dt;
       if (this.hpFlashTimer <= 0) {
         this.hpBar.style.boxShadow = 'none';
         this.hpBar.style.filter = 'none';
@@ -582,7 +582,7 @@ export class Hud {
   private spiritPrev = 0;
   private spiritFlashTimer = 0;
 
-  setSpirit(spirit: number, max: number): void {
+  setSpirit(spirit: number, max: number, dt = 1 / 60): void {
     const pct = Math.max(0, Math.min(1, spirit / max)) * 100;
     this.spiritBar.style.width = `${pct}%`;
     this.spiritText.textContent = `${Math.floor(spirit)}/${Math.ceil(max)}`;
@@ -595,7 +595,7 @@ export class Hud {
     }
     this.spiritPrev = spirit;
     if (this.spiritFlashTimer > 0) {
-      this.spiritFlashTimer -= 1 / 60;
+      this.spiritFlashTimer -= dt;
       if (this.spiritFlashTimer <= 0) {
         this.spiritBar.style.boxShadow = 'none';
         this.spiritBar.style.filter = 'none';
@@ -635,11 +635,11 @@ export class Hud {
     this.ammoEl.textContent = ammoText;
   }
 
-  setCrosshairLocked(locked: boolean): void {
+  setCrosshairLocked(locked: boolean, dt = 1 / 60): void {
     const color = locked ? '#e74c3c' : '#fff';
     // Decay crosshair spread
     if (this.crosshairSpread > 0) {
-      this.crosshairSpread = Math.max(0, this.crosshairSpread - 1 / 60);
+      this.crosshairSpread = Math.max(0, this.crosshairSpread - dt);
     }
     const s = this.crosshairSpread * 5; // max 5px spread
     const styles = [

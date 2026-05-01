@@ -1207,8 +1207,8 @@ export class Game {
     this.flight.speedBonus = bonuses.speed;
     this.flight.spiritBonus = bonuses.spirit;
     this.flight.parryWindowBonus = bonuses.parryWindow;
-    this.hud.setHp(this.flight.hp, this.getEffectiveMaxHealth());
-    this.hud.setSpirit(this.flight.spirit, this.getEffectiveMaxSpirit());
+    this.hud.setHp(this.flight.hp, this.getEffectiveMaxHealth(), dt);
+    this.hud.setSpirit(this.flight.spirit, this.getEffectiveMaxSpirit(), dt);
     // Low-HP heartbeat warning every 2s
     const hpPct = this.flight.hp / this.getEffectiveMaxHealth();
     if (hpPct < 0.25 && this.flight.alive) {
@@ -1263,7 +1263,7 @@ export class Game {
       const toTarget = this.boss.position.clone().sub(origin);
       if (toTarget.length() <= beamRange && toTarget.normalize().dot(forward) > 0.3) locked = true;
     }
-    this.hud.setCrosshairLocked(locked);
+    this.hud.setCrosshairLocked(locked, dt);
 
     // Boss HP bar on HUD
     if (this.boss && this.boss.alive) {
