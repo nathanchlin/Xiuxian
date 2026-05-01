@@ -226,7 +226,7 @@ export class TalismanSystem {
     const cfg = CONFIG.talismans.types.ironguard;
     t.durability--;
     t.cooldownTimer = cfg.interval;
-    this.pendingHeal = cfg.healAmount;
+    this.pendingHeal += cfg.healAmount;
 
     // Heal glow visual
     this.showHealGlow();
