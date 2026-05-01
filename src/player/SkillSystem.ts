@@ -36,6 +36,9 @@ export class SkillSystem {
   private beamTrails: Array<{ mesh: THREE.Mesh; timer: number }> = [];
   private parryShield: THREE.Group | null = null;
 
+  // Shared geometry for blade fan trails (avoid GC churn)
+  static readonly BLADE_TRAIL_GEO = new THREE.BoxGeometry(0.5, 0.06, 0.2);
+
   constructor(
     private readonly flight: FlightController,
     private readonly scene: THREE.Scene,
@@ -602,9 +605,8 @@ class Blade {
     if (this.trailTimer > 0.02) {
       this.trailTimer = 0;
       const cfg = CONFIG.skills.bladeFan;
-      const tGeo = new THREE.BoxGeometry(0.5, 0.06, 0.2);
       const tMat = new THREE.MeshBasicMaterial({ color: cfg.color, transparent: true, opacity: 0.4 });
-      const tMesh = new THREE.Mesh(tGeo, tMat);
+      const tMesh = new THREE.Mesh(SkillSystem.BLADE_TRAIL_GEO, tMat);
       tMesh.position.copy(this.mesh.position);
       tMesh.quaternion.copy(this.mesh.quaternion);
       this.scene.add(tMesh);
@@ -620,7 +622,6 @@ class Blade {
       t.mesh.scale.multiplyScalar(0.92);
       if (t.life <= 0) {
         this.scene.remove(t.mesh);
-        t.mesh.geometry.dispose();
         mat.dispose();
         this.trails.splice(i, 1);
       }
@@ -637,7 +638,6 @@ class Blade {
     (this.mesh.material as THREE.Material).dispose();
     for (const t of this.trails) {
       scene.remove(t.mesh);
-      t.mesh.geometry.dispose();
       (t.mesh.material as THREE.Material).dispose();
     }
   }

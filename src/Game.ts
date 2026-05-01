@@ -58,6 +58,15 @@ export class Game {
   private dashAfterimages: { mesh: THREE.Mesh; life: number }[] = [];
   private dashTrailTimer = 0;
 
+  // Shared geometries for particle effects (avoid GC churn)
+  private static readonly DASH_GEO = new THREE.BoxGeometry(0.6, 1.2, 0.4);
+  private static readonly BOOST_GEO = new THREE.SphereGeometry(0.15, 4, 4);
+  private static readonly ENEMY_PROJ_GEOS: Record<string, THREE.SphereGeometry> = {
+    crow: new THREE.SphereGeometry(0.2, 6, 6),
+    serpent: new THREE.SphereGeometry(0.4, 6, 6),
+    dragon: new THREE.SphereGeometry(0.6, 6, 6),
+  };
+
   private level = 1;
   private wave = 0;
   private kills = 0;
@@ -201,7 +210,6 @@ export class Game {
     this.boostParticles.length = 0;
     for (const p of this.enemyProjectiles) {
       this.engine.scene.remove(p.mesh);
-      p.mesh.geometry.dispose();
       (p.mesh.material as THREE.MeshBasicMaterial).dispose();
     }
     this.enemyProjectiles.length = 0;
@@ -464,11 +472,10 @@ export class Game {
       this.dashTrailTimer -= dt;
       if (this.dashTrailTimer <= 0) {
         this.dashTrailTimer = 0.03;
-        const geo = new THREE.BoxGeometry(0.6, 1.2, 0.4);
         const mat = new THREE.MeshBasicMaterial({
           color: 0x44ffcc, transparent: true, opacity: 0.5,
         });
-        const mesh = new THREE.Mesh(geo, mat);
+        const mesh = new THREE.Mesh(Game.DASH_GEO, mat);
         mesh.position.copy(this.flight.position);
         mesh.quaternion.copy(this.flight.quaternion);
         mesh.renderOrder = 999;
@@ -484,7 +491,6 @@ export class Game {
       ai.mesh.scale.multiplyScalar(0.97);
       if (ai.life <= 0) {
         this.engine.scene.remove(ai.mesh);
-        ai.mesh.geometry.dispose();
         mat.dispose();
         this.dashAfterimages.splice(i, 1);
       }
@@ -495,9 +501,8 @@ export class Game {
       this.boostTrailTimer -= dt;
       if (this.boostTrailTimer <= 0) {
         this.boostTrailTimer = 0.04;
-        const geo = new THREE.SphereGeometry(0.15, 4, 4);
         const mat = new THREE.MeshBasicMaterial({ color: 0x88ddff, transparent: true, opacity: 0.6 });
-        const mesh = new THREE.Mesh(geo, mat);
+        const mesh = new THREE.Mesh(Game.BOOST_GEO, mat);
         mesh.position.copy(this.flight.position);
         mesh.position.x += (Math.random() - 0.5) * 0.8;
         mesh.position.y += (Math.random() - 0.5) * 0.5;
@@ -514,7 +519,6 @@ export class Game {
       p.mesh.scale.multiplyScalar(0.94);
       if (p.life <= 0) {
         this.engine.scene.remove(p.mesh);
-        p.mesh.geometry.dispose();
         mat.dispose();
         this.boostParticles.splice(i, 1);
       }
@@ -529,7 +533,6 @@ export class Game {
       mat.opacity = Math.max(0, p.life / 0.5);
       if (p.life <= 0) {
         this.engine.scene.remove(p.mesh);
-        p.mesh.geometry.dispose();
         mat.dispose();
         this.enemyProjectiles.splice(i, 1);
       }
@@ -773,10 +776,8 @@ export class Game {
   /** Spawn a visual-only projectile from enemy to player */
   private spawnEnemyProjectile(from: THREE.Vector3, to: THREE.Vector3, typeName: string): void {
     const colors: Record<string, number> = { crow: 0xff4400, serpent: 0x44ff44, dragon: 0x4488ff };
-    const sizes: Record<string, number> = { crow: 0.2, serpent: 0.4, dragon: 0.6 };
     const color = colors[typeName] ?? 0xff4400;
-    const size = sizes[typeName] ?? 0.3;
-    const geo = new THREE.SphereGeometry(size, 6, 6);
+    const geo = Game.ENEMY_PROJ_GEOS[typeName] ?? Game.ENEMY_PROJ_GEOS.crow!;
     const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1.0 });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.copy(from);
