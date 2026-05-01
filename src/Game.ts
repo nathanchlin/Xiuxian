@@ -623,6 +623,11 @@ export class Game {
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const e = this.enemies[i];
       if (!e.alive) {
+        // Reward player for enemies that fled (they escaped but still count as kills)
+        if (e.fled) {
+          this.onEnemyKilled(e.typeName);
+          e.fled = false;
+        }
         e.update(dt, playerPos);
         if (e.isDeathDone()) {
           e.dispose(this.engine.scene);

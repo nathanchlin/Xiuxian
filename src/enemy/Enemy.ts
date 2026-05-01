@@ -16,6 +16,7 @@ export class Enemy {
   hp: number;
   maxHp: number;
   alive = true;
+  fled = false; // set when enemy escapes via flee-despawn
   state: EnemyState = 'patrol';
 
   private readonly speed: number;
@@ -238,6 +239,7 @@ export class Enemy {
       // Auto-die if fled too far from player (skip death animation)
       if (dist > 150) {
         this.alive = false;
+        this.fled = true;
         this.state = 'dead';
         this.deathTimer = 0;
         return { attacked: false, damage: 0 };
