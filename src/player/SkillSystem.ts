@@ -94,6 +94,9 @@ export class SkillSystem {
   fireBladeFan(): boolean {
     const cfg = CONFIG.skills.bladeFan;
     if (this.bladeFanCd > 0) return false;
+    // No targets — don't waste spirit
+    const aliveTargets = this.targets.filter(t => t.alive);
+    if (aliveTargets.length === 0) return false;
     if (!this.flight.consumeSpirit(cfg.spiritCost)) return false;
 
     this.bladeFanCd = this.scaleCooldown(cfg.cooldown, 'bladeFan');
@@ -102,9 +105,6 @@ export class SkillSystem {
 
     const origin = this.flight.position.clone();
     const forward = this.flight.getForward();
-
-    // Collect alive targets for homing
-    const aliveTargets = this.targets.filter(t => t.alive);
 
     for (let i = 0; i < cfg.bladeCount; i++) {
       const angleOffset = (i - (cfg.bladeCount - 1) / 2) * cfg.fanAngle;
