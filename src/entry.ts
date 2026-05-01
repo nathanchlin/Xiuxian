@@ -32,7 +32,7 @@ if (!isMobile) {
   // Desktop: pointer-lock based pause/resume
   document.addEventListener('pointerlockchange', () => {
     if (document.pointerLockElement == null) {
-      if (game.state === 'dead' || game.state === 'game_over' || game.state === 'level_complete' || game.state === 'paused') {
+      if (game.state === 'dead' || game.state === 'dying' || game.state === 'game_over' || game.state === 'level_complete' || game.state === 'paused') {
         return;
       }
       overlay.style.display = 'flex';
@@ -44,7 +44,7 @@ if (!isMobile) {
 
   // Handle pointer lock rejection (e.g. after closing inventory panel)
   document.addEventListener('pointerlockerror', () => {
-    if (game.state !== 'paused' && game.state !== 'dead' && game.state !== 'game_over' && game.state !== 'level_complete' && game.state !== 'menu') {
+    if (game.state !== 'paused' && game.state !== 'dead' && game.state !== 'dying' && game.state !== 'game_over' && game.state !== 'level_complete' && game.state !== 'menu') {
       overlay.style.display = 'flex';
       startBtn.textContent = '点击继续';
     }

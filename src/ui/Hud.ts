@@ -729,6 +729,23 @@ export class Hud {
     }, 2500);
   }
 
+  private deathVignetteEl: HTMLDivElement | null = null;
+  setDeathVignette(pct: number): void {
+    if (pct <= 0) {
+      if (this.deathVignetteEl) { this.deathVignetteEl.style.display = 'none'; }
+      return;
+    }
+    if (!this.deathVignetteEl) {
+      this.deathVignetteEl = document.createElement('div');
+      this.deathVignetteEl.style.cssText =
+        'position:fixed;inset:0;pointer-events:none;z-index:200;' +
+        'background:radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.7) 100%);';
+      document.body.appendChild(this.deathVignetteEl);
+    }
+    this.deathVignetteEl.style.display = 'block';
+    this.deathVignetteEl.style.opacity = String(pct);
+  }
+
   /** Show/hide the boss HP bar at the top of the screen */
   setBossHpVisible(visible: boolean): void {
     this.bossHpContainer.style.display = visible ? 'flex' : 'none';
@@ -1121,6 +1138,9 @@ export class Hud {
     }
     if (this.breakthroughFlash) {
       this.breakthroughFlash.style.opacity = '0';
+    }
+    if (this.deathVignetteEl) {
+      this.deathVignetteEl.style.display = 'none';
     }
   }
 

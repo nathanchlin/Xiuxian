@@ -19,7 +19,7 @@ import { DamageNumbers } from './ui/DamageNumbers';
 import { DeathBurst } from './shared/DeathBurst';
 import type { EnemyTypeName } from './enemy/enemy-types';
 
-export type GameState = 'menu' | 'briefing' | 'playing' | 'paused' | 'dead' | 'level_complete' | 'game_over';
+export type GameState = 'menu' | 'briefing' | 'playing' | 'paused' | 'dying' | 'dead' | 'level_complete' | 'game_over';
 
 export class Game {
   readonly engine: Engine;
@@ -68,6 +68,7 @@ export class Game {
 
   private restTimer = 0;
   private briefingTimer = 0;
+  private deathCamTimer = 0;
 
   constructor(container: HTMLElement) {
     const engineCfg: EngineConfig = {
@@ -398,6 +399,23 @@ export class Game {
       // Update camera + player model during briefing so scene is visible
       this.cameraSystem.update(dt, this.flight);
       if (this.playerModel) this.playerModel.update(this.flight, this.cameraSystem, dt);
+      return;
+    }
+
+    if (this.state === 'dying') {
+      // Death cam: keep camera and particles running in slow motion
+      const slowDt = dt * 0.25;
+      this.cameraSystem.update(slowDt, this.flight);
+      this.deathBurst.update(slowDt);
+      this.arena.update(slowDt);
+      // Fade vignette
+      this.deathCamTimer -= dt;
+      const pct = 1 - Math.max(0, this.deathCamTimer / 1.5);
+      this.hud.setDeathVignette(pct);
+      if (this.deathCamTimer <= 0) {
+        this.hud.setDeathVignette(0);
+        this.onDeathCamEnd();
+      }
       return;
     }
 
@@ -868,14 +886,22 @@ export class Game {
      ═══════════════════════════════════════════════════════════════════ */
 
   private onDeath(): void {
-    this.state = 'dead';
+    this.state = 'dying';
+    this.deathCamTimer = 1.5;
     this.sfx.death();
-    this.input.exitPointerLock();
 
     // Death burst particles at player position
     this.deathBurst.spawn(this.flight.position.clone(), 0x4488ff, 20);
     // Hide player model so burst is visible
     if (this.playerModel) this.playerModel.group.visible = false;
+    // Slow camera zoom-out for cinematic feel
+    this.cameraSystem.shake(1.2, 0.4);
+  }
+
+  /** Called after death cam delay finishes */
+  private onDeathCamEnd(): void {
+    this.state = 'dead';
+    this.input.exitPointerLock();
 
     const elapsed = performance.now() / 1000 - this.startTime;
     const isNewBest = this.saveHighScore(this.level, this.kills, elapsed);
