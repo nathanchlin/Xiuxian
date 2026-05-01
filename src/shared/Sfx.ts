@@ -229,11 +229,12 @@ export class Sfx {
     const now = ctx.currentTime;
     gain.gain.setValueAtTime(0, now);
     gain.gain.linearRampToValueAtTime(vol, now + 0.005);
+    gain.gain.setValueAtTime(vol, now + duration - 0.01);
     gain.gain.linearRampToValueAtTime(0, now + duration);
     osc.connect(gain);
     gain.connect(master);
     osc.start(now);
-    osc.stop(now + duration + 0.02);
+    osc.stop(now + duration + 0.05);
   }
 
   private sweep(f0: number, f1: number, duration: number, type: OscType, vol = 1): void {
@@ -246,11 +247,12 @@ export class Sfx {
     osc.frequency.exponentialRampToValueAtTime(Math.max(1, f1), now + duration);
     gain.gain.setValueAtTime(0, now);
     gain.gain.linearRampToValueAtTime(vol, now + 0.01);
+    gain.gain.setValueAtTime(vol, now + duration - 0.01);
     gain.gain.linearRampToValueAtTime(0, now + duration);
     osc.connect(gain);
     gain.connect(master);
     osc.start(now);
-    osc.stop(now + duration + 0.02);
+    osc.stop(now + duration + 0.05);
   }
 
   private noise(duration: number, bandpassFreq: number, vol: number): void {
