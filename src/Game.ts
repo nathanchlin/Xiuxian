@@ -47,6 +47,10 @@ export class Game {
   private lootDrops: Pickup[] = [];
   private talismanDrops: Pickup[] = [];
 
+  // ─── Dash trail afterimages ───
+  private dashAfterimages: { mesh: THREE.Mesh; life: number }[] = [];
+  private dashTrailTimer = 0;
+
   private level = 1;
   private wave = 0;
   private kills = 0;
@@ -161,6 +165,13 @@ export class Game {
     this.comboMultiplier = 1.0;
     this.nextEnemyId = 1;
     this.restTimer = 0;
+    this.dashTrailTimer = 0;
+    for (const ai of this.dashAfterimages) {
+      this.engine.scene.remove(ai.mesh);
+      ai.mesh.geometry.dispose();
+      (ai.mesh.material as THREE.MeshBasicMaterial).dispose();
+    }
+    this.dashAfterimages.length = 0;
     this.startTime = performance.now() / 1000;
 
     // Reset player
@@ -380,6 +391,37 @@ export class Game {
 
     // 3.5 Player model (third-person visible mesh)
     if (this.playerModel) this.playerModel.update(this.flight, this.cameraSystem);
+
+    // 3.6 Dash afterimage trail
+    if (this.flight.dashing) {
+      this.dashTrailTimer -= dt;
+      if (this.dashTrailTimer <= 0) {
+        this.dashTrailTimer = 0.03;
+        const geo = new THREE.BoxGeometry(0.6, 1.2, 0.4);
+        const mat = new THREE.MeshBasicMaterial({
+          color: 0x44ffcc, transparent: true, opacity: 0.5,
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.copy(this.flight.position);
+        mesh.quaternion.copy(this.flight.quaternion);
+        mesh.renderOrder = 999;
+        this.engine.scene.add(mesh);
+        this.dashAfterimages.push({ mesh, life: 0.35 });
+      }
+    }
+    for (let i = this.dashAfterimages.length - 1; i >= 0; i--) {
+      const ai = this.dashAfterimages[i];
+      ai.life -= dt;
+      const mat = ai.mesh.material as THREE.MeshBasicMaterial;
+      mat.opacity = Math.max(0, ai.life / 0.35) * 0.5;
+      ai.mesh.scale.multiplyScalar(0.97);
+      if (ai.life <= 0) {
+        this.engine.scene.remove(ai.mesh);
+        ai.mesh.geometry.dispose();
+        mat.dispose();
+        this.dashAfterimages.splice(i, 1);
+      }
+    }
 
     // 4. Skill system
     this.skillSystem.update(dt);
