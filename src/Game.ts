@@ -514,6 +514,9 @@ export class Game {
     // 11. Update weapon targets (alive enemies + boss)
     this.updateSkillTargets();
 
+    // 11.5 Auto-use consumables when HP/Spirit low
+    this.autoUseConsumables();
+
     // 12. Update HUD
     this.updateHud();
   }
@@ -734,6 +737,33 @@ export class Game {
     const treasures = CONFIG.items.treasures as Record<string, { name: string }>;
     const consumables = CONFIG.items.consumables as Record<string, { name: string }>;
     return books[id]?.name ?? treasures[id]?.name ?? consumables[id]?.name ?? id;
+  }
+
+  private autoUseConsumables(): void {
+    const hpPct = this.flight.hp / CONFIG.player.maxHealth;
+    const spPct = this.flight.spirit / CONFIG.spirit.maxSpirit;
+
+    // Auto HP pill when below 40%
+    if (hpPct < 0.4) {
+      const pill = this.inventory.getItem('pill_hp');
+      if (pill && pill.count > 0) {
+        this.inventory.removeItem('pill_hp');
+        const cfg = CONFIG.items.consumables['pill_hp'] as { value: number };
+        this.flight.hp = Math.min(CONFIG.player.maxHealth, this.flight.hp + cfg.value);
+        this.hud.showKill('自动服用 回血丹');
+      }
+    }
+
+    // Auto Spirit pill when below 20%
+    if (spPct < 0.2) {
+      const pill = this.inventory.getItem('pill_spirit');
+      if (pill && pill.count > 0) {
+        this.inventory.removeItem('pill_spirit');
+        const cfg = CONFIG.items.consumables['pill_spirit'] as { value: number };
+        this.flight.spirit = Math.min(CONFIG.spirit.maxSpirit, this.flight.spirit + cfg.value);
+        this.hud.showKill('自动服用 聚灵丹');
+      }
+    }
   }
 
   private updateHud(): void {
