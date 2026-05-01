@@ -768,15 +768,19 @@ export class Game {
   private onSkillHit(hit: SkillHitResult, skillName?: string): void {
     this.hud.flashHitMarker();
 
-    // Apply combo multiplier to damage
-    const finalDamage = Math.round(hit.damage * this.comboMultiplier);
+    // Apply combo multiplier + critical hit chance
+    let baseDamage = hit.damage * this.comboMultiplier;
+    const isCrit = Math.random() < 0.15;
+    if (isCrit) baseDamage *= 1.75;
+    const finalDamage = Math.round(baseDamage);
 
     // Show damage number at the target's position
     const targetEnemy = this.enemies.find(e => e.id === hit.targetId && e.alive);
     const targetBoss = (!targetEnemy && this.boss?.id === hit.targetId && this.boss.alive) ? this.boss : null;
     const targetPos = targetEnemy?.position ?? targetBoss?.position;
     if (targetPos) {
-      this.damageNumbers.spawn(targetPos, finalDamage);
+      this.damageNumbers.spawn(targetPos, finalDamage, isCrit ? 0xffd700 : 0xff4444);
+      if (isCrit) this.cameraSystem.shake(0.3, 0.1);
     }
 
     for (const enemy of this.enemies) {
