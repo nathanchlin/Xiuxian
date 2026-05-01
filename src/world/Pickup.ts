@@ -60,15 +60,18 @@ export class Pickup {
       case 'spirit':
         color = CONFIG.pickups.spiritOrb.color;
         size = 0.6;
+        this.expireTimer = 60;
         break;
       case 'health':
         color = CONFIG.pickups.healthPill.color;
         size = 0.5;
+        this.expireTimer = 60;
         break;
       case 'missile':
         color = CONFIG.pickups.missileBox.color;
         size = 0.7;
         useBox = true;
+        this.expireTimer = 60;
         break;
       case 'chest':
         color = 0xdaa520;
@@ -84,6 +87,7 @@ export class Pickup {
       case 'cultivation_orb':
         color = 0xffd700;
         size = 0.4;
+        this.expireTimer = 60;
         break;
       case 'skill_book':
         color = this.getItemColor();
