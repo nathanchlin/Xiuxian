@@ -86,6 +86,7 @@ export class Game {
   private briefingTimer = 0;
   private deathCamTimer = 0;
   private heartbeatTimer = 0;
+  private visibilityHandler: (() => void) | null = null;
 
   constructor(container: HTMLElement) {
     const engineCfg: EngineConfig = {
@@ -160,12 +161,13 @@ export class Game {
     this.engine.addUpdater((dt) => this.update(dt));
 
     // Pause when tab is hidden
-    document.addEventListener('visibilitychange', () => {
+    this.visibilityHandler = () => {
       if (document.hidden && this.state === 'playing') {
         this.state = 'paused';
         this.input.exitPointerLock();
       }
-    });
+    };
+    document.addEventListener('visibilitychange', this.visibilityHandler);
   }
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -1418,6 +1420,10 @@ export class Game {
      ═══════════════════════════════════════════════════════════════════ */
 
   dispose(): void {
+    if (this.visibilityHandler) {
+      document.removeEventListener('visibilitychange', this.visibilityHandler);
+      this.visibilityHandler = null;
+    }
     this.clearEnemies();
     this.sfx.stopWind();
     for (const p of this.pickups) p.dispose(this.engine.scene);

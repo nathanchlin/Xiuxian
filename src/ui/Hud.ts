@@ -1334,6 +1334,19 @@ export class Hud {
   }
 
   dispose(): void {
+    // Clear all pending timers to prevent stale callbacks on disposed DOM
+    clearTimeout(this.damageTimer);
+    clearTimeout(this.hitMarkerTimer);
+    clearTimeout(this.bossPhaseTimer);
+    clearTimeout(this.damageDirTimer);
+    clearTimeout(this.breakthroughTimer);
+    clearTimeout(this.comboAnimTimer);
+    clearTimeout(this.talismanPickupTimer);
+    clearTimeout(this.skillLevelUpTimer);
+    clearTimeout(this.announcementTimer);
+    for (let i = 0; i < this.killTimers.length; i++) clearTimeout(this.killTimers[i]);
+    this.killTimers.length = 0;
+
     this.root.remove();
     this.hideEndScreens();
     // Clean up elements appended to document.body (not this.root)
