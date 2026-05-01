@@ -472,10 +472,18 @@ export class Game {
       this.flight.position.z,
       CONFIG.flight.playerRadius,
     );
+    // Detect collision correction while dashing
+    const collided = resolved.x !== this.flight.position.x ||
+                     resolved.y !== this.flight.position.y ||
+                     resolved.z !== this.flight.position.z;
     this.flight.position.set(resolved.x, resolved.y, resolved.z);
     this.flight.velocity.x += resolved.vx;
     this.flight.velocity.y += resolved.vy;
     this.flight.velocity.z += resolved.vz;
+    // End dash early on building collision to prevent jitter
+    if (collided && this.flight.dashing) {
+      this.flight.resetDashState();
+    }
 
     // 2b. Animate arena particles
     this.arena.update(dt);
