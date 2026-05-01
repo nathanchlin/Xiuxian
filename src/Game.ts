@@ -61,6 +61,7 @@ export class Game {
   private comboCount = 0;
   private comboTimer = 0;
   private comboMultiplier = 1.0;
+  private maxCombo = 0;
 
   private restTimer = 0;
   private briefingTimer = 0;
@@ -163,6 +164,7 @@ export class Game {
     this.comboCount = 0;
     this.comboTimer = 0;
     this.comboMultiplier = 1.0;
+    this.maxCombo = 0;
     this.nextEnemyId = 1;
     this.restTimer = 0;
     this.dashTrailTimer = 0;
@@ -702,6 +704,7 @@ export class Game {
 
   private registerCombo(): void {
     this.comboCount++;
+    if (this.comboCount > this.maxCombo) this.maxCombo = this.comboCount;
     this.comboTimer = CONFIG.skills.combo.timeout;
     this.comboMultiplier = Math.min(
       CONFIG.skills.combo.maxMultiplier,
@@ -778,7 +781,7 @@ export class Game {
     if (this.playerModel) this.playerModel.group.visible = false;
 
     const elapsed = performance.now() / 1000 - this.startTime;
-    this.hud.showGameOver({ level: this.level, kills: this.kills, time: elapsed });
+    this.hud.showGameOver({ level: this.level, kills: this.kills, time: elapsed, maxCombo: this.maxCombo });
 
     // Bind restart button (created dynamically by HUD)
     requestAnimationFrame(() => {
@@ -796,7 +799,7 @@ export class Game {
       this.sfx.levelComplete();
       this.input.exitPointerLock();
       const elapsed = performance.now() / 1000 - this.startTime;
-      this.hud.showVictory({ level: this.level, kills: this.kills, time: elapsed });
+      this.hud.showVictory({ level: this.level, kills: this.kills, time: elapsed, maxCombo: this.maxCombo });
       requestAnimationFrame(() => {
         const btn = document.getElementById('hud-restart');
         if (btn) btn.addEventListener('click', () => this.restart());

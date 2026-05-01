@@ -914,7 +914,7 @@ export class Hud {
     }
   }
 
-  showGameOver(stats: { level: number; kills: number; time: number }): void {
+  showGameOver(stats: { level: number; kills: number; time: number; maxCombo: number }): void {
     this.hideEndScreens();
     const overlay = div(
       `position:fixed;top:0;left:0;width:100%;height:100%;` +
@@ -933,6 +933,7 @@ export class Hud {
     info.innerHTML =
       `到达第 <span style="color:${GOLD}">${stats.level}</span> 关&emsp;` +
       `斩杀 <span style="color:${GOLD}">${stats.kills}</span> 敌&emsp;` +
+      `最高 <span style="color:${GOLD}">${stats.maxCombo}</span> 连斩&emsp;` +
       `历时 <span style="color:${GOLD}">${mins}:${String(secs).padStart(2, '0')}</span>`;
     const btn = document.createElement('button');
     btn.id = 'hud-restart';
@@ -945,7 +946,7 @@ export class Hud {
     document.body.appendChild(overlay);
   }
 
-  showVictory(stats: { level: number; kills: number; time: number }): void {
+  showVictory(stats: { level: number; kills: number; time: number; maxCombo: number }): void {
     this.hideEndScreens();
     const overlay = div(
       `position:fixed;top:0;left:0;width:100%;height:100%;` +
@@ -969,6 +970,7 @@ export class Hud {
     info.innerHTML =
       `通关 <span style="color:${GOLD}">${stats.level}</span> 关&emsp;` +
       `斩杀 <span style="color:${GOLD}">${stats.kills}</span> 敌&emsp;` +
+      `最高 <span style="color:${GOLD}">${stats.maxCombo}</span> 连斩&emsp;` +
       `历时 <span style="color:${GOLD}">${mins}:${String(secs).padStart(2, '0')}</span>`;
     const btn = document.createElement('button');
     btn.id = 'hud-restart';
