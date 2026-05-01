@@ -1249,7 +1249,9 @@ export class Hud {
       `font-size:36px;font-weight:bold;color:${GOLD};letter-spacing:4px;margin-bottom:16px;`,
     );
     title.textContent = `第 ${level} 关 通关`;
-    const gradeEl = div(`font-size:56px;font-weight:bold;color:#fff;margin-bottom:12px;`);
+    const gradeEl = div(`font-size:56px;font-weight:bold;margin-bottom:12px;`);
+    const gradeColors: Record<string, string> = { S: '#ffd700', A: '#44ff88', B: '#4488ff', C: '#aaaaaa' };
+    gradeEl.style.color = gradeColors[grade] ?? '#fff';
     gradeEl.textContent = grade;
     const info = div(`font-size:14px;color:#aaa;line-height:2;text-align:center;`);
     if (stats) {
