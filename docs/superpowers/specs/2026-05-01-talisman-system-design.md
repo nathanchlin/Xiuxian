@@ -73,7 +73,30 @@
 - 符箓类型随机从3种中选取
 - 每关（`initLevel`）重新生成
 
-道具外观：黄色方块（BoxGeometry 0.7），发光材质（emissive 0xffaa00），上下浮动 + 旋转动画（与现有 Pickup 相同模式）。
+## 获取方式
+
+符箓不在固定位置刷新，通过以下两种途径获取：
+
+### 1. 场景宝箱
+
+- 每关生成2-3个宝箱，放置在 `arena.pickupSpots` 的位置上
+- 宝箱外观：金色方块（BoxGeometry 1.0），上下浮动+旋转，发光
+- 玩家飞近宝箱（碰撞半径2.0）自动开启
+- 打开后随机掉出1个符箓（3种等概率），宝箱消失
+- 打开时播放 `chestOpen` 音效
+
+### 2. 击杀敌人掉落
+
+- 每个敌人死亡时有概率掉落1个符箓
+- 掉落概率：灵鸦 15%、岩蟒 30%、蛟龙 50%、Boss 100%
+- 掉落的符箓在敌人死亡位置生成，悬浮等待拾取
+- 掉落物10秒后自动消失（避免场景堆积）
+- 掉落类型随机（3种等概率）
+
+### 道具外观
+
+- 宝箱：金色方块（1.0大小），emissive 0xdaa520
+- 掉落符箓：黄色小方块（0.7大小），emissive 0xffaa00，上下浮动+旋转
 
 ## 拾取提示
 
@@ -107,11 +130,12 @@
 
 | 现有系统 | 变更 |
 |----------|------|
-| `src/world/Pickup.ts` | PickupType 添加 `'talisman'`，拾取返回符箓类型ID |
-| `src/config.ts` | 添加 `talismans` 配置段 |
-| `src/Game.ts` | spawnPickups 中添加符箓生成，pickup collection 中处理符箓拾取，update 中调用 TalismanSystem.update |
-| `src/ui/Hud.ts` | 添加符箓槽位显示、拾取提示方法 |
-| **新建** `src/player/TalismanSystem.ts` | 符箓管理：携带、自动攻击、耐久消耗、视觉效果 |
+| `src/world/Pickup.ts` | 扩展为支持宝箱（chest）和符箓掉落（talisman_drop）类型 |
+| `src/config.ts` | 添加 `talismans` 配置段（3种符箓数值 + 掉落概率） |
+| `src/Game.ts` | spawnPickups 添加宝箱生成；敌人死亡时按概率掉落符箓；update 中调用 TalismanSystem.update；掉落物10秒超时清理 |
+| `src/enemy/Enemy.ts` | 不修改，掉落逻辑在 Game.ts 的 onEnemyKilled 中处理 |
+| `src/ui/Hud.ts` | 添加符箓槽位显示、拾取大字提示方法 |
+| **新建** `src/player/TalismanSystem.ts` | 符箓管理：携带、自动攻击/回复、耐久消耗、视觉效果 |
 | `src/shared/Sfx.ts` | 添加符箓相关音效 |
 
 ## 数值平衡
@@ -119,4 +143,5 @@
 - 追魂符 DPS：12/秒，20秒持续 → 总伤害240。对比灵刃散射 DPS 约30（15×3/1.5秒），追魂符约占主输出的40%，作为补充输出合理
 - 雷罚符 DPS：12/秒（30/2.5），但AOE能打多个，密集敌群时价值翻倍
 - 金刚符总回复120HP > 玩家满血100，能完整回一次血+多一些余量
-- 一关4波，场景提供2-3个符箓，不会过量
+- 一关4波，场景2-3个宝箱 + 击杀掉落，预计每关可获得3-5个符箓
+- 掉落概率偏低（灵鸦15%），避免符箓过剩，保持稀缺感
