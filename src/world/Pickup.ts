@@ -204,24 +204,31 @@ export class Pickup {
     }
   }
 
-  /** Pull toward player when within magnet range (XZ only — avoids vertical yanking) */
+  /** Pull toward player when within magnet range */
   attract(playerPos: THREE.Vector3, dt: number): void {
     if (this.collected) return;
     const magnetRadius = 18;
     const dx = playerPos.x - this.position.x;
+    const dy = playerPos.y - this.position.y;
     const dz = playerPos.z - this.position.z;
     const distXZ = Math.sqrt(dx * dx + dz * dz);
     if (distXZ < magnetRadius && distXZ > 0.1) {
       const pullStrength = (1 - distXZ / magnetRadius) * 40;
       this.position.x += (dx / distXZ) * pullStrength * dt;
       this.position.z += (dz / distXZ) * pullStrength * dt;
+      // Also pull Y toward player to prevent items hovering below
+      this.position.y += dy * Math.min(1, pullStrength * dt / Math.abs(dy + 0.01));
     }
   }
 
   checkCollect(playerPos: THREE.Vector3, playerRadius: number): boolean {
     if (this.collected) return false;
     const collectRadius = this.type === 'cultivation_orb' ? 3.0 : this.type === 'chest' ? 2.0 : 1.5;
-    return this.mesh.position.distanceTo(playerPos) < playerRadius + collectRadius;
+    const dx = this.mesh.position.x - playerPos.x;
+    const dz = this.mesh.position.z - playerPos.z;
+    const dy = this.mesh.position.y - playerPos.y;
+    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    return dist < playerRadius + collectRadius;
   }
 
   collect(): LootData {

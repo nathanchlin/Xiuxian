@@ -383,9 +383,9 @@ export class Hud {
     this.hitMarker.textContent = '+';
     this.root.appendChild(this.hitMarker);
 
-    // ── Kill notification (3-line rolling feed) ────────────────────────────────
+    // ── Kill notification (3-line rolling feed, bottom-left) ────────────────────
     const killContainer = div(
-      `${BASE}top:32%;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:4px;align-items:center;`,
+      `${BASE}bottom:15%;left:3%;display:flex;flex-direction:column;gap:4px;align-items:flex-start;`,
     );
     for (let i = 0; i < 3; i++) {
       const line = div(
@@ -505,10 +505,10 @@ export class Hud {
     if (!this.comboContainer) {
       this.comboContainer = document.createElement('div');
       this.comboContainer.style.cssText =
-        `position:fixed;top:18%;left:50%;transform:translateX(-50%);` +
+        `position:fixed;top:40%;right:3%;` +
         `font-family:monospace;font-size:28px;font-weight:bold;` +
         `color:${GOLD};letter-spacing:3px;pointer-events:none;z-index:50;` +
-        `text-shadow:0 0 10px rgba(255,215,0,0.5);transition:transform 0.15s;`;
+        `text-shadow:0 0 10px rgba(255,215,0,0.5);transition:transform 0.15s;text-align:right;`;
       document.body.appendChild(this.comboContainer);
     }
     this.comboContainer.textContent = `${count}连斩 x${multiplier.toFixed(1)}`;

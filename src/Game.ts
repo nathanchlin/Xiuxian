@@ -324,8 +324,11 @@ export class Game {
 
     // HUD updates
     this.hud.setLevel(level);
-    this.hud.setWave(1, CONFIG.progression.wavesPerLevel);
-    this.hud.showAnnouncement(`第 ${level} 关`, '#daa520');
+    const effectiveWaves = Math.min(6, CONFIG.progression.wavesPerLevel + Math.floor((level - 1) / 30));
+    this.hud.setWave(1, effectiveWaves);
+    const realm = CONFIG.progression.realms.find(r => level >= r.startLevel && level <= r.endLevel);
+    const realmSuffix = realm ? ` — ${realm.name}期` : '';
+    this.hud.showAnnouncement(`第 ${level} 关${realmSuffix}`, '#daa520');
     this.hud.setHp(this.flight.hp, this.getEffectiveMaxHealth(), 0);
     this.hud.setSpirit(this.flight.spirit, this.getEffectiveMaxSpirit(), 0);
     this.nextWave();
@@ -340,14 +343,16 @@ export class Game {
 
   private nextWave(): void {
     this.wave++;
-    this.hud.setWave(this.wave, CONFIG.progression.wavesPerLevel);
+    const effectiveWaves = Math.min(6, CONFIG.progression.wavesPerLevel + Math.floor((this.level - 1) / 30));
+    this.hud.setWave(this.wave, effectiveWaves);
 
     const isBossLevel = (CONFIG.progression.bossLevels as readonly number[]).includes(this.level);
-    const isFinalWave = this.wave >= CONFIG.progression.wavesPerLevel;
+    const isFinalWave = this.wave >= effectiveWaves;
 
     if (isBossLevel && isFinalWave) {
       this.spawnBoss();
-      this.hud.showAnnouncement('妖王降临', '#c0392b');
+      const isMajor = (CONFIG.progression.majorBossLevels as readonly number[]).includes(this.level);
+      this.hud.showAnnouncement(isMajor ? '大妖降临' : '妖王降临', isMajor ? '#ff2200' : '#c0392b');
     } else {
       this.spawnEnemies();
       this.hud.showAnnouncement(`第 ${this.wave} 波`, '#88aaff');
@@ -359,8 +364,7 @@ export class Game {
 
   private spawnEnemies(): void {
     const count = Math.floor(
-      CONFIG.progression.scaling.enemyCountBase +
-      CONFIG.progression.scaling.enemyCountPerLevel * this.level,
+      3 + 4 * Math.sqrt(this.level),
     );
 
     const types = this.getEnemyTypesForLevel(this.level);
@@ -415,10 +419,11 @@ export class Game {
   }
 
   private getEnemyTypesForLevel(level: number): EnemyTypeName[] {
-    if (level <= 3) return ['crow'];
-    if (level <= 6) return ['crow', 'serpent'];
-    if (level <= 9) return ['crow', 'serpent', 'dragon'];
-    return ['serpent', 'dragon'];
+    if (level <= 10) return ['crow'];
+    if (level <= 20) return ['crow', 'serpent'];
+    if (level <= 40) return ['crow', 'serpent', 'dragon'];
+    if (level <= 70) return ['serpent', 'dragon', 'phoenix'];
+    return ['dragon', 'phoenix'];
   }
 
   private clearEnemies(): void {
@@ -668,7 +673,7 @@ export class Game {
         if (parryResult.reflected) {
           this.onSkillHit({ targetId: this.boss.id, damage: parryResult.reflectDamage }, 'parry');
         } else {
-          this.applyDamageToPlayer(bossResult.damage, this.boss.position);
+          this.applyDamageToPlayer(bossResult.damage, this.boss.position, true);
           this.spawnEnemyProjectile(this.boss.position, playerPos, 'boss');
         }
       }
@@ -761,9 +766,9 @@ export class Game {
       // Wave clear spirit + HP bonus
       const spiritBonus = 10 + this.level * 3;
       this.flight.spirit = Math.min(this.getEffectiveMaxSpirit(), this.flight.spirit + spiritBonus);
-      const hpBonus = Math.round(this.getEffectiveMaxHealth() * 0.08);
+      const hpBonus = Math.round(this.getEffectiveMaxHealth() * 0.10);
       this.flight.hp = Math.min(this.getEffectiveMaxHealth(), this.flight.hp + hpBonus);
-      if (this.wave >= CONFIG.progression.wavesPerLevel) {
+      if (this.wave >= Math.min(6, CONFIG.progression.wavesPerLevel + Math.floor((this.level - 1) / 30))) {
         this.hud.showKill(`波次清除! +${spiritBonus} 灵力 +${hpBonus} 生命`);
         this.sfx.chestOpen();
         this.onLevelComplete();
@@ -782,11 +787,6 @@ export class Game {
       if (this.restTimer <= 0) {
         this.restTimer = 0;
         this.hud.setWaveCountdown(0);
-        // Clear dead enemies before spawning new wave (dispose for memory safety)
-        for (const e of this.enemies) {
-          if (!e.alive) e.dispose(this.engine.scene);
-        }
-        this.enemies = this.enemies.filter((e) => e.alive);
         this.nextWave();
       }
     }
@@ -812,7 +812,7 @@ export class Game {
      DAMAGE & COMBAT
      ═══════════════════════════════════════════════════════════════════ */
 
-  private applyDamageToPlayer(damage: number, sourcePos?: THREE.Vector3): void {
+  private applyDamageToPlayer(damage: number, sourcePos?: THREE.Vector3, fromBoss = false): void {
     // Skip entirely if invincible (dash or i-frames)
     if (!this.flight.alive || this.flight.dashInvincible || this.flight.hitInvincibleTimer > 0) return;
 
@@ -822,14 +822,15 @@ export class Game {
     const died = this.flight.takeDamage(damage);
     this.sfx.damage();
     this.hud.flashDamage();
-    this.cameraSystem.shake(0.6, 0.15);
     if (this.playerModel) this.playerModel.flashDamage();
+
+    if (fromBoss) this.cameraSystem.shake(0.6, 0.15);
+
     if (sourcePos) {
       this.hud.flashDamageDirection(sourcePos, this.flight.position, this.flight.quaternion);
-      // Knockback impulse away from damage source
       const knockDir = this.flight.position.clone().sub(sourcePos).normalize();
-      knockDir.y = Math.max(knockDir.y, 0.3); // slight upward push
-      this.flight.velocity.add(knockDir.multiplyScalar(15));
+      knockDir.y = Math.max(knockDir.y, 0.3);
+      this.flight.velocity.add(knockDir.multiplyScalar(fromBoss ? 15 : 3));
     }
     if (died) this.onDeath();
   }
@@ -1003,7 +1004,7 @@ export class Game {
     // Cultivation exp orb (skip if maxed)
     if (this.inventory.cultivationLevel < CONFIG.items.cultivation.maxLevel) {
       const baseExp = CONFIG.items.cultivation.dropAmounts[typeName] ?? 5;
-      const expAmount = Math.round(baseExp * (1 + this.level * 0.3));
+      const expAmount = Math.round(baseExp * (1 + this.level * 0.15));
       const orbPos = position.clone().add(offset());
       this.lootDrops.push(new Pickup('cultivation_orb', orbPos, this.engine.scene, { cultivationExp: expAmount }));
     }
@@ -1099,12 +1100,10 @@ export class Game {
     const hpPct = this.flight.hp / this.getEffectiveMaxHealth();
 
     // Score: 0-100 combining kills, combo, and survival
-    const enemiesPerWave = CONFIG.progression.scaling.enemyCountBase +
-      CONFIG.progression.scaling.enemyCountPerLevel * this.level;
-    // Boss wave replaces regular enemies — boss=1 kill + summons, not enemiesPerWave
+    const enemiesPerWave = Math.floor(3 + 4 * Math.sqrt(this.level));
     const isBossLevel = (CONFIG.progression.bossLevels as readonly number[]).includes(this.level);
-    const bossWaveReduction = isBossLevel ? (enemiesPerWave - 1 - CONFIG.boss.summonCount) : 0;
-    const totalExpected = enemiesPerWave * CONFIG.progression.wavesPerLevel - bossWaveReduction;
+    const bossWaveReduction = isBossLevel ? (enemiesPerWave - 1 - Math.ceil(CONFIG.boss.baseSummonCount + this.level * CONFIG.boss.summonPerLevel)) : 0;
+    const totalExpected = enemiesPerWave * Math.min(6, CONFIG.progression.wavesPerLevel + Math.floor((this.level - 1) / 30)) - bossWaveReduction;
     const killScore = Math.min(1, this.levelKills / totalExpected) * 40;       // 0-40 pts
     const comboScore = Math.min(1, this.levelMaxCombo / 20) * 30;               // 0-30 pts
     const hpScore = hpPct * 30;                                                  // 0-30 pts
@@ -1139,7 +1138,8 @@ export class Game {
 
   private getEffectiveMaxHealth(): number {
     const bonuses = this.inventory.getStatBonuses();
-    return Math.floor(CONFIG.player.maxHealth * (1 + bonuses.hp));
+    const levelBonus = 1 + (this.level - 1) * CONFIG.player.hpPerGameLevel / CONFIG.player.maxHealth;
+    return Math.floor(CONFIG.player.maxHealth * levelBonus * (1 + bonuses.hp));
   }
 
   private getEffectiveMaxSpirit(): number {
@@ -1160,7 +1160,7 @@ export class Game {
   }
 
   private getEnemyColor(typeName: string): number {
-    const colors: Record<string, number> = { crow: 0x444444, serpent: 0x22cc44, dragon: 0xff4444 };
+    const colors: Record<string, number> = { crow: 0x444444, serpent: 0x22cc44, dragon: 0xff4444, phoenix: 0xff8800 };
     return colors[typeName] ?? 0xffffff;
   }
 
@@ -1296,7 +1296,7 @@ export class Game {
     if (this.boss && this.boss.alive) {
       this.hud.setBossHpVisible(true);
       this.hud.setBossHp(this.boss.hp, this.boss.maxHp);
-      this.hud.setBossShield(this.boss.currentShieldHp, CONFIG.boss.shieldHp);
+      this.hud.setBossShield(this.boss.currentShieldHp, this.boss.maxShieldHp);
     } else {
       this.hud.setBossHpVisible(false);
       this.hud.setBossShield(0, 0);

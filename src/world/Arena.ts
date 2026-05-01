@@ -37,10 +37,10 @@ export class Arena {
     const extra = level - presets.length;
     const tintIdx = (level - 1) % CONFIG.arena.skyTintPresets.length;
     return {
-      buildings: base.buildings + extra * CONFIG.arena.buildingsPerLevel,
-      bridges: base.bridges + Math.floor(extra * 0.5),
-      islands: base.islands + extra,
-      spread: base.spread + extra * CONFIG.arena.spreadPerLevel,
+      buildings: Math.min(50, base.buildings + extra * CONFIG.arena.buildingsPerLevel),
+      bridges: Math.min(20, base.bridges + Math.floor(extra * 0.5)),
+      islands: Math.min(30, base.islands + extra),
+      spread: Math.min(800, base.spread + extra * CONFIG.arena.spreadPerLevel),
       skyTint: CONFIG.arena.skyTintPresets[tintIdx]!,
     };
   }

@@ -16,25 +16,24 @@ export class DamageNumbers {
   }
 
   /** Spawn a damage number at world position */
-  spawn(position: THREE.Vector3, damage: number, color = 0xff4444, prefix = ''): void {
-    // Scale by damage: 5→1x, 25→1.3x, 80→1.5x, 150→1.7x, 450→2x
-    const sizeScale = Math.min(2.0, 0.7 + Math.log10(Math.max(1, damage)) * 0.45);
+  spawn(position: THREE.Vector3, damage: number, color = 0xff8866, prefix = ''): void {
+    const sizeScale = Math.min(1.4, 0.6 + Math.log10(Math.max(1, damage)) * 0.25);
 
     const canvas = document.createElement('canvas');
     canvas.width = 128;
     canvas.height = 64;
     const ctx = canvas.getContext('2d')!;
 
-    const fontSize = Math.round(30 + 20 * sizeScale);
-    ctx.font = `bold ${fontSize}px monospace`;
+    const fontSize = Math.round(24 + 12 * sizeScale);
+    ctx.font = `${fontSize}px monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
     const text = `${prefix}${Math.round(damage)}`;
 
     // Outline
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 4;
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    ctx.lineWidth = 3;
     ctx.strokeText(text, 64, 32);
 
     // Fill
@@ -48,22 +47,21 @@ export class DamageNumbers {
     const mat = new THREE.SpriteMaterial({
       map: texture,
       transparent: true,
-      depthTest: false,
+      depthTest: true,
+      depthWrite: false,
     });
     const sprite = new THREE.Sprite(mat);
     sprite.position.copy(position);
     sprite.position.y += 1.5;
-    // Random horizontal offset so overlapping numbers don't stack
     sprite.position.x += (Math.random() - 0.5) * 1.5;
-    sprite.scale.set(2.5 * sizeScale, 1.25 * sizeScale, 1);
-    sprite.renderOrder = 1001;
+    sprite.scale.set(1.8 * sizeScale, 0.9 * sizeScale, 1);
 
     this.scene.add(sprite);
 
-    const maxTime = 0.8 + Math.random() * 0.3;
+    const maxTime = 0.6 + Math.random() * 0.2;
     this.pool.push({
       sprite,
-      velocity: new THREE.Vector3((Math.random() - 0.5) * 2, 8, (Math.random() - 0.5) * 2),
+      velocity: new THREE.Vector3((Math.random() - 0.5) * 1, 5, (Math.random() - 0.5) * 1),
       timer: maxTime,
       maxTime,
     });

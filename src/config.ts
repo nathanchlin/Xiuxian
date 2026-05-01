@@ -2,6 +2,18 @@
  * Global game configuration for XianxiaAirCombat.
  * All tunable parameters in one place. Hot-reloads via Vite HMR.
  */
+
+// ─── Computed: Cultivation exp table (50*n²) ───
+const CULTIVATION_MAX = 50;
+const expPerLevelTable: number[] = [0];
+for (let i = 1; i <= CULTIVATION_MAX; i++) expPerLevelTable.push(Math.round(50 * i * i));
+
+// ─── Computed: Boss levels (every 5) and major boss levels (every 10) ───
+const bossLevels: number[] = [];
+for (let i = 5; i <= 100; i += 5) bossLevels.push(i);
+const majorBossLevels: number[] = [];
+for (let i = 10; i <= 100; i += 10) majorBossLevels.push(i);
+
 export const CONFIG = {
   // ─── Flight Physics ───
   flight: {
@@ -37,7 +49,7 @@ export const CONFIG = {
   // ─── Spirit (Mana) ───
   spirit: {
     maxSpirit: 100,
-    regenRate: 5,
+    regenRate: 8,
     beamCost: 3,
     dashCost: 15,
   },
@@ -152,6 +164,7 @@ export const CONFIG = {
   // ─── Player ───
   player: {
     maxHealth: 200,
+    hpPerGameLevel: 8,
     startHeight: 80,
   },
 
@@ -188,11 +201,21 @@ export const CONFIG = {
         color: 0x2244aa,
         scale: 2.5,
       },
+      phoenix: {
+        name: '凤凰',
+        hp: 500,
+        speed: 35,
+        attackDamage: 8,
+        chargeDamage: 12,
+        attackType: 'fireball' as const,
+        color: 0xff4400,
+        scale: 2.0,
+      },
     },
     scaling: {
-      hpPerLevel: 0.15,
-      damagePerLevel: 0.10,
-      speedPerLevel: 0.03,
+      hpPerLevel: 0.04,
+      damagePerLevel: 0.03,
+      speedPerLevel: 0.008,
     },
     engageDistance: 80,
     fleeHpPercent: 0.2,
@@ -202,12 +225,16 @@ export const CONFIG = {
   // ─── Boss ───
   boss: {
     baseHp: 250,
+    baseDamage: 15,
+    damagePerLevel: 0.05,
     phase1Threshold: 0.6,
     phase2Threshold: 0.3,
     phase2SpeedBoost: 1.5,
     phase3SpeedBoost: 1.3,
-    summonCount: 2,
-    shieldHp: 80,
+    baseSummonCount: 2,
+    summonPerLevel: 0.05,
+    baseShieldHp: 80,
+    shieldPerLevel: 2,
     color: 0xcc00ff,
   },
 
@@ -218,12 +245,12 @@ export const CONFIG = {
       { buildings: 12, bridges: 5, islands: 8, spread: 300, skyTint: '#1a0a2e' },
       { buildings: 15, bridges: 6, islands: 10, spread: 400, skyTint: '#2a1a1e' },
     ] as Array<{ buildings: number; bridges: number; islands: number; spread: number; skyTint: string }>,
-    skyTintPresets: ['#0a0a3e', '#1a0a2e', '#2a1a1e', '#0a1a2e'],
+    skyTintPresets: ['#0a0a3e', '#0a1a2e', '#1a0a2e', '#2a1a1e', '#1a2a0a', '#2a2a0a'],
     buildingMinGap: 20,
     heightRange: [30, 120] as [number, number],
     islandRadius: [1, 3] as [number, number],
-    buildingsPerLevel: 2,
-    spreadPerLevel: 30,
+    buildingsPerLevel: 1,
+    spreadPerLevel: 15,
     bodyColor: 0xf0f0f0,
     accentColor: 0xdaa520,
     fogDensity: 0.008,
@@ -246,6 +273,7 @@ export const CONFIG = {
       crow: 0.15,
       serpent: 0.30,
       dragon: 0.50,
+      phoenix: 0.40,
       boss: 1.0,
     } as Record<string, number>,
     types: {
@@ -283,20 +311,24 @@ export const CONFIG = {
 
   // ─── Progression ───
   progression: {
-    totalLevels: 6,
-    bossLevels: [3, 6],
+    totalLevels: 100,
+    bossLevels: bossLevels as readonly number[],
+    majorBossLevels: majorBossLevels as readonly number[],
+    realms: [
+      { name: '炼气', startLevel: 1, endLevel: 10 },
+      { name: '筑基', startLevel: 11, endLevel: 30 },
+      { name: '结丹', startLevel: 31, endLevel: 50 },
+      { name: '元婴', startLevel: 51, endLevel: 70 },
+      { name: '化神', startLevel: 71, endLevel: 90 },
+      { name: '飞升', startLevel: 91, endLevel: 100 },
+    ] as readonly { name: string; startLevel: number; endLevel: number }[],
     wavesPerLevel: 4,
     waveRestTime: 2,
     scaling: {
-      hpPerLevel: 1.2,
-      damagePerLevel: 1.1,
-      enemyCountBase: 4,
-      enemyCountPerLevel: 2,
-      speedPerLevel: 1.05,
     },
     arenaScaling: {
-      buildingsPerLevel: 2,
-      spreadPerLevel: 30,
+      buildingsPerLevel: 1,
+      spreadPerLevel: 15,
     },
     unlocks: [] as Array<{ level: number; type: string; id: string }>,
   },
@@ -342,15 +374,16 @@ export const CONFIG = {
       pill_shield: { name: '无敌符', color: 0xffdd00, description: '3秒无敌',   effect: 'invincible', value: 3 },
     } as Record<string, { name: string; color: number; description: string; effect: string; value: number }>,
     cultivation: {
-      expPerLevel: [0, 50, 120, 220, 360, 550, 800, 1100, 1500, 2000],
-      maxLevel: 10,
-      bonusPerLevel: 0.05,
-      dropAmounts: { crow: 5, serpent: 15, dragon: 30, boss: 100 } as Record<string, number>,
+      expPerLevel: expPerLevelTable as readonly number[],
+      maxLevel: CULTIVATION_MAX,
+      bonusPerLevel: 0.03,
+      dropAmounts: { crow: 5, serpent: 15, dragon: 30, phoenix: 60, boss: 100 } as Record<string, number>,
     },
     dropTable: {
       crow:    { cultivationExp: 1.0, consumable: 0.20, skillBook: 0.05, treasure: 0.0  },
       serpent: { cultivationExp: 1.0, consumable: 0.25, skillBook: 0.15, treasure: 0.05 },
       dragon:  { cultivationExp: 1.0, consumable: 0.30, skillBook: 0.30, treasure: 0.10 },
+      phoenix: { cultivationExp: 1.0, consumable: 0.35, skillBook: 0.20, treasure: 0.15 },
       boss:    { cultivationExp: 1.0, consumable: 0.50, skillBook: 1.0,  treasure: 0.50 },
     } as Record<string, { cultivationExp: number; consumable: number; skillBook: number; treasure: number }>,
     qualityColors: {

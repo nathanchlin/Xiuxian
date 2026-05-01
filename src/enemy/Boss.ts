@@ -19,7 +19,10 @@ export class Boss {
   private readonly bodyColor: number;
   private shieldMesh: THREE.Mesh | null = null;
   private shieldHp = 0;
+  readonly maxShieldHp: number;
   get currentShieldHp(): number { return this.shieldHp; }
+  private readonly scaledDamage: number;
+  private readonly summonCount: number;
   private attackCooldown = 0;
   private dashCooldown = 0;
   private readonly baseSpeed = 30;
@@ -42,9 +45,14 @@ export class Boss {
     this.id = id;
     this.position.copy(spawn);
 
-    // Linear HP scaling instead of exponential — avoids damage sponge at high levels
+    // Linear HP scaling
     this.hp = Math.round(CONFIG.boss.baseHp * (1 + CONFIG.enemies.scaling.hpPerLevel * level));
     this.maxHp = this.hp;
+
+    // Level-scaled damage, shield, summons
+    this.scaledDamage = Math.round(CONFIG.boss.baseDamage * (1 + CONFIG.boss.damagePerLevel * level));
+    this.maxShieldHp = CONFIG.boss.baseShieldHp + CONFIG.boss.shieldPerLevel * level;
+    this.summonCount = CONFIG.boss.baseSummonCount + Math.floor(level * CONFIG.boss.summonPerLevel);
 
     this.bodyMat = new THREE.MeshStandardMaterial({
       color: CONFIG.boss.color, roughness: 0.3, metalness: 0.2,
@@ -150,7 +158,7 @@ export class Boss {
   }
 
   private activateShield(): void {
-    this.shieldHp = CONFIG.boss.shieldHp;
+    this.shieldHp = this.maxShieldHp;
     this.shieldBarFill.visible = true;
     this.updateShieldBar();
     if (!this.shieldMesh) {
@@ -186,7 +194,7 @@ export class Boss {
   }
 
   private updateShieldBar(): void {
-    const pct = Math.max(0, this.shieldHp / CONFIG.boss.shieldHp);
+    const pct = Math.max(0, this.shieldHp / this.maxShieldHp);
     this.shieldBarFill.scale.x = pct;
     this.shieldBarFill.position.x = -(1 - pct) * this.hpBarWidth / 2;
   }
@@ -240,23 +248,23 @@ export class Boss {
       const moveDir = approach.add(strafeDir.multiplyScalar(speed * 0.35));
       this.velocity.lerp(moveDir, Math.min(1, 3 * dt));
       if (this.attackCooldown <= 0 && dist < 80) {
-        this.attackCooldown = 1.5; attacked = true; damage = 20;
+        this.attackCooldown = 1.5; attacked = true; damage = this.scaledDamage;
       }
     } else if (this.phase === 2) {
       // Phase 2: aggressive strafe + faster approach
-      if (!this.phase2Summoned) { this.phase2Summoned = true; this.onSummon?.(CONFIG.boss.summonCount, this.position.clone()); }
+      if (!this.phase2Summoned) { this.phase2Summoned = true; this.onSummon?.(this.summonCount, this.position.clone()); }
       const approach = toPlayer.clone().normalize().multiplyScalar(speed * 0.6);
       const moveDir = approach.add(strafeDir.multiplyScalar(speed * 0.5));
       this.velocity.lerp(moveDir, Math.min(1, 4 * dt));
       if (this.attackCooldown <= 0 && dist < 60) {
-        this.attackCooldown = 1.0; attacked = true; damage = 25; aoe = dist < 20;
+        this.attackCooldown = 1.0; attacked = true; damage = Math.round(this.scaledDamage * 1.3); aoe = dist < 20;
       }
     } else {
       // Phase 3: dash attack + weave between dashes
       if (this.dashCooldown <= 0 && dist < 50) {
         this.dashCooldown = 2.0;
         this.velocity.copy(toPlayer.clone().normalize().multiplyScalar(speed * 2));
-        attacked = true; damage = 40;
+        attacked = true; damage = this.scaledDamage * 2;
       } else {
         const approach = toPlayer.clone().normalize().multiplyScalar(speed);
         const weave = strafeDir.multiplyScalar(speed * 0.25);

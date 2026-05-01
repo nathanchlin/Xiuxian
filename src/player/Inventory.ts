@@ -78,7 +78,7 @@ export class Inventory {
   }
 
   getCultivationBonus(): number {
-    return this.cultivationLevel * CONFIG.items.cultivation.bonusPerLevel;
+    return Math.log2(1 + this.cultivationLevel) * CONFIG.items.cultivation.bonusPerLevel;
   }
 
   getExpForNextLevel(): number {

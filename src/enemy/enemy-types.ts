@@ -1,6 +1,6 @@
 import { CONFIG } from '../config';
 
-export type EnemyTypeName = 'crow' | 'serpent' | 'dragon';
+export type EnemyTypeName = 'crow' | 'serpent' | 'dragon' | 'phoenix';
 
 export interface EnemyTypeConfig {
   name: string;

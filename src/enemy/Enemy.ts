@@ -51,7 +51,7 @@ export class Enemy {
     this.attackDamage = cfg.attackDamage;
     this.color = cfg.color;
     // Attack cooldown varies by type: crow fast, serpent medium, dragon slow
-    const cooldownByType: Record<EnemyTypeName, number> = { crow: 2.5, serpent: 3.5, dragon: 5.0 };
+    const cooldownByType: Record<EnemyTypeName, number> = { crow: 2.5, serpent: 3.5, dragon: 5.0, phoenix: 4.0 };
     this.attackCooldownTime = cooldownByType[typeName] ?? 3.5;
 
     this.bodyMat = new THREE.MeshStandardMaterial({ color: cfg.color, roughness: 0.4, metalness: 0.1 });
@@ -103,6 +103,32 @@ export class Enemy {
       const eyeGeo = new THREE.SphereGeometry(0.18 * scale, 6, 6);
       const le = new THREE.Mesh(eyeGeo, eyeMat); le.position.set(-0.35 * scale, 0.3 * scale, -1.1 * scale);
       const re = new THREE.Mesh(eyeGeo, eyeMat); re.position.set(0.35 * scale, 0.3 * scale, -1.1 * scale);
+      this.group.add(le, re);
+    } else if (typeName === 'phoenix') {
+      // Phoenix: compact body + large fiery wings + crest plume
+      bodyGeo = new THREE.BoxGeometry(1.2 * scale, 0.8 * scale, 1.8 * scale);
+      const body = new THREE.Mesh(bodyGeo, this.bodyMat);
+      this.group.add(body);
+      // Large swept wings
+      const wGeo = new THREE.BoxGeometry(4.0 * scale, 0.08 * scale, 1.2 * scale);
+      const lw = new THREE.Mesh(wGeo, wingMat); lw.position.set(-2.0 * scale, 0.2 * scale, 0.2 * scale); lw.rotation.z = 0.2;
+      const rw = new THREE.Mesh(wGeo, wingMat); rw.position.set(2.0 * scale, 0.2 * scale, 0.2 * scale); rw.rotation.z = -0.2;
+      this.group.add(lw, rw);
+      this.wingL = lw; this.wingR = rw;
+      // Tail feathers
+      const tailGeo = new THREE.BoxGeometry(0.4 * scale, 0.15 * scale, 2.0 * scale);
+      const tail = new THREE.Mesh(tailGeo, wingMat); tail.position.z = 1.8 * scale;
+      this.group.add(tail);
+      this.tailMesh = tail;
+      // Crest plume
+      const crestGeo = new THREE.BoxGeometry(0.3 * scale, 0.6 * scale, 0.15 * scale);
+      const crest = new THREE.Mesh(crestGeo, wingMat); crest.position.set(0, 0.6 * scale, -0.6 * scale);
+      this.group.add(crest);
+      // Fiery orange eyes
+      const eyeMat = new THREE.MeshStandardMaterial({ color: 0xff8800, emissive: 0xff8800, emissiveIntensity: 2.5 });
+      const eyeGeo = new THREE.SphereGeometry(0.15 * scale, 6, 6);
+      const le = new THREE.Mesh(eyeGeo, eyeMat); le.position.set(-0.3 * scale, 0.25 * scale, -0.9 * scale);
+      const re = new THREE.Mesh(eyeGeo, eyeMat); re.position.set(0.3 * scale, 0.25 * scale, -0.9 * scale);
       this.group.add(le, re);
     } else {
       // Crow: compact body + flat wings + beak + yellow eyes
@@ -176,7 +202,7 @@ export class Enemy {
   private die(): void {
     this.alive = false;
     this.state = 'dead';
-    this.deathTimer = 2.0;
+    this.deathTimer = -1; // never auto-expire
     this.bodyMat.color.setHex(0x666666);
     this.bodyMat.emissive.setHex(0x000000);
     this.bodyMat.emissiveIntensity = 0;
@@ -188,11 +214,6 @@ export class Enemy {
 
   update(dt: number, playerPos: THREE.Vector3): { attacked: boolean; damage: number } {
     if (!this.alive) {
-      if (this.deathTimer > 0) {
-        this.deathTimer -= dt;
-        this.group.position.y -= 20 * dt;
-        this.bodyMat.opacity = Math.max(0, this.deathTimer / 2.0);
-      }
       return { attacked: false, damage: 0 };
     }
 
@@ -339,7 +360,7 @@ export class Enemy {
 
   getPosition(): THREE.Vector3 { return this.position.clone(); }
 
-  isDeathDone(): boolean { return !this.alive && this.deathTimer <= 0; }
+  isDeathDone(): boolean { return !this.alive && this.deathTimer === 0; }
 
   dispose(scene: THREE.Scene): void {
     scene.remove(this.group);
