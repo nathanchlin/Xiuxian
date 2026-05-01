@@ -66,6 +66,7 @@ export class Hud {
 
   // Overlays
   private damageOverlay: HTMLDivElement;
+  private lowHpVignette: HTMLDivElement;
   private hitMarker: HTMLDivElement;
   private killText: HTMLDivElement;
   private bossPhaseText: HTMLDivElement;
@@ -312,6 +313,14 @@ export class Hud {
     );
     this.root.appendChild(this.damageOverlay);
 
+    // ── Low HP vignette (persistent, fades in when HP < 30%) ──────────────
+    this.lowHpVignette = div(
+      `${BASE}top:0;left:0;width:100%;height:100%;` +
+        `background:radial-gradient(ellipse at center, transparent 30%, rgba(120,0,0,0.35) 100%);` +
+        `opacity:0;transition:opacity 0.5s;pointer-events:none;`,
+    );
+    this.root.appendChild(this.lowHpVignette);
+
     // ── Hit marker ────────────────────────────────────────────────────────────
     this.hitMarker = div(
       `${BASE}top:50%;left:50%;transform:translate(-50%,-50%);` +
@@ -401,6 +410,8 @@ export class Hud {
     } else {
       this.hpBar.style.opacity = '1';
     }
+    // Low HP vignette below 30%
+    this.lowHpVignette.style.opacity = pct < 30 ? `${1 - pct / 30}` : '0';
   }
 
   setSpirit(spirit: number, max: number): void {
