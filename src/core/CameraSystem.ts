@@ -64,9 +64,10 @@ export class CameraSystem {
     // Derive forward direction from player quaternion (local -Z = forward)
     const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(playerQuat);
 
-    // First-person: at player position, looking forward
-    const firstTarget = playerPos.clone();
-    const firstLookAt = playerPos.clone().add(forward.multiplyScalar(10));
+    // First-person: at eye level, looking forward
+    const eyeOffset = new THREE.Vector3(0, 1.0, 0);
+    const firstTarget = playerPos.clone().add(eyeOffset);
+    const firstLookAt = firstTarget.clone().add(forward.multiplyScalar(10));
 
     // Handle transition
     if (this.transitioning) {
