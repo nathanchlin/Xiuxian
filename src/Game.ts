@@ -813,6 +813,7 @@ export class Game {
     this.hud.setSpirit(this.flight.spirit, this.getEffectiveMaxSpirit());
     this.hud.setAltitude(this.flight.getAltitude());
     this.hud.setSpeed(this.flight.getSpeed());
+    this.hud.setCultivationLevel(this.inventory.cultivationLevel);
 
     const aliveCount = this.enemies.filter((e) => e.alive).length + (this.boss?.alive ? 1 : 0);
     this.hud.setEnemyCount(aliveCount);

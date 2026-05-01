@@ -57,6 +57,7 @@ export class Hud {
   private altEl: HTMLDivElement;
   private speedEl: HTMLDivElement;
   private boostBar: HTMLDivElement;
+  private cultLevelEl: HTMLDivElement;
 
   // Radar
   private radarCanvas: HTMLCanvasElement;
@@ -207,6 +208,15 @@ export class Hud {
     const boostGroup = this._barGroup('疾冲', '#27ae60');
     this.boostBar = boostGroup.bar;
     bottomBar.appendChild(boostGroup.wrapper);
+
+    // Cultivation level badge
+    const cultWrapper = div(`display:flex;flex-direction:column;align-items:center;font-size:11px;`);
+    const cultLbl = div(`color:${GOLD};`);
+    cultLbl.textContent = '修为';
+    this.cultLevelEl = div(`font-size:14px;font-weight:bold;color:${GOLD};`);
+    this.cultLevelEl.textContent = '第 0 层';
+    cultWrapper.append(cultLbl, this.cultLevelEl);
+    bottomBar.appendChild(cultWrapper);
 
     // ── Sword Intent indicator (above bottom bar) ────────────────────
     this.intentContainer = div(
@@ -409,6 +419,10 @@ export class Hud {
 
   setBoost(pct: number): void {
     this.boostBar.style.width = `${Math.max(0, Math.min(1, pct)) * 100}%`;
+  }
+
+  setCultivationLevel(level: number): void {
+    this.cultLevelEl.textContent = `第 ${level} 层`;
   }
 
   setWeapon(name: string, ammoText: string): void {
