@@ -17,16 +17,20 @@ export class DamageNumbers {
 
   /** Spawn a damage number at world position */
   spawn(position: THREE.Vector3, damage: number, color = 0xff4444, prefix = ''): void {
+    // Scale by damage: 5→1x, 25→1.3x, 80→1.5x, 150→1.7x, 450→2x
+    const sizeScale = Math.min(2.0, 0.7 + Math.log10(Math.max(1, damage)) * 0.45);
+
     const canvas = document.createElement('canvas');
     canvas.width = 128;
     canvas.height = 64;
     const ctx = canvas.getContext('2d')!;
 
-    ctx.font = 'bold 40px monospace';
+    const fontSize = Math.round(30 + 20 * sizeScale);
+    ctx.font = `bold ${fontSize}px monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    const text = `${prefix}${damage}`;
+    const text = `${prefix}${Math.round(damage)}`;
 
     // Outline
     ctx.strokeStyle = '#000';
@@ -51,7 +55,7 @@ export class DamageNumbers {
     sprite.position.y += 1.5;
     // Random horizontal offset so overlapping numbers don't stack
     sprite.position.x += (Math.random() - 0.5) * 1.5;
-    sprite.scale.set(2.5, 1.25, 1);
+    sprite.scale.set(2.5 * sizeScale, 1.25 * sizeScale, 1);
     sprite.renderOrder = 1001;
 
     this.scene.add(sprite);
