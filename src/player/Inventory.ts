@@ -118,6 +118,7 @@ export class Inventory {
     const cultBonus = this.getCultivationBonus();
     bonuses.damage += cultBonus;
     bonuses.hp += cultBonus;
+    bonuses.speed += cultBonus;
     bonuses.spirit += cultBonus;
 
     // Equipment bonuses

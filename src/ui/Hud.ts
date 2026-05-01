@@ -1334,5 +1334,11 @@ export class Hud {
   dispose(): void {
     this.root.remove();
     this.hideEndScreens();
+    // Clean up elements appended to document.body (not this.root)
+    if (this.waveCountdownEl) { this.waveCountdownEl.remove(); this.waveCountdownEl = null; }
+    if (this.announcementEl) { this.announcementEl.remove(); this.announcementEl = null; }
+    if (this.deathVignetteEl) { this.deathVignetteEl.remove(); this.deathVignetteEl = null; }
+    for (const arrow of this.trackerArrows) arrow.remove();
+    this.trackerArrows.length = 0;
   }
 }
