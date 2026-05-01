@@ -583,6 +583,10 @@ export class Game {
 
     if (aliveEnemies === 0 && !bossAlive && this.restTimer <= 0) {
       console.log(`[WAVE] All enemies dead. wave=${this.wave}, wavesPerLevel=${CONFIG.progression.wavesPerLevel}`);
+      // Wave clear spirit bonus
+      const spiritBonus = 10 + this.level * 3;
+      this.flight.spirit = Math.min(this.getEffectiveMaxSpirit(), this.flight.spirit + spiritBonus);
+      this.hud.showKill(`波次清除! +${spiritBonus} 灵力`);
       if (this.wave >= CONFIG.progression.wavesPerLevel) {
         this.onLevelComplete();
         return;
