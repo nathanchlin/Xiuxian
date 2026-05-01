@@ -457,6 +457,10 @@ export class Game {
     if (heal > 0) {
       this.flight.hp = Math.min(this.getEffectiveMaxHealth(), this.flight.hp + heal);
     }
+    for (const name of this.talismanSystem.consumeExpired()) {
+      this.hud.showKill(`${name} 已耗尽`);
+      this.sfx.talismanExpire();
+    }
 
     // 5. Enemy updates + damage to player
     const playerPos = this.flight.position;

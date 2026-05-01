@@ -35,6 +35,7 @@ export class TalismanSystem {
   // Hit results to be consumed by Game each frame
   private pendingHits: TalismanHitResult[] = [];
   private pendingHeal = 0;
+  private expiredNames: string[] = [];
 
   constructor(
     private readonly flight: FlightController,
@@ -124,6 +125,8 @@ export class TalismanSystem {
 
       // Check durability
       if (t.durability <= 0) {
+        const cfg = CONFIG.talismans.types[t.type];
+        this.expiredNames.push(cfg.name);
         this.removeTalisman(i);
       }
     }
@@ -170,6 +173,12 @@ export class TalismanSystem {
 
   consumeHeal(): number {
     return this.pendingHeal;
+  }
+
+  consumeExpired(): string[] {
+    const names = this.expiredNames;
+    this.expiredNames = [];
+    return names;
   }
 
   // ─── Talisman Behaviors ────────────────────────────────
