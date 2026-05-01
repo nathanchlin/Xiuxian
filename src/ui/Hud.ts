@@ -81,6 +81,12 @@ export class Hud {
   private skillCds!: { q: HTMLDivElement; f: HTMLDivElement; r: HTMLDivElement };
   private finalStrikeHint!: HTMLDivElement;
 
+  // Talisman HUD
+  private talismanSlots: HTMLDivElement[] = [];
+  private talismanDurTexts: HTMLDivElement[] = [];
+  private talismanPickupEl!: HTMLDivElement;
+  private talismanPickupTimer = 0;
+
   constructor() {
     // ── Root ──────────────────────────────────────────────────────────────────
     this.root = div(
@@ -236,6 +242,33 @@ export class Hud {
     this.finalStrikeHint.textContent = '按左键 — 万剑归宗';
     this.root.appendChild(this.finalStrikeHint);
 
+    // ── Talisman slots (bottom bar, after HP) ────────────────────────
+    const talismanContainer = div(
+      `${BASE}bottom:80px;right:180px;display:flex;gap:6px;`,
+    );
+    for (let i = 0; i < 2; i++) {
+      const slot = div(
+        `width:28px;height:28px;border:1px solid #555;border-radius:4px;` +
+          `background:rgba(0,0,0,0.5);position:relative;`,
+      );
+      const durText = div(
+        `position:absolute;bottom:1px;right:2px;font-size:9px;color:#fff;` +
+          `text-shadow:0 0 3px #000;`,
+      );
+      slot.appendChild(durText);
+      this.talismanSlots.push(slot);
+      this.talismanDurTexts.push(durText);
+      talismanContainer.appendChild(slot);
+    }
+    this.root.appendChild(talismanContainer);
+
+    // ── Talisman pickup notification ─────────────────────────────────
+    this.talismanPickupEl = div(
+      `${BASE}top:35%;left:50%;transform:translate(-50%,-50%) scale(0.8);` +
+        `text-align:center;opacity:0;transition:all 0.2s;pointer-events:none;`,
+    );
+    this.root.appendChild(this.talismanPickupEl);
+
     this.root.appendChild(bottomBar);
 
     // ── Damage flash overlay ──────────────────────────────────────────────────
@@ -382,6 +415,40 @@ export class Hud {
 
   setFinalStrikeReady(ready: boolean): void {
     this.finalStrikeHint.style.opacity = ready ? '1' : '0';
+  }
+
+  setTalismanSlots(slots: Array<{ type: string; durability: number; color: number } | null>): void {
+    for (let i = 0; i < 2; i++) {
+      const slot = this.talismanSlots[i]!;
+      const durText = this.talismanDurTexts[i]!;
+      const data = slots[i] ?? null;
+      if (data) {
+        const hex = '#' + data.color.toString(16).padStart(6, '0');
+        slot.style.borderColor = hex;
+        slot.style.background = hex + '44';
+        slot.style.boxShadow = `0 0 6px ${hex}`;
+        durText.textContent = `${data.durability}`;
+      } else {
+        slot.style.borderColor = '#555';
+        slot.style.background = 'rgba(0,0,0,0.5)';
+        slot.style.boxShadow = 'none';
+        durText.textContent = '';
+      }
+    }
+  }
+
+  showTalismanPickup(name: string, description: string): void {
+    this.talismanPickupEl.innerHTML =
+      `<div style="font-size:28px;font-weight:bold;color:#ffd700;text-shadow:0 0 12px rgba(255,215,0,0.8);letter-spacing:3px;">` +
+      `「获得 ${name}」</div>` +
+      `<div style="font-size:14px;color:#ccc;margin-top:6px;">${description}</div>`;
+    this.talismanPickupEl.style.opacity = '1';
+    this.talismanPickupEl.style.transform = 'translate(-50%,-50%) scale(1)';
+    clearTimeout(this.talismanPickupTimer);
+    this.talismanPickupTimer = window.setTimeout(() => {
+      this.talismanPickupEl.style.opacity = '0';
+      this.talismanPickupEl.style.transform = 'translate(-50%,-50%) scale(0.8)';
+    }, 1500);
   }
 
   flashDamage(): void {
