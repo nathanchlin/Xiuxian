@@ -242,6 +242,7 @@ export class Enemy {
       this.attackCooldown = this.attackCooldownTime;
       attacked = true;
       this.group.lookAt(playerPos);
+      this.velocity.multiplyScalar(0.3); // decelerate on attack
     } else if (dist < CONFIG.enemies.engageDistance) {
       this.state = 'chase';
       const chaseDir = toPlayer.normalize();
@@ -271,7 +272,7 @@ export class Enemy {
     this.position.addScaledVector(this.velocity, dt);
     if (this.position.y < 20) this.position.y = 20;
     this.group.position.copy(this.position);
-    if (this.velocity.lengthSq() > 0.1) {
+    if (this.velocity.lengthSq() > 0.1 && this.state !== 'attack') {
       this.group.lookAt(this.position.clone().add(this.velocity));
     }
     this.group.position.y += Math.sin(performance.now() * 0.003 + this.id * 7) * 0.3;
