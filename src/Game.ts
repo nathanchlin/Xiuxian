@@ -734,11 +734,13 @@ export class Game {
       this.flight.hp = Math.min(this.getEffectiveMaxHealth(), this.flight.hp + hpBonus);
       if (this.wave >= CONFIG.progression.wavesPerLevel) {
         this.hud.showKill(`波次清除! +${spiritBonus} 灵力 +${hpBonus} 生命`);
+        this.sfx.chestOpen();
         this.onLevelComplete();
         return;
       } else {
         this.restTimer = CONFIG.progression.waveRestTime;
         this.hud.showKill(`波次清除! +${spiritBonus} 灵力 +${hpBonus} 生命 — 第 ${this.wave + 1} 波即将来袭`);
+        this.sfx.pickup();
       }
     }
 
