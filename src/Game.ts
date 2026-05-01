@@ -727,16 +727,18 @@ export class Game {
 
     if (aliveEnemies === 0 && !bossAlive && this.restTimer <= 0) {
       console.log(`[WAVE] All enemies dead. wave=${this.wave}, wavesPerLevel=${CONFIG.progression.wavesPerLevel}`);
-      // Wave clear spirit bonus
+      // Wave clear spirit + HP bonus
       const spiritBonus = 10 + this.level * 3;
       this.flight.spirit = Math.min(this.getEffectiveMaxSpirit(), this.flight.spirit + spiritBonus);
+      const hpBonus = Math.round(this.getEffectiveMaxHealth() * 0.08);
+      this.flight.hp = Math.min(this.getEffectiveMaxHealth(), this.flight.hp + hpBonus);
       if (this.wave >= CONFIG.progression.wavesPerLevel) {
-        this.hud.showKill(`波次清除! +${spiritBonus} 灵力`);
+        this.hud.showKill(`波次清除! +${spiritBonus} 灵力 +${hpBonus} 生命`);
         this.onLevelComplete();
         return;
       } else {
         this.restTimer = CONFIG.progression.waveRestTime;
-        this.hud.showKill(`波次清除! +${spiritBonus} 灵力 — 第 ${this.wave + 1} 波即将来袭`);
+        this.hud.showKill(`波次清除! +${spiritBonus} 灵力 +${hpBonus} 生命 — 第 ${this.wave + 1} 波即将来袭`);
       }
     }
 
