@@ -227,11 +227,9 @@ export class Game {
     this.autoConsumeCd = 0;
 
     // Reset player
+    this.flight.resetForRestart();
     this.flight.hp = this.getEffectiveMaxHealth();
     this.flight.spirit = this.getEffectiveMaxSpirit();
-    this.flight.alive = true;
-    this.flight.resetDashState();
-    this.flight.teleportTo(0, CONFIG.player.startHeight, 0);
 
     // Snap camera to player — eliminates spring-catch-up lag after teleport
     this.cameraSystem.snapTo(this.flight);
@@ -244,8 +242,6 @@ export class Game {
     this.lootDrops = [];
     this.inventory.reset();
     this.sfx.startWind();
-
-    this.flight.skillKills = { bladeFan: 0, swordDash: 0, parry: 0, finalStrike: 0 };
 
     this.initLevel(1);
     this.state = 'briefing';
@@ -294,6 +290,8 @@ export class Game {
     this.flight.hp = this.getEffectiveMaxHealth();
     this.flight.spirit = this.getEffectiveMaxSpirit();
     this.flight.alive = true;
+    this.flight.quaternion.identity();
+    this.flight.swordIntent = 0;
     this.flight.resetDashState();
     this.flight.teleportTo(0, CONFIG.player.startHeight, 0);
 

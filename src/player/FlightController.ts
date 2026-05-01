@@ -334,5 +334,26 @@ export class FlightController {
     this.dashTimer = 0;
   }
 
+  /** Full state reset for game restart — clears orientation and all combat state. */
+  resetForRestart(): void {
+    this.position.set(0, CONFIG.player.startHeight, 0);
+    this.velocity.set(0, 0, 0);
+    this.quaternion.identity();
+    this.angularVelocity.set(0, 0, 0);
+    this.hp = CONFIG.player.maxHealth;
+    this.spirit = CONFIG.spirit.maxSpirit;
+    this.alive = true;
+    this.boostActive = false;
+    this.boostTimer = 0;
+    this.boostCooldownTimer = 0;
+    this.swordIntent = 0;
+    this.intentDecayTimer = 0;
+    this.hitInvincibleTimer = 0;
+    this.parrying = false;
+    this.parryTimer = 0;
+    this.skillKills = { bladeFan: 0, swordDash: 0, parry: 0, finalStrike: 0 };
+    this.resetDashState();
+  }
+
   dispose(): void {}
 }
