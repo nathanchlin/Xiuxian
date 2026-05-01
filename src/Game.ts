@@ -776,6 +776,9 @@ export class Game {
     // Skip entirely if invincible (dash or i-frames)
     if (!this.flight.alive || this.flight.dashInvincible || this.flight.hitInvincibleTimer > 0) return;
 
+    // Taking damage cancels final strike charge
+    this.skillSystem.cancelCharge();
+
     const died = this.flight.takeDamage(damage);
     this.sfx.damage();
     this.hud.flashDamage();

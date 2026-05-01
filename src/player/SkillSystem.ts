@@ -60,6 +60,11 @@ export class SkillSystem {
     return this.charging;
   }
 
+  cancelCharge(): void {
+    this.charging = false;
+    this.chargeTimer = 0;
+  }
+
   getSwordIntent(): number {
     return this.flight.swordIntent;
   }
