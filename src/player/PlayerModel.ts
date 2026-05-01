@@ -15,6 +15,7 @@ export class PlayerModel {
   private damageFlashTimer = 0;
   private intentRing: THREE.Mesh;
   private swordMat: THREE.MeshStandardMaterial;
+  private swordTrailMat: THREE.MeshBasicMaterial;
 
   constructor(private readonly scene: THREE.Scene) {
     const bodyMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.4 });
@@ -49,10 +50,10 @@ export class PlayerModel {
 
     // Sword glow trail
     const trailGeo = new THREE.PlaneGeometry(0.2, 2);
-    const trailMat = new THREE.MeshBasicMaterial({
+    this.swordTrailMat = new THREE.MeshBasicMaterial({
       color: 0x4488ff, transparent: true, opacity: 0.3, side: THREE.DoubleSide,
     });
-    this.swordTrail = new THREE.Mesh(trailGeo, trailMat);
+    this.swordTrail = new THREE.Mesh(trailGeo, this.swordTrailMat);
     this.swordTrail.position.set(0, -0.2, 1.2);
     this.swordTrail.rotation.x = Math.PI / 2;
     this.group.add(this.swordTrail);
@@ -149,6 +150,7 @@ export class PlayerModel {
     this.swordMat.color.setHex(c);
     this.swordMat.emissive.setHex(c);
     this.swordMat.emissiveIntensity = 0.3 + level * 0.1;
+    this.swordTrailMat.color.setHex(c);
   }
 
   dispose(): void {
