@@ -300,6 +300,8 @@ export class Game {
     // Clear stale floating damage numbers and death particles
     this.damageNumbers.dispose();
     this.deathBurst.dispose();
+    this.skillSystem.reset();
+    this.talismanSystem.reset();
 
     // Create new arena
     this.arena = new Arena(this.engine.scene, level);
