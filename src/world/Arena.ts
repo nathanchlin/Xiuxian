@@ -50,8 +50,11 @@ export class Arena {
 
     // Buildings
     const anchors = this.poissonDisk(cfg.buildings, cfg.spread, arenaCfg.buildingMinGap);
-    const bodyMat = new THREE.MeshStandardMaterial({ color: arenaCfg.bodyColor, roughness: 0.4, metalness: 0.0 });
-    const outlineMat = new THREE.LineBasicMaterial({ color: arenaCfg.accentColor });
+    const tintColor = new THREE.Color(cfg.skyTint);
+    const bodyColor = new THREE.Color(arenaCfg.bodyColor).lerp(tintColor, 0.2);
+    const accentColor = new THREE.Color(arenaCfg.accentColor).lerp(tintColor, 0.15);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.4, metalness: 0.0 });
+    const outlineMat = new THREE.LineBasicMaterial({ color: accentColor });
 
     for (const anchor of anchors) {
       const w = 8 + Math.random() * 12;
@@ -119,7 +122,8 @@ export class Arena {
     }
 
     // Floating islands
-    const islandMat = new THREE.MeshStandardMaterial({ color: 0xaabb88, roughness: 0.7 });
+    const islandColor = new THREE.Color(0xaabb88).lerp(tintColor, 0.15);
+    const islandMat = new THREE.MeshStandardMaterial({ color: islandColor, roughness: 0.7 });
     for (let i = 0; i < cfg.islands; i++) {
       const angle = Math.random() * Math.PI * 2;
       const r = Math.random() * cfg.spread * 0.8;
