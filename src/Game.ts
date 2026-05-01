@@ -279,6 +279,24 @@ export class Game {
     if (this.arena) this.arena.dispose(this.engine.scene);
     this.clearEnemies();
 
+    // Clear stale particles from previous level
+    for (const ai of this.dashAfterimages) {
+      this.engine.scene.remove(ai.mesh); ai.mesh.geometry.dispose();
+      (ai.mesh.material as THREE.MeshBasicMaterial).dispose();
+    }
+    this.dashAfterimages.length = 0;
+    for (const bp of this.boostParticles) {
+      this.engine.scene.remove(bp.mesh); bp.mesh.geometry.dispose();
+      (bp.mesh.material as THREE.MeshBasicMaterial).dispose();
+    }
+    this.boostParticles.length = 0;
+    for (const p of this.enemyProjectiles) {
+      this.engine.scene.remove(p.mesh);
+      (p.mesh.material as THREE.MeshBasicMaterial).dispose();
+    }
+    this.enemyProjectiles.length = 0;
+    this.dashTrailTimer = 0;
+
     // Create new arena
     this.arena = new Arena(this.engine.scene, level);
 
