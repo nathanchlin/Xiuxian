@@ -472,10 +472,29 @@ export class Hud {
     }, 100);
   }
 
+  private hpPrev = 0;
+  private hpFlashTimer = 0;
+
   setHp(hp: number, max: number): void {
     const pct = Math.max(0, Math.min(1, hp / max)) * 100;
     this.hpBar.style.width = `${pct}%`;
     this.hpText.textContent = `${Math.ceil(hp)}`;
+
+    // Green glow flash on HP gain (mirrors spirit bar cyan flash)
+    if (hp > this.hpPrev + 1) {
+      this.hpFlashTimer = 0.35;
+      this.hpBar.style.boxShadow = '0 0 12px #44ff44, 0 0 4px #ffffff';
+      this.hpBar.style.filter = 'brightness(1.8)';
+    }
+    this.hpPrev = hp;
+    if (this.hpFlashTimer > 0) {
+      this.hpFlashTimer -= 1 / 60;
+      if (this.hpFlashTimer <= 0) {
+        this.hpBar.style.boxShadow = 'none';
+        this.hpBar.style.filter = 'none';
+      }
+    }
+
     // Pulse warning when below 25%
     if (pct < 25) {
       const pulse = Math.sin(performance.now() * 0.008) * 0.3 + 0.7;
