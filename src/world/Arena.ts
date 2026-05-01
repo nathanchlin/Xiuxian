@@ -205,6 +205,7 @@ export class Arena {
   }
 
   update(dt: number): void {
+    if (this.skybox) this.skybox.update(dt);
     if (!this.particlePos || !this.particleMat) return;
     const t = performance.now() * 0.001;
     const halfSpread = this.particleSpread;
@@ -252,6 +253,7 @@ class Skybox {
       uniforms: {
         topColor: { value: topColor },
         bottomColor: { value: bottomColor },
+        time: { value: 0 },
       },
       vertexShader: `
         varying vec3 vWorldPos;
@@ -264,17 +266,33 @@ class Skybox {
       fragmentShader: `
         uniform vec3 topColor;
         uniform vec3 bottomColor;
+        uniform float time;
         varying vec3 vWorldPos;
         void main() {
-          float h = normalize(vWorldPos).y;
+          vec3 dir = normalize(vWorldPos);
+          float h = dir.y;
           float t = clamp(h * 0.5 + 0.5, 0.0, 1.0);
-          gl_FragColor = vec4(mix(bottomColor, topColor, t), 1.0);
+          vec3 sky = mix(bottomColor, topColor, t);
+          if (h > 0.2) {
+            float band1 = smoothstep(0.3, 0.5, h) * smoothstep(0.7, 0.5, h);
+            float wave1 = sin(dir.x * 2.0 + time * 0.4 + dir.z * 1.5) * 0.5 + 0.5;
+            sky += vec3(0.1, 0.8, 0.6) * band1 * wave1 * 0.35;
+            float band2 = smoothstep(0.45, 0.6, h) * smoothstep(0.8, 0.6, h);
+            float wave2 = sin(dir.x * 1.5 - time * 0.3 + dir.z * 2.0 + 3.14) * 0.5 + 0.5;
+            sky += vec3(0.3, 0.2, 0.9) * band2 * wave2 * 0.25;
+          }
+          gl_FragColor = vec4(sky, 1.0);
         }
       `,
       side: THREE.BackSide,
       depthWrite: false,
     });
     this.mesh = new THREE.Mesh(geo, mat);
+  }
+
+  update(dt: number): void {
+    const mat = this.mesh.material as THREE.ShaderMaterial;
+    mat.uniforms.time!.value += dt;
   }
 
   dispose(): void {
