@@ -158,9 +158,10 @@ export class FlightController {
     // Hit invincibility decay
     if (this.hitInvincibleTimer > 0) this.hitInvincibleTimer -= dt;
 
-    // Spirit regen (cap respects bonus)
+    // Spirit regen (scales with spirit bonus from cultivation/equipment)
     const effectiveMaxSpirit = CONFIG.spirit.maxSpirit * (1 + this.spiritBonus);
-    this.spirit = Math.min(effectiveMaxSpirit, this.spirit + CONFIG.spirit.regenRate * dt);
+    const regenRate = CONFIG.spirit.regenRate * (1 + this.spiritBonus);
+    this.spirit = Math.min(effectiveMaxSpirit, this.spirit + regenRate * dt);
 
     // Sword intent decay
     if (this.swordIntent > 0) {
