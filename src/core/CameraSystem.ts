@@ -122,5 +122,16 @@ export class CameraSystem {
     return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
   }
 
+  /** Instantly snap camera to follow target — no spring delay. Use after teleport/level change. */
+  snapTo(flight: FlightController): void {
+    const cfg = CONFIG.camera;
+    const offset = new THREE.Vector3(0, cfg.thirdPersonHeight, cfg.thirdPersonDistance);
+    offset.applyQuaternion(flight.quaternion);
+    this.camera.position.copy(flight.position).add(offset);
+    this.currentLookAt.copy(flight.position);
+    this.camera.lookAt(this.currentLookAt);
+    this.transitioning = false;
+  }
+
   dispose(): void {}
 }

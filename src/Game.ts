@@ -118,7 +118,7 @@ export class Game {
     this.startTime = performance.now() / 1000;
     this.kills = 0;
     this.state = 'briefing';
-    this.briefingTimer = 3.0;
+    this.briefingTimer = 1.0;
     this.initLevel(1);
     this.engine.start();
   }
@@ -142,6 +142,9 @@ export class Game {
     this.flight.alive = true;
     this.flight.teleportTo(0, CONFIG.player.startHeight, 0);
 
+    // Snap camera to player — eliminates spring-catch-up lag after teleport
+    this.cameraSystem.snapTo(this.flight);
+
     this.talismanSystem.reset();
     for (const d of this.talismanDrops) d.dispose(this.engine.scene);
     this.talismanDrops = [];
@@ -150,7 +153,7 @@ export class Game {
 
     this.initLevel(1);
     this.state = 'briefing';
-    this.briefingTimer = 3.0;
+    this.briefingTimer = 1.0;
   }
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -185,6 +188,9 @@ export class Game {
     this.flight.spirit = CONFIG.spirit.maxSpirit;
     this.flight.alive = true;
     this.flight.teleportTo(0, CONFIG.player.startHeight, 0);
+
+    // Snap camera to player — eliminates spring-catch-up lag after teleport
+    this.cameraSystem.snapTo(this.flight);
 
     // HUD updates
     this.hud.setLevel(level);
@@ -314,8 +320,9 @@ export class Game {
       if (this.briefingTimer <= 0) {
         this.state = 'playing';
       }
-      // Still render camera during briefing
+      // Update camera + player model during briefing so scene is visible
       this.cameraSystem.update(dt, this.flight);
+      if (this.playerModel) this.playerModel.update(this.flight, this.cameraSystem);
       return;
     }
 
@@ -617,7 +624,7 @@ export class Game {
           this.hud.hideEndScreens();
           this.initLevel(this.level + 1);
           this.state = 'briefing';
-          this.briefingTimer = 3.0;
+          this.briefingTimer = 1.0;
           this.input.requestPointerLock();
         });
       }
