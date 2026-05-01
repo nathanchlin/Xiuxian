@@ -243,6 +243,7 @@ export class Pickup {
 
   dispose(scene: THREE.Scene): void {
     if (this.glowLight) {
+      this.mesh.remove(this.glowLight);
       this.glowLight.dispose();
     }
     scene.remove(this.mesh);
