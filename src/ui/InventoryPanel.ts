@@ -266,7 +266,7 @@ export class InventoryPanel {
 
   private renderSkills(inv: Inventory, flight: FlightController): void {
     const skills = [
-      { key: 'bladeFan', name: '灵刃散射', bookId: 'skill_bladefan', desc: '扇形发射灵刃' },
+      { key: 'bladeFan', name: '万剑齐发', bookId: 'skill_bladefan', desc: '发射12把自动追踪飞剑' },
       { key: 'swordDash', name: '御剑突刺', bookId: 'skill_sworddash', desc: '前方高速突进' },
       { key: 'parry', name: '剑气护体', bookId: 'skill_parry', desc: '弹反敌人攻击' },
       { key: 'finalStrike', name: '万剑归宗', bookId: 'skill_final', desc: '消耗剑意大招' },

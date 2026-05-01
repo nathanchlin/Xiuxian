@@ -85,10 +85,15 @@ export class SkillSystem {
     const origin = this.flight.position.clone();
     const forward = this.flight.getForward();
 
+    // Collect alive targets for homing
+    const aliveTargets = this.targets.filter(t => t.alive);
+
     for (let i = 0; i < cfg.bladeCount; i++) {
       const angleOffset = (i - (cfg.bladeCount - 1) / 2) * cfg.fanAngle;
       const dir = forward.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), angleOffset).normalize();
-      this.blades.push(new Blade(origin.clone(), dir, this.scene));
+      // Assign target: round-robin among alive enemies
+      const target = aliveTargets.length > 0 ? aliveTargets[i % aliveTargets.length]! : null;
+      this.blades.push(new Blade(origin.clone(), dir, this.scene, target?.position.clone() ?? null));
     }
   }
 
@@ -407,14 +412,17 @@ export class SkillSystem {
 
 class Blade {
   readonly mesh: THREE.Mesh;
-  private readonly velocity: THREE.Vector3;
+  private velocity: THREE.Vector3;
+  private targetPos: THREE.Vector3 | null;
   private distanceTraveled = 0;
+  private readonly trackingLerp = 5;
   expired = false;
   hitTargetId = -1;
 
-  constructor(origin: THREE.Vector3, direction: THREE.Vector3, scene: THREE.Scene) {
+  constructor(origin: THREE.Vector3, direction: THREE.Vector3, scene: THREE.Scene, targetPos: THREE.Vector3 | null) {
     const cfg = CONFIG.skills.bladeFan;
     this.velocity = direction.clone().multiplyScalar(cfg.projectileSpeed);
+    this.targetPos = targetPos;
 
     const geo = new THREE.BoxGeometry(0.8, 0.1, 0.3);
     const mat = new THREE.MeshBasicMaterial({ color: cfg.color, transparent: true, opacity: 0.8 });
@@ -425,6 +433,15 @@ class Blade {
   }
 
   update(dt: number): void {
+    // Homing: steer toward target
+    if (this.targetPos && this.distanceTraveled > 3) {
+      const toTarget = this.targetPos.clone().sub(this.mesh.position).normalize();
+      const currentDir = this.velocity.clone().normalize();
+      currentDir.lerp(toTarget, Math.min(1, this.trackingLerp * dt));
+      currentDir.normalize();
+      this.velocity.copy(currentDir).multiplyScalar(CONFIG.skills.bladeFan.projectileSpeed);
+    }
+
     const step = this.velocity.clone().multiplyScalar(dt);
     this.mesh.position.add(step);
     this.distanceTraveled += step.length();
@@ -432,6 +449,9 @@ class Blade {
       this.expired = true;
     }
     this.mesh.rotation.z += dt * 10;
+    // Face movement direction
+    const ahead = this.mesh.position.clone().add(this.velocity);
+    this.mesh.lookAt(ahead);
   }
 
   checkHit(targetPos: THREE.Vector3, radius: number): boolean {

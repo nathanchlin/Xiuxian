@@ -84,15 +84,15 @@ export const CONFIG = {
       decayTime: 10,
     },
     bladeFan: {
-      name: '灵刃散射',
-      spiritCost: 8,
-      cooldown: 1.5,
-      damage: 15,
-      range: 80,
-      projectileSpeed: 60,
-      projectileRadius: 1,
-      fanAngle: Math.PI / 24,
-      bladeCount: 3,
+      name: '万剑齐发',
+      spiritCost: 12,
+      cooldown: 3,
+      damage: 20,
+      range: 100,
+      projectileSpeed: 70,
+      projectileRadius: 1.5,
+      fanAngle: Math.PI / 6,
+      bladeCount: 12,
       intentPerHit: 1,
       color: 0x44ffcc,
     },
@@ -312,7 +312,7 @@ export const CONFIG = {
   // ─── Items & Loot ───
   items: {
     skillBooks: {
-      skill_bladefan:  { name: '灵刃秘卷', skill: 'bladeFan',   color: 0x44ffcc, description: '灵刃散射 +1级' },
+      skill_bladefan:  { name: '万剑秘卷', skill: 'bladeFan',   color: 0x44ffcc, description: '万剑齐发 +1级' },
       skill_sworddash: { name: '御剑心法', skill: 'swordDash',  color: 0x00ffcc, description: '御剑突刺 +1级' },
       skill_parry:     { name: '护体剑诀', skill: 'parry',      color: 0xffd700, description: '剑气护体 +1级' },
       skill_final:     { name: '归宗真解', skill: 'finalStrike', color: 0xffd700, description: '万剑归宗 +1级' },
