@@ -892,7 +892,14 @@ export class Game {
     this.hud.setSpirit(this.flight.spirit, this.getEffectiveMaxSpirit());
     this.hud.setAltitude(this.flight.getAltitude());
     this.hud.setSpeed(this.flight.getSpeed());
-    this.hud.setCultivationLevel(this.inventory.cultivationLevel);
+    // Cultivation level + exp progress
+    const nextExp = this.inventory.getExpForNextLevel();
+    const curExp = this.inventory.cultivationExp;
+    const prevLevelExp = this.inventory.cultivationLevel > 0
+      ? (CONFIG.items.cultivation.expPerLevel[this.inventory.cultivationLevel] ?? 0)
+      : 0;
+    const expPct = nextExp === Infinity ? 1 : (curExp - prevLevelExp) / (nextExp - prevLevelExp);
+    this.hud.setCultivationLevel(this.inventory.cultivationLevel, Math.max(0, Math.min(1, expPct)));
     const boost = this.flight.getBoostState();
     this.hud.setBoost(boost.active ? 1 : boost.cooldownPct);
 

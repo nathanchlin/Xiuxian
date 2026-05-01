@@ -59,6 +59,7 @@ export class Hud {
   private speedEl: HTMLDivElement;
   private boostBar: HTMLDivElement;
   private cultLevelEl: HTMLDivElement;
+  private cultExpBar: HTMLDivElement;
 
   // Radar
   private radarCanvas: HTMLCanvasElement;
@@ -214,12 +215,16 @@ export class Hud {
     bottomBar.appendChild(boostGroup.wrapper);
 
     // Cultivation level badge
-    const cultWrapper = div(`display:flex;flex-direction:column;align-items:center;font-size:11px;`);
+    const cultWrapper = div(`display:flex;flex-direction:column;align-items:center;font-size:11px;gap:2px;`);
     const cultLbl = div(`color:${GOLD};`);
     cultLbl.textContent = '修为';
     this.cultLevelEl = div(`font-size:14px;font-weight:bold;color:${GOLD};`);
     this.cultLevelEl.textContent = '第 0 层';
-    cultWrapper.append(cultLbl, this.cultLevelEl);
+    // Exp progress bar
+    const cultExpBarBg = div(`width:60px;height:3px;background:rgba(255,215,0,0.2);border-radius:2px;overflow:hidden;`);
+    this.cultExpBar = div(`width:0%;height:100%;background:${GOLD};border-radius:2px;transition:width 0.3s;`);
+    cultExpBarBg.appendChild(this.cultExpBar);
+    cultWrapper.append(cultLbl, this.cultLevelEl, cultExpBarBg);
     bottomBar.appendChild(cultWrapper);
 
     // ── Sword Intent indicator (above bottom bar) ────────────────────
@@ -465,8 +470,11 @@ export class Hud {
     this.boostBar.style.width = `${Math.max(0, Math.min(1, pct)) * 100}%`;
   }
 
-  setCultivationLevel(level: number): void {
+  setCultivationLevel(level: number, expPct?: number): void {
     this.cultLevelEl.textContent = `第 ${level} 层`;
+    if (expPct !== undefined) {
+      this.cultExpBar.style.width = `${Math.min(100, expPct * 100)}%`;
+    }
   }
 
   setWeapon(name: string, ammoText: string): void {
