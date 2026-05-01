@@ -360,6 +360,12 @@ export class Game {
     );
     this.boss = new Boss(this.nextEnemyId++, spawn, this.level, this.engine.scene);
 
+    // Boss spawn announcement + effects
+    this.hud.showAnnouncement('Boss 出现', '#ff4444');
+    this.sfx.bossPhaseChange();
+    this.deathBurst.spawn(spawn.clone(), CONFIG.boss.color, 15);
+    this.cameraSystem.shake(1.0, 0.3);
+
     this.boss.onSummon = (count, pos) => {
       for (let i = 0; i < count; i++) {
         const offset = new THREE.Vector3(
