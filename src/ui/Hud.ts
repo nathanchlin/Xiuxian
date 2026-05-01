@@ -806,6 +806,28 @@ export class Hud {
     ctx.lineTo(cx + R, cy);
     ctx.stroke();
 
+    // Sweep line — rotating golden scan animation
+    const sweepSpeed = 1.5;
+    const sweepAngle = (performance.now() / 1000) * sweepSpeed;
+    const sweepTail = Math.PI * 0.35;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, R, sweepAngle - sweepTail, sweepAngle);
+    ctx.closePath();
+    const grad = ctx.createConicGradient(sweepAngle - sweepTail, cx, cy);
+    grad.addColorStop(0, 'rgba(218,165,32,0)');
+    grad.addColorStop(0.7, 'rgba(218,165,32,0.08)');
+    grad.addColorStop(1, 'rgba(218,165,32,0)');
+    ctx.fillStyle = grad;
+    ctx.fill();
+    // Leading edge line
+    ctx.strokeStyle = 'rgba(218,165,32,0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(sweepAngle) * R, cy + Math.sin(sweepAngle) * R);
+    ctx.stroke();
+
     const sin = Math.sin(-playerYaw);
     const cos = Math.cos(-playerYaw);
 
