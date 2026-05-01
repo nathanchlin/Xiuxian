@@ -1094,11 +1094,20 @@ export class Game {
      INVENTORY PANEL
      ═══════════════════════════════════════════════════════════════════ */
 
+  /** Callback when pointer lock fails after closing inventory (set by entry.ts) */
+  onNeedOverlay: (() => void) | null = null;
+
   toggleInventoryPanel(): void {
     if (this.inventoryPanel.isVisible()) {
       this.inventoryPanel.hide();
       this.state = 'playing';
       this.input.requestPointerLock();
+      // Safety: if pointer lock not acquired within 150ms, show overlay for recovery
+      setTimeout(() => {
+        if (this.state === 'playing' && !this.input.isLocked()) {
+          this.onNeedOverlay?.();
+        }
+      }, 150);
     } else {
       this.inventoryPanel.show(this.inventory, this.flight);
       this.state = 'paused';

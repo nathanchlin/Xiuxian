@@ -41,6 +41,20 @@ if (!isMobile) {
       overlay.style.display = 'none';
     }
   });
+
+  // Handle pointer lock rejection (e.g. after closing inventory panel)
+  document.addEventListener('pointerlockerror', () => {
+    if (game.state !== 'paused' && game.state !== 'dead' && game.state !== 'game_over' && game.state !== 'level_complete' && game.state !== 'menu') {
+      overlay.style.display = 'flex';
+      startBtn.textContent = '点击继续';
+    }
+  });
+
+  // Fallback: Game detects when pointer lock fails silently after inventory close
+  game.onNeedOverlay = () => {
+    overlay.style.display = 'flex';
+    startBtn.textContent = '点击继续';
+  };
 }
 
 if (import.meta.hot) {
