@@ -16,6 +16,7 @@ import { Pickup, type PickupType, randomTalismanType, type TalismanTypeName } fr
 import { Inventory } from './player/Inventory';
 import { InventoryPanel } from './ui/InventoryPanel';
 import { DamageNumbers } from './ui/DamageNumbers';
+import { DeathBurst } from './shared/DeathBurst';
 import type { EnemyTypeName } from './enemy/enemy-types';
 
 export type GameState = 'menu' | 'briefing' | 'playing' | 'paused' | 'dead' | 'level_complete' | 'game_over';
@@ -42,6 +43,7 @@ export class Game {
   readonly inventory: Inventory;
   readonly inventoryPanel: InventoryPanel;
   private damageNumbers!: DamageNumbers;
+  private deathBurst!: DeathBurst;
   private lootDrops: Pickup[] = [];
   private talismanDrops: Pickup[] = [];
 
@@ -76,6 +78,7 @@ export class Game {
     this.inventory = new Inventory();
     this.inventoryPanel = new InventoryPanel();
     this.damageNumbers = new DamageNumbers(this.engine.scene);
+    this.deathBurst = new DeathBurst(this.engine.scene);
     this.setupInventoryCallbacks();
 
     // ── Key bindings ───────────────────────────────────────────────
@@ -519,8 +522,9 @@ export class Game {
     // 11.5 Auto-use consumables when HP/Spirit low
     this.autoUseConsumables();
 
-    // 11.6 Update damage numbers
+    // 11.6 Update damage numbers + death particles
     this.damageNumbers.update(dt);
+    this.deathBurst.update(dt);
 
     // 12. Update HUD
     this.updateHud();
@@ -592,6 +596,7 @@ export class Game {
     this.kills++;
     this.sfx.enemyDie();
     this.hud.showKill(`${typeName} 已斩`);
+    if (position) this.deathBurst.spawn(position, this.getEnemyColor(typeName));
 
     if (position) {
       // Talisman drops (existing system)
@@ -611,6 +616,7 @@ export class Game {
     this.kills++;
     this.sfx.enemyDie();
     this.hud.showKill('妖王已诛!');
+    this.deathBurst.spawn(this.boss!.position, CONFIG.boss.color, 30);
 
     if (this.boss) {
       const pos = this.boss.position.clone();
@@ -753,6 +759,11 @@ export class Game {
     }
     this.skillSystem.setTargets(targets);
     this.talismanSystem.setTargets(targets.map(t => ({ id: t.id, position: t.position, alive: t.alive })));
+  }
+
+  private getEnemyColor(typeName: string): number {
+    const colors: Record<string, number> = { crow: 0x444444, serpent: 0x22cc44, dragon: 0xff4444 };
+    return colors[typeName] ?? 0xffffff;
   }
 
   private getItemName(id: string): string {
@@ -973,6 +984,7 @@ export class Game {
     this.playerModel?.dispose();
     this.inventoryPanel.dispose();
     this.damageNumbers.dispose();
+    this.deathBurst.dispose();
     this.hud.dispose();
     this.flight.dispose();
     this.cameraSystem.dispose();
