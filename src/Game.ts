@@ -11,7 +11,8 @@ import { Enemy } from './enemy/Enemy';
 import { Boss } from './enemy/Boss';
 import { Hud } from './ui/Hud';
 import { PlayerModel } from './player/PlayerModel';
-import { Pickup, type PickupType } from './world/Pickup';
+import { TalismanSystem } from './player/TalismanSystem';
+import { Pickup, type PickupType, randomTalismanType, type TalismanTypeName } from './world/Pickup';
 import type { EnemyTypeName } from './enemy/enemy-types';
 
 export type GameState = 'menu' | 'briefing' | 'playing' | 'paused' | 'dead' | 'level_complete' | 'game_over';
@@ -34,6 +35,8 @@ export class Game {
   private enemies: Enemy[] = [];
   private boss: Boss | null = null;
   private pickups: Pickup[] = [];
+  readonly talismanSystem: TalismanSystem;
+  private talismanDrops: Pickup[] = [];
 
   private level = 1;
   private wave = 0;
@@ -62,6 +65,7 @@ export class Game {
     this.flight = new FlightController(this.input);
     this.cameraSystem = new CameraSystem(this.engine.camera);
     this.skillSystem = new SkillSystem(this.flight, this.engine.scene, this.sfx);
+    this.talismanSystem = new TalismanSystem(this.flight, this.engine.scene, this.sfx);
 
     // ── Key bindings ───────────────────────────────────────────────
     this.input.registerKey('v', () => {
@@ -138,6 +142,10 @@ export class Game {
     this.flight.alive = true;
     this.flight.teleportTo(0, CONFIG.player.startHeight, 0);
 
+    this.talismanSystem.reset();
+    for (const d of this.talismanDrops) d.dispose(this.engine.scene);
+    this.talismanDrops = [];
+
     this.initLevel(1);
     this.state = 'briefing';
     this.briefingTimer = 3.0;
@@ -155,6 +163,8 @@ export class Game {
     // Dispose old pickups
     for (const p of this.pickups) p.dispose(this.engine.scene);
     this.pickups = [];
+    for (const d of this.talismanDrops) d.dispose(this.engine.scene);
+    this.talismanDrops = [];
 
     // Dispose old arena
     if (this.arena) this.arena.dispose(this.engine.scene);
@@ -279,10 +289,15 @@ export class Game {
     for (const p of this.pickups) p.dispose(this.engine.scene);
     this.pickups = [];
     const spots = this.arena.pickupSpots.slice(0, 10);
-    const types: PickupType[] = ['spirit', 'health', 'missile'];
-    for (let i = 0; i < spots.length; i++) {
-      const type = types[i % types.length]!;
-      this.pickups.push(new Pickup(type, spots[i]!, this.engine.scene));
+
+    const basicTypes: PickupType[] = ['spirit', 'health', 'spirit'];
+    for (let i = 0; i < Math.min(basicTypes.length, spots.length); i++) {
+      this.pickups.push(new Pickup(basicTypes[i]!, spots[i]!, this.engine.scene));
+    }
+
+    const chestCount = CONFIG.talismans.chestPerLevel;
+    for (let i = basicTypes.length; i < basicTypes.length + chestCount && i < spots.length; i++) {
+      this.pickups.push(new Pickup('chest', spots[i]!, this.engine.scene));
     }
   }
 
@@ -343,6 +358,18 @@ export class Game {
       }
     }
 
+    // 4.5 Talisman system
+    this.talismanSystem.update(dt);
+    for (const hit of this.talismanSystem.consumeHits()) {
+      for (const id of hit.targetIds) {
+        this.onSkillHit({ targetId: id, damage: hit.damage });
+      }
+    }
+    const heal = this.talismanSystem.consumeHeal();
+    if (heal > 0) {
+      this.flight.hp = Math.min(CONFIG.player.maxHealth, this.flight.hp + heal);
+    }
+
     // 5. Enemy updates + damage to player
     const playerPos = this.flight.position;
     for (const enemy of this.enemies) {
@@ -352,7 +379,7 @@ export class Game {
         const parryResult = this.skillSystem.tryParryReflect();
         if (parryResult.reflected) {
           const killed = enemy.takeDamage(parryResult.reflectDamage);
-          if (killed) this.onEnemyKilled(enemy.typeName);
+          if (killed) this.onEnemyKilled(enemy.typeName, enemy.position.clone());
           this.hud.flashHitMarker();
         } else {
           this.applyDamageToPlayer(result.damage);
@@ -375,16 +402,28 @@ export class Game {
       }
     }
 
-    // 7. Pickup collection
-    for (const pickup of this.pickups) {
+    // 7. Pickup collection (pickups + talisman drops)
+    const allPickups = [...this.pickups, ...this.talismanDrops];
+    for (const pickup of allPickups) {
       pickup.update(dt);
       if (pickup.checkCollect(this.flight.position, CONFIG.flight.playerRadius)) {
         const loot = pickup.collect();
         if (loot.health > 0) this.flight.hp = Math.min(CONFIG.player.maxHealth, this.flight.hp + loot.health);
         if (loot.spirit > 0) this.flight.spirit = Math.min(CONFIG.spirit.maxSpirit, this.flight.spirit + loot.spirit);
-        this.sfx.chestOpen();
+        if (loot.talismanType) {
+          this.equipTalisman(loot.talismanType);
+        } else {
+          this.sfx.chestOpen();
+        }
       }
     }
+    this.talismanDrops = this.talismanDrops.filter(d => {
+      if (d.collected || d.expireTimer <= 0) {
+        d.dispose(this.engine.scene);
+        return false;
+      }
+      return true;
+    });
 
     // 9. Wave progression — check if all enemies dead
     const aliveEnemies = this.enemies.filter((e) => e.alive).length;
@@ -436,7 +475,7 @@ export class Game {
     for (const enemy of this.enemies) {
       if (enemy.id === hit.targetId && enemy.alive) {
         const killed = enemy.takeDamage(hit.damage);
-        if (killed) this.onEnemyKilled(enemy.typeName);
+        if (killed) this.onEnemyKilled(enemy.typeName, enemy.position.clone());
         return;
       }
     }
@@ -447,16 +486,38 @@ export class Game {
     }
   }
 
-  private onEnemyKilled(typeName: string): void {
+  private onEnemyKilled(typeName: string, position?: THREE.Vector3): void {
     this.kills++;
     this.sfx.enemyDie();
     this.hud.showKill(`${typeName} 已斩`);
+
+    if (position) {
+      const dropRate = CONFIG.talismans.dropRates[typeName] ?? 0;
+      if (Math.random() < dropRate) {
+        const tType = randomTalismanType();
+        const drop = new Pickup('talisman_drop', position, this.engine.scene, tType);
+        this.talismanDrops.push(drop);
+      }
+    }
   }
 
   private onBossKilled(): void {
     this.kills++;
     this.sfx.enemyDie();
     this.hud.showKill('妖王已诛!');
+
+    if (this.boss) {
+      const tType = randomTalismanType();
+      const drop = new Pickup('talisman_drop', this.boss.position.clone(), this.engine.scene, tType);
+      this.talismanDrops.push(drop);
+    }
+  }
+
+  private equipTalisman(type: TalismanTypeName): void {
+    this.talismanSystem.equip(type);
+    const cfg = CONFIG.talismans.types[type];
+    this.hud.showTalismanPickup(cfg.name, cfg.description);
+    this.sfx.talismanEquip();
   }
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -536,6 +597,7 @@ export class Game {
       targets.push({ id: this.boss.id, mesh: this.boss.hitbox, position: this.boss.position, alive: this.boss.alive });
     }
     this.skillSystem.setTargets(targets);
+    this.talismanSystem.setTargets(targets.map(t => ({ id: t.id, position: t.position, alive: t.alive })));
   }
 
   private updateHud(): void {
@@ -556,6 +618,13 @@ export class Game {
     this.hud.setSkillCooldowns(cds.bladeFan, cds.swordDash, cds.parry);
     this.hud.setFinalStrikeReady(intent >= maxIntent);
 
+    const tSlots = this.talismanSystem.getSlots();
+    this.hud.setTalismanSlots(tSlots.map(s => {
+      if (!s) return null;
+      const cfg = CONFIG.talismans.types[s.type];
+      return { type: s.type, durability: s.durability, color: cfg.color };
+    }));
+
     // Radar
     const euler = new THREE.Euler().setFromQuaternion(this.flight.quaternion, 'YXZ');
     const enemyBlips = this.enemies
@@ -564,7 +633,9 @@ export class Game {
     if (this.boss?.alive) {
       enemyBlips.push({ x: this.boss.position.x, z: this.boss.position.z });
     }
-    const pickupBlips = this.pickups.map((p) => ({ x: p.position.x, z: p.position.z }));
+    const pickupBlips = [...this.pickups, ...this.talismanDrops]
+      .filter(p => !p.collected)
+      .map((p) => ({ x: p.position.x, z: p.position.z }));
     this.hud.updateRadar(
       this.flight.position.x,
       this.flight.position.z,
@@ -581,6 +652,8 @@ export class Game {
   dispose(): void {
     this.clearEnemies();
     for (const p of this.pickups) p.dispose(this.engine.scene);
+    this.talismanSystem.dispose();
+    for (const d of this.talismanDrops) d.dispose(this.engine.scene);
     if (this.arena) this.arena.dispose(this.engine.scene);
     this.playerModel?.dispose();
     this.hud.dispose();
