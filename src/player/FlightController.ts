@@ -145,6 +145,8 @@ export class FlightController {
     this.hitInvincibleTimer = 0.5;
     if (this.hp <= 0) {
       this.alive = false;
+      this.boostActive = false;
+      this.boostTimer = 0;
       return true;
     }
     return false;
