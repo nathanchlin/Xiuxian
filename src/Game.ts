@@ -47,6 +47,9 @@ export class Game {
   private lootDrops: Pickup[] = [];
   private talismanDrops: Pickup[] = [];
 
+  // ─── Enemy attack projectiles (visual only) ───
+  private enemyProjectiles: { mesh: THREE.Mesh; vel: THREE.Vector3; life: number }[] = [];
+
   // ─── Dash trail afterimages ───
   private dashAfterimages: { mesh: THREE.Mesh; life: number }[] = [];
   private dashTrailTimer = 0;
@@ -182,6 +185,12 @@ export class Game {
       (ai.mesh.material as THREE.MeshBasicMaterial).dispose();
     }
     this.dashAfterimages.length = 0;
+    for (const p of this.enemyProjectiles) {
+      this.engine.scene.remove(p.mesh);
+      p.mesh.geometry.dispose();
+      (p.mesh.material as THREE.MeshBasicMaterial).dispose();
+    }
+    this.enemyProjectiles.length = 0;
     this.startTime = performance.now() / 1000;
 
     // Reset player
@@ -443,6 +452,21 @@ export class Game {
       }
     }
 
+    // 3b. Enemy projectile visual update
+    for (let i = this.enemyProjectiles.length - 1; i >= 0; i--) {
+      const p = this.enemyProjectiles[i];
+      p.life -= dt;
+      p.mesh.position.addScaledVector(p.vel, dt);
+      const mat = p.mesh.material as THREE.MeshBasicMaterial;
+      mat.opacity = Math.max(0, p.life / 0.5);
+      if (p.life <= 0) {
+        this.engine.scene.remove(p.mesh);
+        p.mesh.geometry.dispose();
+        mat.dispose();
+        this.enemyProjectiles.splice(i, 1);
+      }
+    }
+
     // 4. Skill system
     this.skillSystem.update(dt);
 
@@ -499,6 +523,8 @@ export class Game {
           this.hud.flashHitMarker();
         } else {
           this.applyDamageToPlayer(result.damage, enemy.position);
+          // Visual projectile from enemy to player
+          this.spawnEnemyProjectile(enemy.position, playerPos, enemy.typeName);
         }
       }
     }
@@ -660,6 +686,21 @@ export class Game {
       this.flight.velocity.add(knockDir.multiplyScalar(15));
     }
     if (died) this.onDeath();
+  }
+
+  /** Spawn a visual-only projectile from enemy to player */
+  private spawnEnemyProjectile(from: THREE.Vector3, to: THREE.Vector3, typeName: string): void {
+    const colors: Record<string, number> = { crow: 0xff4400, serpent: 0x44ff44, dragon: 0x4488ff };
+    const sizes: Record<string, number> = { crow: 0.2, serpent: 0.4, dragon: 0.6 };
+    const color = colors[typeName] ?? 0xff4400;
+    const size = sizes[typeName] ?? 0.3;
+    const geo = new THREE.SphereGeometry(size, 6, 6);
+    const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1.0 });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.copy(from);
+    this.engine.scene.add(mesh);
+    const vel = to.clone().sub(from).normalize().multiplyScalar(80);
+    this.enemyProjectiles.push({ mesh, vel, life: 0.5 });
   }
 
   private onSkillHit(hit: SkillHitResult, skillName?: string): void {
