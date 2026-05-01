@@ -185,6 +185,12 @@ export class Pickup {
 
     if (this.expireTimer > 0) {
       this.expireTimer -= dt;
+      // Blink warning when about to expire — frequency increases as timer runs out
+      if (this.expireTimer < 5) {
+        const urgency = 1 - this.expireTimer / 5;
+        const blinkFreq = 3 + urgency * 12;
+        this.mesh.visible = Math.sin(this.expireTimer * blinkFreq * Math.PI * 2) > 0;
+      }
       if (this.expireTimer <= 0) {
         this.collected = true;
         this.mesh.visible = false;
