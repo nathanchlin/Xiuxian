@@ -932,6 +932,12 @@ export class Game {
       1.0 + (this.comboCount - 1) * CONFIG.skills.combo.damagePerHit,
     );
     this.hud.setCombo(this.comboCount, this.comboMultiplier);
+    // Spirit bonus every 10 combo
+    if (this.comboCount % 10 === 0) {
+      const bonus = 5 + this.comboCount;
+      this.flight.spirit = Math.min(this.getEffectiveMaxSpirit(), this.flight.spirit + bonus);
+      this.hud.showKill(`${this.comboCount}连斩! +${bonus} 灵力`);
+    }
   }
 
   private updateCombo(dt: number): void {
