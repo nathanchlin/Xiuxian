@@ -1343,6 +1343,9 @@ export class Hud {
     if (this.deathVignetteEl) {
       this.deathVignetteEl.style.display = 'none';
     }
+    // Clear stale skill level-up notification
+    clearTimeout(this.skillLevelUpTimer);
+    this.skillLevelUpEl.style.opacity = '0';
   }
 
   dispose(): void {
