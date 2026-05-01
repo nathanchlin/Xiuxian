@@ -136,6 +136,11 @@ export const CONFIG = {
       cooldownPerLevel: 0.05,
       minCooldown: 0.3,
     },
+    combo: {
+      timeout: 4.0,
+      damagePerHit: 0.05,
+      maxMultiplier: 3.0,
+    },
   },
 
   // ─── Player ───
@@ -337,9 +342,9 @@ export const CONFIG = {
       dropAmounts: { crow: 5, serpent: 15, dragon: 30, boss: 100 } as Record<string, number>,
     },
     dropTable: {
-      crow:    { cultivationExp: 1.0, consumable: 0.20, skillBook: 0.0,  treasure: 0.0  },
-      serpent: { cultivationExp: 1.0, consumable: 0.25, skillBook: 0.05, treasure: 0.05 },
-      dragon:  { cultivationExp: 1.0, consumable: 0.30, skillBook: 0.10, treasure: 0.10 },
+      crow:    { cultivationExp: 1.0, consumable: 0.20, skillBook: 0.05, treasure: 0.0  },
+      serpent: { cultivationExp: 1.0, consumable: 0.25, skillBook: 0.15, treasure: 0.05 },
+      dragon:  { cultivationExp: 1.0, consumable: 0.30, skillBook: 0.30, treasure: 0.10 },
       boss:    { cultivationExp: 1.0, consumable: 0.50, skillBook: 1.0,  treasure: 0.50 },
     } as Record<string, { cultivationExp: number; consumable: number; skillBook: number; treasure: number }>,
     qualityColors: {

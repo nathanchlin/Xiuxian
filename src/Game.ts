@@ -53,6 +53,11 @@ export class Game {
   private startTime = 0;
   private nextEnemyId = 1;
 
+  // ─── Combo ───
+  private comboCount = 0;
+  private comboTimer = 0;
+  private comboMultiplier = 1.0;
+
   private restTimer = 0;
   private briefingTimer = 0;
 
@@ -151,6 +156,9 @@ export class Game {
     this.level = 1;
     this.wave = 0;
     this.kills = 0;
+    this.comboCount = 0;
+    this.comboTimer = 0;
+    this.comboMultiplier = 1.0;
     this.nextEnemyId = 1;
     this.restTimer = 0;
     this.startTime = performance.now() / 1000;
@@ -530,6 +538,9 @@ export class Game {
 
     // 12. Update HUD
     this.updateHud();
+
+    // 13. Combo decay
+    this.updateCombo(dt);
   }
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -547,17 +558,20 @@ export class Game {
   private onSkillHit(hit: SkillHitResult, skillName?: string): void {
     this.hud.flashHitMarker();
 
+    // Apply combo multiplier to damage
+    const finalDamage = Math.round(hit.damage * this.comboMultiplier);
+
     // Show damage number at the target's position
     const targetEnemy = this.enemies.find(e => e.id === hit.targetId && e.alive);
     const targetBoss = (!targetEnemy && this.boss?.id === hit.targetId && this.boss.alive) ? this.boss : null;
     const targetPos = targetEnemy?.position ?? targetBoss?.position;
     if (targetPos) {
-      this.damageNumbers.spawn(targetPos, hit.damage);
+      this.damageNumbers.spawn(targetPos, finalDamage);
     }
 
     for (const enemy of this.enemies) {
       if (enemy.id === hit.targetId && enemy.alive) {
-        const killed = enemy.takeDamage(hit.damage);
+        const killed = enemy.takeDamage(finalDamage);
         if (killed) {
           this.onEnemyKilled(enemy.typeName, enemy.position.clone());
           if (skillName) {
@@ -577,7 +591,7 @@ export class Game {
     }
 
     if (this.boss && this.boss.id === hit.targetId && this.boss.alive) {
-      const killed = this.boss.takeDamage(hit.damage);
+      const killed = this.boss.takeDamage(finalDamage);
       if (killed) {
         this.onBossKilled();
         if (skillName) {
@@ -597,6 +611,7 @@ export class Game {
 
   private onEnemyKilled(typeName: string, position?: THREE.Vector3): void {
     this.kills++;
+    this.registerCombo();
     this.sfx.enemyDie();
     this.hud.showKill(`${typeName} 已斩`);
     if (position) this.deathBurst.spawn(position, this.getEnemyColor(typeName));
@@ -617,6 +632,7 @@ export class Game {
 
   private onBossKilled(): void {
     this.kills++;
+    this.registerCombo();
     this.sfx.enemyDie();
     this.hud.showKill('妖王已诛!');
     this.deathBurst.spawn(this.boss!.position, CONFIG.boss.color, 30);
@@ -629,6 +645,27 @@ export class Game {
 
       // Boss always drops good loot
       this.spawnLootDrops('boss', pos);
+    }
+  }
+
+  private registerCombo(): void {
+    this.comboCount++;
+    this.comboTimer = CONFIG.skills.combo.timeout;
+    this.comboMultiplier = Math.min(
+      CONFIG.skills.combo.maxMultiplier,
+      1.0 + (this.comboCount - 1) * CONFIG.skills.combo.damagePerHit,
+    );
+    this.hud.setCombo(this.comboCount, this.comboMultiplier);
+  }
+
+  private updateCombo(dt: number): void {
+    if (this.comboTimer > 0) {
+      this.comboTimer -= dt;
+      if (this.comboTimer <= 0) {
+        this.comboCount = 0;
+        this.comboMultiplier = 1.0;
+        this.hud.setCombo(0, 1.0);
+      }
     }
   }
 

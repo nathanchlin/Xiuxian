@@ -399,6 +399,32 @@ export class Hud {
     this.killEl.textContent = `击杀: ${count}`;
   }
 
+  private comboContainer: HTMLDivElement | null = null;
+  setCombo(count: number, multiplier: number): void {
+    if (count <= 1) {
+      if (this.comboContainer) {
+        this.comboContainer.remove();
+        this.comboContainer = null;
+      }
+      return;
+    }
+    if (!this.comboContainer) {
+      this.comboContainer = document.createElement('div');
+      this.comboContainer.style.cssText =
+        `position:fixed;top:18%;left:50%;transform:translateX(-50%);` +
+        `font-family:monospace;font-size:28px;font-weight:bold;` +
+        `color:${GOLD};letter-spacing:3px;pointer-events:none;z-index:50;` +
+        `text-shadow:0 0 10px rgba(255,215,0,0.5);transition:transform 0.15s;`;
+      document.body.appendChild(this.comboContainer);
+    }
+    this.comboContainer.textContent = `${count}连斩 x${multiplier.toFixed(1)}`;
+    // Punch animation
+    this.comboContainer.style.transform = 'translateX(-50%) scale(1.2)';
+    setTimeout(() => {
+      if (this.comboContainer) this.comboContainer.style.transform = 'translateX(-50%) scale(1)';
+    }, 100);
+  }
+
   setHp(hp: number, max: number): void {
     const pct = Math.max(0, Math.min(1, hp / max)) * 100;
     this.hpBar.style.width = `${pct}%`;
@@ -921,8 +947,12 @@ export class Hud {
   }
 
   hideEndScreens(): void {
-    for (const id of ['hud-end-game-over', 'hud-end-level-complete']) {
+    for (const id of ['hud-end-game-over', 'hud-end-victory', 'hud-end-level-complete']) {
       document.getElementById(id)?.remove();
+    }
+    if (this.comboContainer) {
+      this.comboContainer.remove();
+      this.comboContainer = null;
     }
   }
 
