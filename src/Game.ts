@@ -1460,6 +1460,24 @@ export class Game {
     }
     this.clearEnemies();
     this.sfx.stopWind();
+    // Clean up particle arrays (restart() also does this; dispose must too)
+    for (const ai of this.dashAfterimages) {
+      this.engine.scene.remove(ai.mesh);
+      ai.mesh.geometry.dispose();
+      (ai.mesh.material as THREE.MeshBasicMaterial).dispose();
+    }
+    this.dashAfterimages.length = 0;
+    for (const bp of this.boostParticles) {
+      this.engine.scene.remove(bp.mesh);
+      bp.mesh.geometry.dispose();
+      (bp.mesh.material as THREE.MeshBasicMaterial).dispose();
+    }
+    this.boostParticles.length = 0;
+    for (const p of this.enemyProjectiles) {
+      this.engine.scene.remove(p.mesh);
+      (p.mesh.material as THREE.MeshBasicMaterial).dispose();
+    }
+    this.enemyProjectiles.length = 0;
     for (const p of this.pickups) p.dispose(this.engine.scene);
     this.talismanSystem.dispose();
     for (const d of this.talismanDrops) d.dispose(this.engine.scene);
