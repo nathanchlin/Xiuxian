@@ -197,7 +197,7 @@ export class SkillSystem {
     const cfg = CONFIG.weapons.beam;
     if (!this.flight.consumeSpirit(cfg.spiritCost)) return null;
 
-    this.sfx.shoot();
+    this.sfx.spiritBeam();
 
     const origin = this.flight.position.clone();
     const forward = this.flight.getForward();

@@ -62,12 +62,6 @@ export class Sfx {
     this.noise(0.12, 600, 0.8);
   }
 
-  doorOpen(): void {
-    if (!this.ready()) return;
-    this.sweep(400, 200, 0.2, 'triangle', 0.4);
-    this.beep(600, 0.08, 'sine', 0.3);
-  }
-
   chestOpen(): void {
     if (!this.ready()) return;
     this.beep(440, 0.1, 'sine', 0.5);
@@ -81,35 +75,10 @@ export class Sfx {
     this.beep(990, 0.08, 'sine', 0.3);
   }
 
-  floorTransition(): void {
-    if (!this.ready()) return;
-    this.sweep(200, 800, 0.5, 'sine', 0.5);
-    this.beep(440, 0.3, 'triangle', 0.3);
-  }
-
-  cardSelect(): void {
-    if (!this.ready()) return;
-    this.beep(520, 0.08, 'sine', 0.4);
-    this.beep(780, 0.12, 'sine', 0.5);
-    this.sweep(400, 1200, 0.3, 'triangle', 0.3);
-  }
-
   spiritBeam(): void {
     if (!this.ready()) return;
     this.sweep(2000, 800, 0.08, 'sawtooth', 0.5);
     this.beep(1500, 0.04, 'sine', 0.3);
-  }
-
-  missileLaunch(): void {
-    if (!this.ready()) return;
-    this.sweep(100, 400, 0.3, 'square', 0.6);
-    this.beep(200, 0.1, 'sine', 0.4);
-  }
-
-  missileExplode(): void {
-    if (!this.ready()) return;
-    this.noise(0.3, 600, 1.0);
-    this.sweep(200, 40, 0.4, 'sawtooth', 0.8);
   }
 
   swordDash(): void {
