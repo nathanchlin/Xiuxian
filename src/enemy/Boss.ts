@@ -29,6 +29,7 @@ export class Boss {
   private shieldBarFill: THREE.Mesh;
   private readonly hpBarWidth = 4;
   private hitRecoil = 0;
+  private hitFlashTimer = 0;
 
   onSummon: ((count: number, pos: THREE.Vector3) => void) | null = null;
   onPhaseChange: ((phase: BossPhase) => void) | null = null;
@@ -139,12 +140,7 @@ export class Boss {
     this.bodyMat.color.setHex(0xffffff);
     this.bodyMat.emissiveIntensity = 1.0;
     this.hitRecoil = 0.2;
-    setTimeout(() => {
-      if (this.alive) {
-        this.bodyMat.color.setHex(this.bodyColor);
-        this.bodyMat.emissiveIntensity = 0.3;
-      }
-    }, 100);
+    this.hitFlashTimer = 0.1;
 
     const hpPct = this.hp / this.maxHp;
     if (this.phase === 1 && hpPct <= CONFIG.boss.phase1Threshold) { this.phase = 2; this.onPhaseChange?.(2); this.updateVisualsForPhase(2); }
@@ -208,6 +204,15 @@ export class Boss {
 
     this.attackCooldown = Math.max(0, this.attackCooldown - dt);
     this.dashCooldown = Math.max(0, this.dashCooldown - dt);
+
+    // Hit flash decay
+    if (this.hitFlashTimer > 0) {
+      this.hitFlashTimer -= dt;
+      if (this.hitFlashTimer <= 0 && this.alive) {
+        this.bodyMat.color.setHex(this.bodyColor);
+        this.bodyMat.emissiveIntensity = 0.3;
+      }
+    }
 
     const toPlayer = playerPos.clone().sub(this.position);
     const dist = toPlayer.length();

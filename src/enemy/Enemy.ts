@@ -27,6 +27,7 @@ export class Enemy {
   private deathTimer = 0;
   private spawnFlashTimer = 0.3;
   private hitRecoil = 0;
+  private hitFlashTimer = 0;
   private patrolTarget = new THREE.Vector3();
   private patrolTimer = 0;
   private hpBarBg: THREE.Mesh;
@@ -155,7 +156,7 @@ export class Enemy {
     if (!this.alive) return false;
     this.hp -= amount;
     this.bodyMat.color.setHex(0xffffff);
-    setTimeout(() => { if (this.alive) this.bodyMat.color.setHex(this.color); }, 80);
+    this.hitFlashTimer = 0.08;
     this.hitRecoil = 0.15;
     if (this.hp <= 0) { this.die(); return true; }
     return false;
@@ -190,6 +191,14 @@ export class Enemy {
       if (this.spawnFlashTimer <= 0) {
         this.bodyMat.emissive.setHex(0x000000);
         this.bodyMat.emissiveIntensity = 0;
+      }
+    }
+
+    // Hit flash decay
+    if (this.hitFlashTimer > 0) {
+      this.hitFlashTimer -= dt;
+      if (this.hitFlashTimer <= 0 && this.alive) {
+        this.bodyMat.color.setHex(this.color);
       }
     }
 
