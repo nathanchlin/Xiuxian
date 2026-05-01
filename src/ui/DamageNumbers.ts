@@ -16,7 +16,7 @@ export class DamageNumbers {
   }
 
   /** Spawn a damage number at world position */
-  spawn(position: THREE.Vector3, damage: number, color = 0xff4444): void {
+  spawn(position: THREE.Vector3, damage: number, color = 0xff4444, prefix = ''): void {
     const canvas = document.createElement('canvas');
     canvas.width = 128;
     canvas.height = 64;
@@ -26,15 +26,17 @@ export class DamageNumbers {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
+    const text = `${prefix}${damage}`;
+
     // Outline
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 4;
-    ctx.strokeText(`${damage}`, 64, 32);
+    ctx.strokeText(text, 64, 32);
 
     // Fill
     const hex = '#' + color.toString(16).padStart(6, '0');
     ctx.fillStyle = hex;
-    ctx.fillText(`${damage}`, 64, 32);
+    ctx.fillText(text, 64, 32);
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.needsUpdate = true;

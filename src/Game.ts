@@ -507,8 +507,14 @@ export class Game {
       pickup.update(dt);
       if (pickup.checkCollect(this.flight.position, CONFIG.flight.playerRadius)) {
         const loot = pickup.collect();
-        if (loot.health > 0) this.flight.hp = Math.min(this.getEffectiveMaxHealth(), this.flight.hp + loot.health);
-        if (loot.spirit > 0) this.flight.spirit = Math.min(this.getEffectiveMaxSpirit(), this.flight.spirit + loot.spirit);
+        if (loot.health > 0) {
+            this.flight.hp = Math.min(this.getEffectiveMaxHealth(), this.flight.hp + loot.health);
+            this.damageNumbers.spawn(this.flight.position.clone(), loot.health, 0x44ff44, '+');
+          }
+          if (loot.spirit > 0) {
+            this.flight.spirit = Math.min(this.getEffectiveMaxSpirit(), this.flight.spirit + loot.spirit);
+            this.damageNumbers.spawn(this.flight.position.clone(), loot.spirit, 0x44aaff, '+');
+          }
         if (loot.talismanType) {
           this.equipTalisman(loot.talismanType);
         } else if (loot.cultivationExp > 0) {
