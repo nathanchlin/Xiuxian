@@ -150,8 +150,8 @@ export class Game {
     this.startTime = performance.now() / 1000;
 
     // Reset player
-    this.flight.hp = CONFIG.player.maxHealth;
-    this.flight.spirit = CONFIG.spirit.maxSpirit;
+    this.flight.hp = this.getEffectiveMaxHealth();
+    this.flight.spirit = this.getEffectiveMaxSpirit();
     this.flight.alive = true;
     this.flight.teleportTo(0, CONFIG.player.startHeight, 0);
 
@@ -202,8 +202,8 @@ export class Game {
     }
 
     // Reset player
-    this.flight.hp = CONFIG.player.maxHealth;
-    this.flight.spirit = CONFIG.spirit.maxSpirit;
+    this.flight.hp = this.getEffectiveMaxHealth();
+    this.flight.spirit = this.getEffectiveMaxSpirit();
     this.flight.alive = true;
     this.flight.teleportTo(0, CONFIG.player.startHeight, 0);
 
@@ -213,10 +213,8 @@ export class Game {
     // HUD updates
     this.hud.setLevel(level);
     this.hud.setWave(1, CONFIG.progression.wavesPerLevel);
-    this.hud.setHp(this.flight.hp, CONFIG.player.maxHealth);
-    this.hud.setSpirit(this.flight.spirit, CONFIG.spirit.maxSpirit);
-
-    // Start first wave
+    this.hud.setHp(this.flight.hp, this.getEffectiveMaxHealth());
+    this.hud.setSpirit(this.flight.spirit, this.getEffectiveMaxSpirit());
     this.nextWave();
 
     // Spawn pickups from arena spots
@@ -397,7 +395,7 @@ export class Game {
     }
     const heal = this.talismanSystem.consumeHeal();
     if (heal > 0) {
-      this.flight.hp = Math.min(CONFIG.player.maxHealth, this.flight.hp + heal);
+      this.flight.hp = Math.min(this.getEffectiveMaxHealth(), this.flight.hp + heal);
     }
 
     // 5. Enemy updates + damage to player
@@ -450,8 +448,8 @@ export class Game {
       pickup.update(dt);
       if (pickup.checkCollect(this.flight.position, CONFIG.flight.playerRadius)) {
         const loot = pickup.collect();
-        if (loot.health > 0) this.flight.hp = Math.min(CONFIG.player.maxHealth, this.flight.hp + loot.health);
-        if (loot.spirit > 0) this.flight.spirit = Math.min(CONFIG.spirit.maxSpirit, this.flight.spirit + loot.spirit);
+        if (loot.health > 0) this.flight.hp = Math.min(this.getEffectiveMaxHealth(), this.flight.hp + loot.health);
+        if (loot.spirit > 0) this.flight.spirit = Math.min(this.getEffectiveMaxSpirit(), this.flight.spirit + loot.spirit);
         if (loot.talismanType) {
           this.equipTalisman(loot.talismanType);
         } else if (loot.cultivationExp > 0) {
@@ -692,7 +690,7 @@ export class Game {
     this.sfx.levelComplete();
     this.input.exitPointerLock();
 
-    const hpPct = this.flight.hp / CONFIG.player.maxHealth;
+    const hpPct = this.flight.hp / this.getEffectiveMaxHealth();
     let grade: string;
     if (hpPct >= 0.9) grade = 'S';
     else if (hpPct >= 0.7) grade = 'A';
@@ -720,6 +718,16 @@ export class Game {
      HELPERS
      ═══════════════════════════════════════════════════════════════════ */
 
+  private getEffectiveMaxHealth(): number {
+    const bonuses = this.inventory.getStatBonuses();
+    return Math.floor(CONFIG.player.maxHealth * (1 + bonuses.hp));
+  }
+
+  private getEffectiveMaxSpirit(): number {
+    const bonuses = this.inventory.getStatBonuses();
+    return Math.floor(CONFIG.spirit.maxSpirit * (1 + bonuses.spirit));
+  }
+
   private updateSkillTargets(): void {
     const targets = [];
     for (const e of this.enemies) {
@@ -740,8 +748,8 @@ export class Game {
   }
 
   private autoUseConsumables(): void {
-    const hpPct = this.flight.hp / CONFIG.player.maxHealth;
-    const spPct = this.flight.spirit / CONFIG.spirit.maxSpirit;
+    const hpPct = this.flight.hp / this.getEffectiveMaxHealth();
+    const spPct = this.flight.spirit / this.getEffectiveMaxSpirit();
 
     // Auto HP pill when below 40%
     if (hpPct < 0.4) {
@@ -749,7 +757,7 @@ export class Game {
       if (pill && pill.count > 0) {
         this.inventory.removeItem('pill_hp');
         const cfg = CONFIG.items.consumables['pill_hp'] as { value: number };
-        this.flight.hp = Math.min(CONFIG.player.maxHealth, this.flight.hp + cfg.value);
+        this.flight.hp = Math.min(this.getEffectiveMaxHealth(), this.flight.hp + cfg.value);
         this.hud.showKill('自动服用 回血丹');
       }
     }
@@ -760,15 +768,17 @@ export class Game {
       if (pill && pill.count > 0) {
         this.inventory.removeItem('pill_spirit');
         const cfg = CONFIG.items.consumables['pill_spirit'] as { value: number };
-        this.flight.spirit = Math.min(CONFIG.spirit.maxSpirit, this.flight.spirit + cfg.value);
+        this.flight.spirit = Math.min(this.getEffectiveMaxSpirit(), this.flight.spirit + cfg.value);
         this.hud.showKill('自动服用 聚灵丹');
       }
     }
   }
 
   private updateHud(): void {
-    this.hud.setHp(this.flight.hp, CONFIG.player.maxHealth);
-    this.hud.setSpirit(this.flight.spirit, CONFIG.spirit.maxSpirit);
+    const bonuses = this.inventory.getStatBonuses();
+    this.skillSystem.setDamageBonus(bonuses.damage);
+    this.hud.setHp(this.flight.hp, this.getEffectiveMaxHealth());
+    this.hud.setSpirit(this.flight.spirit, this.getEffectiveMaxSpirit());
     this.hud.setAltitude(this.flight.getAltitude());
     this.hud.setSpeed(this.flight.getSpeed());
 
@@ -892,10 +902,10 @@ export class Game {
       if (!this.inventory.removeItem(itemId)) return;
       switch (cfg.effect) {
         case 'hp':
-          this.flight.hp = Math.min(CONFIG.player.maxHealth, this.flight.hp + cfg.value);
+          this.flight.hp = Math.min(this.getEffectiveMaxHealth(), this.flight.hp + cfg.value);
           break;
         case 'spirit':
-          this.flight.spirit = Math.min(CONFIG.spirit.maxSpirit, this.flight.spirit + cfg.value);
+          this.flight.spirit = Math.min(this.getEffectiveMaxSpirit(), this.flight.spirit + cfg.value);
           break;
         case 'invincible':
           this.flight.dashInvincible = true;

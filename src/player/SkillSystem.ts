@@ -28,6 +28,7 @@ export class SkillSystem {
   private dashHitsThisFrame: number[] = [];
 
   private targets: EnemyTarget[] = [];
+  private damageBonus = 0;
 
   private beamTrails: Array<{ mesh: THREE.Mesh; timer: number }> = [];
   private parryShield: THREE.Group | null = null;
@@ -37,6 +38,10 @@ export class SkillSystem {
     private readonly scene: THREE.Scene,
     private readonly sfx: Sfx,
   ) {}
+
+  setDamageBonus(bonus: number): void {
+    this.damageBonus = bonus;
+  }
 
   setTargets(targets: EnemyTarget[]): void {
     this.targets = targets;
@@ -60,7 +65,7 @@ export class SkillSystem {
 
   private scaleDamage(base: number, skill: string): number {
     const level = this.flight.getSkillLevel(skill);
-    return Math.floor(base * (1 + level * CONFIG.skills.growth.damagePerLevel));
+    return Math.floor(base * (1 + level * CONFIG.skills.growth.damagePerLevel) * (1 + this.damageBonus));
   }
 
   private scaleCooldown(base: number, skill: string): number {
