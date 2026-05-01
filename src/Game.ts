@@ -831,9 +831,11 @@ export class Game {
     if (this.inventoryPanel.isVisible()) {
       this.inventoryPanel.hide();
       this.state = 'playing';
+      this.input.requestPointerLock();
     } else {
       this.inventoryPanel.show(this.inventory, this.flight);
       this.state = 'paused';
+      this.input.exitPointerLock();
     }
   }
 
