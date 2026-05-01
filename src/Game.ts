@@ -689,6 +689,7 @@ export class Game {
           this.equipTalisman(loot.talismanType);
         } else if (loot.cultivationExp > 0) {
           this.sfx.pickup();
+          this.damageNumbers.spawn(this.flight.position.clone(), loot.cultivationExp, 0xffd700, '+');
           const leveledUp = this.inventory.addCultivationExp(loot.cultivationExp);
           if (leveledUp) {
             this.hud.showKill(`修为突破 — 第${this.inventory.cultivationLevel}层`);
