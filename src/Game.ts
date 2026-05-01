@@ -230,6 +230,7 @@ export class Game {
     this.flight.resetForRestart();
     this.flight.hp = this.getEffectiveMaxHealth();
     this.flight.spirit = this.getEffectiveMaxSpirit();
+    if (this.playerModel) this.playerModel.group.visible = true;
 
     // Snap camera to player — eliminates spring-catch-up lag after teleport
     this.cameraSystem.snapTo(this.flight);
