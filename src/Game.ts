@@ -432,6 +432,7 @@ export class Game {
       this.briefingTimer -= dt;
       if (this.briefingTimer <= 0) {
         this.state = 'playing';
+        this.hud.showAnnouncement('开战!', '#ff4444');
       }
       // Update camera + player model during briefing so scene is visible
       this.cameraSystem.update(dt, this.flight);
