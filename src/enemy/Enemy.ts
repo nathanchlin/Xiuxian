@@ -138,8 +138,16 @@ export class Enemy {
       const strafe = new THREE.Vector3(-chaseDir.z, 0, chaseDir.x).multiplyScalar(
         Math.sin(performance.now() * 0.002 + this.id) * 0.3,
       );
-      const moveDir = chaseDir.add(strafe).normalize();
-      this.velocity.lerp(moveDir.multiplyScalar(this.speed), Math.min(1, 3 * dt));
+      // Keep minimum distance — avoid clipping into player
+      const minDist = CONFIG.enemies.avoidDistance;
+      if (dist < minDist) {
+        // Too close: back off
+        const retreatDir = chaseDir.clone().negate();
+        this.velocity.lerp(retreatDir.multiplyScalar(this.speed * 0.6), Math.min(1, 4 * dt));
+      } else {
+        const moveDir = chaseDir.add(strafe).normalize();
+        this.velocity.lerp(moveDir.multiplyScalar(this.speed), Math.min(1, 3 * dt));
+      }
     } else {
       this.state = 'patrol';
       this.patrolTimer -= dt;
