@@ -1126,6 +1126,8 @@ export class Game {
         const cfg = CONFIG.items.consumables['pill_hp'] as { value: number };
         this.flight.hp = Math.min(this.getEffectiveMaxHealth(), this.flight.hp + cfg.value);
         this.hud.showKill('自动服用 回血丹');
+        this.damageNumbers.spawn(this.flight.position.clone(), cfg.value, 0x44ff44, '+');
+        this.sfx.pickup();
       }
     }
 
@@ -1137,6 +1139,8 @@ export class Game {
         const cfg = CONFIG.items.consumables['pill_spirit'] as { value: number };
         this.flight.spirit = Math.min(this.getEffectiveMaxSpirit(), this.flight.spirit + cfg.value);
         this.hud.showKill('自动服用 聚灵丹');
+        this.damageNumbers.spawn(this.flight.position.clone(), cfg.value, 0x44aaff, '+');
+        this.sfx.pickup();
       }
     }
   }
