@@ -161,6 +161,25 @@ export class Sfx {
     this.beep(880, 0.2, 'sine', 0.5);
   }
 
+  talismanEquip(): void {
+    if (!this.ready()) return;
+    this.beep(880, 0.1, 'sine', 0.5);
+    this.beep(1100, 0.12, 'sine', 0.4);
+    this.sweep(600, 1200, 0.2, 'triangle', 0.3);
+  }
+
+  talismanExpire(): void {
+    if (!this.ready()) return;
+    this.sweep(600, 200, 0.3, 'triangle', 0.4);
+  }
+
+  thunder(): void {
+    if (!this.ready()) return;
+    this.noise(0.3, 300, 0.9);
+    this.sweep(200, 50, 0.4, 'sawtooth', 0.7);
+    this.beep(100, 0.15, 'square', 0.5);
+  }
+
   // --- primitives --------------------------------------------------------
 
   private beep(freq: number, duration: number, type: OscType, vol = 1): void {
