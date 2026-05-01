@@ -842,7 +842,7 @@ export class Game {
     else if (hpPct >= 0.4) grade = 'B';
     else grade = 'C';
 
-    this.hud.showLevelComplete(this.level, grade);
+    this.hud.showLevelComplete(this.level, grade, { kills: this.kills, maxCombo: this.maxCombo });
 
     // Bind next-level button
     requestAnimationFrame(() => {

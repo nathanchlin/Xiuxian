@@ -1016,7 +1016,7 @@ export class Hud {
     document.body.appendChild(overlay);
   }
 
-  showLevelComplete(level: number, grade: string): void {
+  showLevelComplete(level: number, grade: string, stats?: { kills: number; maxCombo: number }): void {
     this.hideEndScreens();
     const overlay = div(
       `position:fixed;top:0;left:0;width:100%;height:100%;` +
@@ -1029,8 +1029,14 @@ export class Hud {
       `font-size:36px;font-weight:bold;color:${GOLD};letter-spacing:4px;margin-bottom:16px;`,
     );
     title.textContent = `第 ${level} 关 通关`;
-    const gradeEl = div(`font-size:56px;font-weight:bold;color:#fff;margin-bottom:20px;`);
+    const gradeEl = div(`font-size:56px;font-weight:bold;color:#fff;margin-bottom:12px;`);
     gradeEl.textContent = grade;
+    const info = div(`font-size:14px;color:#aaa;line-height:2;text-align:center;`);
+    if (stats) {
+      info.innerHTML =
+        `斩杀 <span style="color:${GOLD}">${stats.kills}</span> 敌&emsp;` +
+        `最高 <span style="color:${GOLD}">${stats.maxCombo}</span> 连斩`;
+    }
     const btn = document.createElement('button');
     btn.id = 'hud-next-level';
     btn.textContent = '继续前行';
@@ -1038,7 +1044,7 @@ export class Hud {
       `margin-top:16px;padding:12px 40px;font-size:18px;font-family:monospace;` +
       `background:rgba(218,165,32,0.3);color:#fff;border:2px solid ${GOLD};` +
       `border-radius:6px;cursor:pointer;letter-spacing:2px;pointer-events:auto;`;
-    overlay.append(title, gradeEl, btn);
+    overlay.append(title, gradeEl, info, btn);
     document.body.appendChild(overlay);
   }
 
