@@ -319,6 +319,8 @@ export class Game {
     this.boss.onPhaseChange = (phase) => {
       this.sfx.bossPhaseChange();
       this.hud.showBossPhase(phase);
+      this.deathBurst.spawn(this.boss!.position.clone(), CONFIG.boss.color, 15);
+      this.cameraSystem.shake(1.0, 0.3);
     };
   }
 
