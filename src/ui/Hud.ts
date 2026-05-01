@@ -91,6 +91,7 @@ export class Hud {
   private intentContainer!: HTMLDivElement;
   private skillCdContainer!: HTMLDivElement;
   private skillCds!: { q: HTMLDivElement; f: HTMLDivElement; r: HTMLDivElement };
+  private skillCdOverlays!: { q: HTMLDivElement; f: HTMLDivElement; r: HTMLDivElement };
   private finalStrikeHint!: HTMLDivElement;
 
   // Talisman HUD
@@ -259,20 +260,23 @@ export class Hud {
     this.skillCdContainer = div(
       `${BASE}bottom:80px;left:18px;display:flex;gap:6px;font-size:12px;`,
     );
-    const makeCdBox = (label: string) => {
+    const makeCdBox = (label: string): { box: HTMLDivElement; overlay: HTMLDivElement } => {
       const box = div(
-        `width:36px;height:36px;border:1px solid ${GOLD};border-radius:4px;` +
+        `position:relative;width:36px;height:36px;border:1px solid ${GOLD};border-radius:4px;` +
           `display:flex;align-items:center;justify-content:center;` +
-          `background:rgba(0,0,0,0.6);color:${GOLD};font-weight:bold;`,
+          `background:rgba(0,0,0,0.6);color:${GOLD};font-weight:bold;overflow:hidden;`,
       );
       box.textContent = label;
-      return box;
+      const overlay = div(
+        `position:absolute;inset:0;border-radius:3px;pointer-events:none;`,
+      );
+      overlay.style.display = 'none';
+      box.appendChild(overlay);
+      return { box, overlay };
     };
-    this.skillCds = {
-      q: makeCdBox('1'),
-      f: makeCdBox('2'),
-      r: makeCdBox('3'),
-    };
+    const cd1 = makeCdBox('1'), cd2 = makeCdBox('2'), cd3 = makeCdBox('3');
+    this.skillCds = { q: cd1.box, f: cd2.box, r: cd3.box };
+    this.skillCdOverlays = { q: cd1.overlay, f: cd2.overlay, r: cd3.overlay };
     this.skillCdContainer.append(this.skillCds.q, this.skillCds.f, this.skillCds.r);
     this.root.appendChild(this.skillCdContainer);
 
@@ -568,20 +572,25 @@ export class Hud {
   }
 
   setSkillCooldowns(bladeFan: number, swordDash: number, parry: number, costs: { bladeFan: number; swordDash: number; parry: number }): void {
-    const setCd = (el: HTMLDivElement, cd: number, key: string, cost: number) => {
+    const setCd = (el: HTMLDivElement, overlay: HTMLDivElement, cd: number, totalCd: number, key: string, cost: number) => {
       if (cd > 0) {
-        el.style.opacity = '0.4';
-        el.textContent = cd.toFixed(1);
+        const pct = cd / totalCd;
+        const deg = Math.round(pct * 360);
+        overlay.style.display = 'block';
+        overlay.style.background = `conic-gradient(rgba(0,0,0,0.7) ${deg}deg, transparent ${deg}deg)`;
         el.style.color = '#888';
+        el.textContent = cd.toFixed(1);
+        el.style.opacity = '1';
       } else {
+        overlay.style.display = 'none';
         el.style.opacity = '1';
         el.textContent = `${key} ⬡${cost}`;
         el.style.color = GOLD;
       }
     };
-    setCd(this.skillCds.q, bladeFan, '1', costs.bladeFan);
-    setCd(this.skillCds.f, swordDash, '2', costs.swordDash);
-    setCd(this.skillCds.r, parry, '3', costs.parry);
+    setCd(this.skillCds.q, this.skillCdOverlays.q, bladeFan, 5, '1', costs.bladeFan);
+    setCd(this.skillCds.f, this.skillCdOverlays.f, swordDash, 4, '2', costs.swordDash);
+    setCd(this.skillCds.r, this.skillCdOverlays.r, parry, 6, '3', costs.parry);
   }
 
   setFinalStrikeReady(ready: boolean): void {
