@@ -479,7 +479,7 @@ export class Hud {
 
   private comboContainer: HTMLDivElement | null = null;
   private comboBorderGlow: HTMLDivElement;
-  setCombo(count: number, multiplier: number): void {
+  setCombo(count: number, multiplier: number, urgent = false): void {
     if (count <= 1) {
       if (this.comboContainer) {
         this.comboContainer.remove();
@@ -498,6 +498,13 @@ export class Hud {
       document.body.appendChild(this.comboContainer);
     }
     this.comboContainer.textContent = `${count}连斩 x${multiplier.toFixed(1)}`;
+    // Urgency blink when combo about to expire
+    if (urgent) {
+      const blink = Math.sin(performance.now() * 0.02) > 0;
+      this.comboContainer.style.color = blink ? '#ff4444' : GOLD;
+    } else {
+      this.comboContainer.style.color = GOLD;
+    }
     // Punch animation
     this.comboContainer.style.transform = 'translateX(-50%) scale(1.2)';
     clearTimeout(this.comboAnimTimer);

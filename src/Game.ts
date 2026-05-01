@@ -929,6 +929,8 @@ export class Game {
         this.comboCount = 0;
         this.comboMultiplier = 1.0;
         this.hud.setCombo(0, 1.0);
+      } else if (this.comboCount > 1 && this.comboTimer < 1.5) {
+        this.hud.setCombo(this.comboCount, this.comboMultiplier, true);
       }
     }
   }
