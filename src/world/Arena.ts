@@ -130,6 +130,13 @@ export class Arena {
           bridge.position.set(midX, 50, midZ);
           bridge.rotation.y = Math.atan2(dz, dx);
           this.group.add(bridge);
+          // Collision: axis-aligned bounding box for the rotated bridge
+          const halfLen = dist / 2 + 1; // slight padding for width
+          this.colliders.push({
+            minX: midX - halfLen, maxX: midX + halfLen,
+            minY: 49.5, maxY: 50.5,
+            minZ: midZ - halfLen, maxZ: midZ + halfLen,
+          });
           bridgeCount++;
         }
       }
