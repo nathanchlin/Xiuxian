@@ -85,13 +85,13 @@ export class Pickup {
         color = this.getItemColor();
         size = 0.8;
         useBox = true;
-        this.expireTimer = 15;
+        this.expireTimer = 30;
         break;
       case 'treasure_drop':
         color = this.getItemColor();
         size = 0.9;
         useBox = true;
-        this.expireTimer = 15;
+        this.expireTimer = 30;
         break;
       case 'consumable_drop':
         color = this.getItemColor();
