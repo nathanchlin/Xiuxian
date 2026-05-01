@@ -26,6 +26,7 @@ export class Enemy {
   private bodyMat: THREE.MeshStandardMaterial;
   private deathTimer = 0;
   private spawnFlashTimer = 0.3;
+  private hitRecoil = 0;
   private patrolTarget = new THREE.Vector3();
   private patrolTimer = 0;
   private hpBarBg: THREE.Mesh;
@@ -155,6 +156,7 @@ export class Enemy {
     this.hp -= amount;
     this.bodyMat.color.setHex(0xffffff);
     setTimeout(() => { if (this.alive) this.bodyMat.color.setHex(this.color); }, 80);
+    this.hitRecoil = 0.15;
     if (this.hp <= 0) { this.die(); return true; }
     return false;
   }
@@ -255,6 +257,15 @@ export class Enemy {
       this.group.lookAt(this.position.clone().add(this.velocity));
     }
     this.group.position.y += Math.sin(performance.now() * 0.003 + this.id * 7) * 0.3;
+
+    // Hit recoil: scale squish + position push
+    if (this.hitRecoil > 0) {
+      this.hitRecoil -= dt;
+      const t = Math.max(0, this.hitRecoil / 0.15);
+      this.group.scale.set(1 + t * 0.2, 1 - t * 0.15, 1 + t * 0.2);
+      this.group.position.y -= t * 1.5;
+      if (this.hitRecoil <= 0) this.group.scale.set(1, 1, 1);
+    }
 
     // Update health bar
     const pct = Math.max(0, this.hp / this.maxHp);
