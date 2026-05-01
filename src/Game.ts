@@ -218,6 +218,7 @@ export class Game {
     this.cameraSystem.snapTo(this.flight);
 
     this.talismanSystem.reset();
+    this.skillSystem.reset();
     for (const d of this.talismanDrops) d.dispose(this.engine.scene);
     this.talismanDrops = [];
     for (const d of this.lootDrops) d.dispose(this.engine.scene);

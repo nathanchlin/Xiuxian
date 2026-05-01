@@ -509,6 +509,43 @@ export class SkillSystem {
     }
     this.runeTrails = [];
   }
+
+  /** Reset for game restart — clears all active visuals but keeps the system alive */
+  reset(): void {
+    for (const b of this.blades) b.dispose(this.scene);
+    this.blades.length = 0;
+    for (const trail of this.beamTrails) {
+      this.scene.remove(trail.mesh);
+      trail.mesh.geometry.dispose();
+      (trail.mesh.material as THREE.Material).dispose();
+    }
+    this.beamTrails = [];
+    for (const s of this.parrySparks) {
+      this.scene.remove(s.mesh);
+      s.mesh.geometry.dispose();
+      (s.mesh.material as THREE.Material).dispose();
+    }
+    this.parrySparks = [];
+    for (const r of this.runeTrails) {
+      this.scene.remove(r.mesh);
+      r.mesh.geometry.dispose();
+      (r.mesh.material as THREE.MeshBasicMaterial).map?.dispose();
+      (r.mesh.material as THREE.Material).dispose();
+    }
+    this.runeTrails = [];
+    if (this.parryShield) {
+      this.scene.remove(this.parryShield);
+      this.parryShield = null;
+    }
+    this.bladeFanCd = 0;
+    this.swordDashCd = 0;
+    this.parryCd = 0;
+    this.charging = false;
+    this.chargeTimer = 0;
+    this.dashHitIds.clear();
+    clearTimeout(this.parryShieldTimerId);
+    this.parryShieldTimerId = 0;
+  }
 }
 
 // ─── Blade Projectile ────────────────────────────────────
