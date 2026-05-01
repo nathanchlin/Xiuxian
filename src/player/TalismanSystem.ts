@@ -204,7 +204,7 @@ export class TalismanSystem {
 
     t.durability--;
     t.cooldownTimer = cfg.interval;
-    this.sfx.parrySuccess(); // reuse as thunder sound
+    this.sfx.thunder();
 
     // AOE: hit all enemies within radius
     const hitIds: number[] = [];
