@@ -137,8 +137,10 @@ export class Game {
       if (this.flight.swordIntent >= CONFIG.skills.finalStrike.requiredIntent) {
         if (this.skillSystem.tryFinalStrike()) { this.hud.pulseCrosshair(); return; }
       }
+      const lowSpirit = this.flight.spirit < CONFIG.weapons.beam.spiritCost;
       const hit = this.skillSystem.fireNormalBeam();
       if (hit) { this.onSkillHit(hit); this.hud.pulseCrosshair(); }
+      else if (lowSpirit) { this.sfx.empty(); }
     });
 
     // Main update loop
