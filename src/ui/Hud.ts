@@ -87,6 +87,10 @@ export class Hud {
   private talismanPickupEl!: HTMLDivElement;
   private talismanPickupTimer = 0;
 
+  // Skill level display
+  private skillLevelUpEl!: HTMLDivElement;
+  private skillLevelUpTimer = 0;
+
   constructor() {
     // ── Root ──────────────────────────────────────────────────────────────────
     this.root = div(
@@ -232,6 +236,14 @@ export class Hud {
     };
     this.skillCdContainer.append(this.skillCds.q, this.skillCds.f, this.skillCds.r);
     this.root.appendChild(this.skillCdContainer);
+
+    // ── Skill level-up notification ──────────────────────────────────
+    this.skillLevelUpEl = div(
+      `${BASE}top:42%;left:50%;transform:translateX(-50%);` +
+        `font-size:20px;font-weight:bold;color:#44ffcc;letter-spacing:2px;` +
+        `text-shadow:0 0 10px rgba(68,255,204,0.8);opacity:0;transition:all 0.3s;`,
+    );
+    this.root.appendChild(this.skillLevelUpEl);
 
     // ── Final strike hint ────────────────────────────────────────────
     this.finalStrikeHint = div(
@@ -449,6 +461,36 @@ export class Hud {
       this.talismanPickupEl.style.opacity = '0';
       this.talismanPickupEl.style.transform = 'translate(-50%,-50%) scale(0.8)';
     }, 1500);
+  }
+
+  setSkillLevels(bladeFan: number, swordDash: number, parry: number): void {
+    const levels = [bladeFan, swordDash, parry];
+    for (let i = 0; i < 3; i++) {
+      const cdBox = [this.skillCds.q, this.skillCds.f, this.skillCds.r][i]!;
+      const lv = levels[i]!;
+      if (lv > 0) {
+        cdBox.style.borderWidth = '2px';
+        cdBox.title = `Lv.${lv}`;
+        // Show level as small text at top-left corner
+        let lvEl = cdBox.querySelector('.skill-lv') as HTMLDivElement | null;
+        if (!lvEl) {
+          lvEl = div(`position:absolute;top:-8px;left:-4px;font-size:8px;color:#44ffcc;text-shadow:0 0 3px #000;`);
+          lvEl.className = 'skill-lv';
+          cdBox.style.position = 'relative';
+          cdBox.appendChild(lvEl);
+        }
+        lvEl.textContent = `${lv}`;
+      }
+    }
+  }
+
+  showSkillLevelUp(name: string, level: number): void {
+    this.skillLevelUpEl.textContent = `${name} 升至 Lv.${level}`;
+    this.skillLevelUpEl.style.opacity = '1';
+    clearTimeout(this.skillLevelUpTimer);
+    this.skillLevelUpTimer = window.setTimeout(() => {
+      this.skillLevelUpEl.style.opacity = '0';
+    }, 2000);
   }
 
   flashDamage(): void {

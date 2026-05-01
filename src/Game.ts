@@ -146,6 +146,8 @@ export class Game {
     for (const d of this.talismanDrops) d.dispose(this.engine.scene);
     this.talismanDrops = [];
 
+    this.flight.skillKills = { bladeFan: 0, swordDash: 0, parry: 0, finalStrike: 0 };
+
     this.initLevel(1);
     this.state = 'briefing';
     this.briefingTimer = 3.0;
@@ -342,19 +344,19 @@ export class Game {
 
     // Process blade hits
     for (const hit of this.skillSystem.consumeBladeHits()) {
-      this.onSkillHit(hit);
+      this.onSkillHit(hit, 'bladeFan');
     }
 
     // Process dash hits
     for (const id of this.skillSystem.consumeDashHits()) {
-      this.onSkillHit({ targetId: id, damage: CONFIG.skills.swordDash.damage });
+      this.onSkillHit({ targetId: id, damage: this.skillSystem.getScaledSwordDashDamage() }, 'swordDash');
     }
 
     // Final strike release when charge completes
     if (this.skillSystem.isCharging() && this.skillSystem.chargeTimer <= 0) {
       const hits = this.skillSystem.releaseFinalStrike();
       for (const hit of hits) {
-        this.onSkillHit(hit);
+        this.onSkillHit(hit, 'finalStrike');
       }
     }
 
@@ -379,7 +381,13 @@ export class Game {
         const parryResult = this.skillSystem.tryParryReflect();
         if (parryResult.reflected) {
           const killed = enemy.takeDamage(parryResult.reflectDamage);
-          if (killed) this.onEnemyKilled(enemy.typeName, enemy.position.clone());
+          if (killed) {
+            this.onEnemyKilled(enemy.typeName, enemy.position.clone());
+            const leveledUp = this.flight.addSkillKill('parry');
+            if (leveledUp) {
+              this.hud.showSkillLevelUp('剑气护体', this.flight.getSkillLevel('parry'));
+            }
+          }
           this.hud.flashHitMarker();
         } else {
           this.applyDamageToPlayer(result.damage);
@@ -394,7 +402,13 @@ export class Game {
         const parryResult = this.skillSystem.tryParryReflect();
         if (parryResult.reflected) {
           const killed = this.boss.takeDamage(parryResult.reflectDamage);
-          if (killed) this.onBossKilled();
+          if (killed) {
+            this.onBossKilled();
+            const leveledUp = this.flight.addSkillKill('parry');
+            if (leveledUp) {
+              this.hud.showSkillLevelUp('剑气护体', this.flight.getSkillLevel('parry'));
+            }
+          }
           this.hud.flashHitMarker();
         } else {
           this.applyDamageToPlayer(bossResult.damage);
@@ -469,20 +483,46 @@ export class Game {
     if (died) this.onDeath();
   }
 
-  private onSkillHit(hit: SkillHitResult): void {
+  private onSkillHit(hit: SkillHitResult, skillName?: string): void {
     this.hud.flashHitMarker();
 
     for (const enemy of this.enemies) {
       if (enemy.id === hit.targetId && enemy.alive) {
         const killed = enemy.takeDamage(hit.damage);
-        if (killed) this.onEnemyKilled(enemy.typeName, enemy.position.clone());
+        if (killed) {
+          this.onEnemyKilled(enemy.typeName, enemy.position.clone());
+          if (skillName) {
+            const leveledUp = this.flight.addSkillKill(skillName);
+            if (leveledUp) {
+              const level = this.flight.getSkillLevel(skillName);
+              const names: Record<string, string> = {
+                bladeFan: '灵刃散射', swordDash: '御剑突刺',
+                parry: '剑气护体', finalStrike: '万剑归宗',
+              };
+              this.hud.showSkillLevelUp(names[skillName] ?? skillName, level);
+            }
+          }
+        }
         return;
       }
     }
 
     if (this.boss && this.boss.id === hit.targetId && this.boss.alive) {
       const killed = this.boss.takeDamage(hit.damage);
-      if (killed) this.onBossKilled();
+      if (killed) {
+        this.onBossKilled();
+        if (skillName) {
+          const leveledUp = this.flight.addSkillKill(skillName);
+          if (leveledUp) {
+            const level = this.flight.getSkillLevel(skillName);
+            const names: Record<string, string> = {
+              bladeFan: '灵刃散射', swordDash: '御剑突刺',
+              parry: '剑气护体', finalStrike: '万剑归宗',
+            };
+            this.hud.showSkillLevelUp(names[skillName] ?? skillName, level);
+          }
+        }
+      }
     }
   }
 
@@ -617,6 +657,13 @@ export class Game {
     const cds = this.skillSystem.getCooldowns();
     this.hud.setSkillCooldowns(cds.bladeFan, cds.swordDash, cds.parry);
     this.hud.setFinalStrikeReady(intent >= maxIntent);
+
+    // Skill levels
+    this.hud.setSkillLevels(
+      this.flight.getSkillLevel('bladeFan'),
+      this.flight.getSkillLevel('swordDash'),
+      this.flight.getSkillLevel('parry'),
+    );
 
     const tSlots = this.talismanSystem.getSlots();
     this.hud.setTalismanSlots(tSlots.map(s => {
