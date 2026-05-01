@@ -314,7 +314,6 @@ export class Game {
 
   private nextWave(): void {
     this.wave++;
-    console.log(`[WAVE] Starting wave ${this.wave}, enemies before: ${this.enemies.length}`);
     this.hud.setWave(this.wave, CONFIG.progression.wavesPerLevel);
 
     const isBossLevel = (CONFIG.progression.bossLevels as readonly number[]).includes(this.level);
@@ -337,7 +336,6 @@ export class Game {
       CONFIG.progression.scaling.enemyCountBase +
       CONFIG.progression.scaling.enemyCountPerLevel * this.level,
     );
-    console.log(`[WAVE] spawnEnemies: count=${count}, level=${this.level}, wave=${this.wave}`);
 
     const types = this.getEnemyTypesForLevel(this.level);
 
@@ -728,7 +726,6 @@ export class Game {
     const bossAlive = this.boss ? this.boss.alive : false;
 
     if (aliveEnemies === 0 && !bossAlive && this.restTimer <= 0) {
-      console.log(`[WAVE] All enemies dead. wave=${this.wave}, wavesPerLevel=${CONFIG.progression.wavesPerLevel}`);
       // Wave clear spirit + HP bonus
       const spiritBonus = 10 + this.level * 3;
       this.flight.spirit = Math.min(this.getEffectiveMaxSpirit(), this.flight.spirit + spiritBonus);
