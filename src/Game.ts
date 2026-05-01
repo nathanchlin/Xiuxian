@@ -1298,7 +1298,7 @@ export class Game {
     this.hud.setTalismanSlots(tSlots.map(s => {
       if (!s) return null;
       const cfg = CONFIG.talismans.types[s.type];
-      return { type: s.type, durability: s.durability, color: cfg.color };
+      return { type: s.type, durability: s.durability, color: cfg.color, name: cfg.name };
     }));
 
     // Radar

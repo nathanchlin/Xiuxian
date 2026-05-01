@@ -107,6 +107,7 @@ export class Hud {
   // Talisman HUD
   private talismanSlots: HTMLDivElement[] = [];
   private talismanDurTexts: HTMLDivElement[] = [];
+  private talismanNameTexts: HTMLDivElement[] = [];
   private talismanPickupEl!: HTMLDivElement;
   private talismanPickupTimer = 0;
 
@@ -312,6 +313,7 @@ export class Hud {
       `${BASE}bottom:80px;right:180px;display:flex;gap:6px;`,
     );
     for (let i = 0; i < 2; i++) {
+      const slotWrapper = div(`position:relative;display:flex;flex-direction:column;align-items:center;`);
       const slot = div(
         `width:28px;height:28px;border:1px solid #555;border-radius:4px;` +
           `background:rgba(0,0,0,0.5);position:relative;`,
@@ -320,10 +322,16 @@ export class Hud {
         `position:absolute;bottom:1px;right:2px;font-size:9px;color:#fff;` +
           `text-shadow:0 0 3px #000;`,
       );
+      const nameText = div(
+        `font-size:9px;color:#aaa;margin-top:1px;white-space:nowrap;`,
+      );
       slot.appendChild(durText);
+      slotWrapper.appendChild(slot);
+      slotWrapper.appendChild(nameText);
       this.talismanSlots.push(slot);
       this.talismanDurTexts.push(durText);
-      talismanContainer.appendChild(slot);
+      this.talismanNameTexts.push(nameText);
+      talismanContainer.appendChild(slotWrapper);
     }
     this.root.appendChild(talismanContainer);
 
@@ -700,10 +708,11 @@ export class Hud {
     this.finalStrikeHint.style.opacity = ready ? '1' : '0';
   }
 
-  setTalismanSlots(slots: Array<{ type: string; durability: number; color: number } | null>): void {
+  setTalismanSlots(slots: Array<{ type: string; durability: number; color: number; name?: string } | null>): void {
     for (let i = 0; i < 2; i++) {
       const slot = this.talismanSlots[i]!;
       const durText = this.talismanDurTexts[i]!;
+      const nameText = this.talismanNameTexts[i]!;
       const data = slots[i] ?? null;
       if (data) {
         const hex = '#' + data.color.toString(16).padStart(6, '0');
@@ -711,11 +720,14 @@ export class Hud {
         slot.style.background = hex + '44';
         slot.style.boxShadow = `0 0 6px ${hex}`;
         durText.textContent = `${data.durability}`;
+        nameText.textContent = data.name ?? '';
+        nameText.style.color = hex;
       } else {
         slot.style.borderColor = '#555';
         slot.style.background = 'rgba(0,0,0,0.5)';
         slot.style.boxShadow = 'none';
         durText.textContent = '';
+        nameText.textContent = '';
       }
     }
   }
