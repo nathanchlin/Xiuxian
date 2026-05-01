@@ -130,12 +130,17 @@ export class Arena {
           bridge.position.set(midX, 50, midZ);
           bridge.rotation.y = Math.atan2(dz, dx);
           this.group.add(bridge);
-          // Collision: axis-aligned bounding box for the rotated bridge
-          const halfLen = dist / 2 + 1; // slight padding for width
+          // Collision: tight AABB for the rotated bridge rectangle
+          const cosA = Math.abs(Math.cos(bridge.rotation.y));
+          const sinA = Math.abs(Math.sin(bridge.rotation.y));
+          const halfW = dist / 2;
+          const halfD = 1; // bridge width / 2
+          const extentX = halfW * cosA + halfD * sinA + 0.5;
+          const extentZ = halfW * sinA + halfD * cosA + 0.5;
           this.colliders.push({
-            minX: midX - halfLen, maxX: midX + halfLen,
+            minX: midX - extentX, maxX: midX + extentX,
             minY: 49.5, maxY: 50.5,
-            minZ: midZ - halfLen, maxZ: midZ + halfLen,
+            minZ: midZ - extentZ, maxZ: midZ + extentZ,
           });
           bridgeCount++;
         }
