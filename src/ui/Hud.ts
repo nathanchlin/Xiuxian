@@ -74,6 +74,7 @@ export class Hud {
   // Overlays
   private damageOverlay: HTMLDivElement;
   private lowHpVignette: HTMLDivElement;
+  private boundaryOverlay: HTMLDivElement;
   private hitMarker: HTMLDivElement;
   private killText: HTMLDivElement;
   private killFeed: HTMLDivElement[] = [];
@@ -356,6 +357,14 @@ export class Hud {
     );
     this.root.appendChild(this.lowHpVignette);
 
+    // ── Boundary proximity warning (amber edge glow) ────────────────────────
+    this.boundaryOverlay = div(
+      `${BASE}top:0;left:0;width:100%;height:100%;` +
+        `box-shadow:inset 0 0 80px rgba(218,165,32,0.6);` +
+        `opacity:0;transition:opacity 0.3s;pointer-events:none;`,
+    );
+    this.root.appendChild(this.boundaryOverlay);
+
     // ── Hit marker ────────────────────────────────────────────────────────────
     this.hitMarker = div(
       `${BASE}top:50%;left:50%;transform:translate(-50%,-50%);` +
@@ -542,6 +551,11 @@ export class Hud {
     }
     // Low HP vignette below 30%
     this.lowHpVignette.style.opacity = pct < 30 ? `${1 - pct / 30}` : '0';
+  }
+
+  setBoundaryWarning(penetration: number): void {
+    // penetration: 0 = safe, 1 = at boundary edge
+    this.boundaryOverlay.style.opacity = penetration > 0 ? `${Math.min(1, penetration)}` : '0';
   }
 
   private spiritPrev = 0;

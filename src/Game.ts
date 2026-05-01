@@ -1155,6 +1155,13 @@ export class Game {
     this.hud.setAltitude(this.flight.getAltitude());
     this.hud.setSpeed(this.flight.getSpeed());
     this.sfx.updateWind(this.flight.getSpeed());
+    // Boundary proximity warning
+    const distXZ = Math.hypot(this.flight.position.x, this.flight.position.z);
+    const boundaryStart = CONFIG.flight.boundaryRadius - CONFIG.flight.boundaryDragWidth;
+    const boundaryPct = distXZ > boundaryStart
+      ? Math.min(1, (distXZ - boundaryStart) / CONFIG.flight.boundaryDragWidth)
+      : 0;
+    this.hud.setBoundaryWarning(boundaryPct);
     // Cultivation level + exp progress
     const nextExp = this.inventory.getExpForNextLevel();
     const curExp = this.inventory.cultivationExp;
