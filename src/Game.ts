@@ -281,6 +281,7 @@ export class Game {
       this.hud.showAnnouncement('妖王降临', '#c0392b');
     } else {
       this.spawnEnemies();
+      this.hud.showAnnouncement(`第 ${this.wave} 波`, '#88aaff');
     }
 
     this.updateSkillTargets();
