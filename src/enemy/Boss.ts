@@ -23,6 +23,9 @@ export class Boss {
   private readonly baseSpeed = 30;
   private deathTimer = 0;
   private phase2Summoned = false;
+  private hpBarBg: THREE.Mesh;
+  private hpBarFill: THREE.Mesh;
+  private readonly hpBarWidth = 4;
 
   onSummon: ((count: number, pos: THREE.Vector3) => void) | null = null;
   onPhaseChange: ((phase: BossPhase) => void) | null = null;
@@ -77,6 +80,24 @@ export class Boss {
 
     this.group.position.copy(spawn);
     scene.add(this.group);
+
+    // Health bar (boss-sized)
+    const barY = 5;
+    this.hpBarBg = new THREE.Mesh(
+      new THREE.PlaneGeometry(this.hpBarWidth, 0.3),
+      new THREE.MeshBasicMaterial({ color: 0x330000, side: THREE.DoubleSide, depthTest: false }),
+    );
+    this.hpBarBg.position.y = barY;
+    this.hpBarBg.renderOrder = 999;
+    this.group.add(this.hpBarBg);
+
+    this.hpBarFill = new THREE.Mesh(
+      new THREE.PlaneGeometry(this.hpBarWidth, 0.24),
+      new THREE.MeshBasicMaterial({ color: 0xff3300, side: THREE.DoubleSide, depthTest: false }),
+    );
+    this.hpBarFill.position.y = barY;
+    this.hpBarFill.renderOrder = 1000;
+    this.group.add(this.hpBarFill);
   }
 
   takeDamage(amount: number): boolean {
@@ -116,6 +137,8 @@ export class Boss {
     this.deathTimer = 3.0;
     this.bodyMat.emissiveIntensity = 0;
     this.bodyMat.color.setHex(0x333333);
+    this.hpBarBg.visible = false;
+    this.hpBarFill.visible = false;
   }
 
   update(dt: number, playerPos: THREE.Vector3): { attacked: boolean; damage: number; aoe: boolean } {
@@ -166,6 +189,13 @@ export class Boss {
 
     this.group.position.copy(this.position);
     if (dist > 1) this.group.lookAt(playerPos);
+
+    // Update health bar
+    const pct = Math.max(0, this.hp / this.maxHp);
+    this.hpBarFill.scale.x = pct;
+    this.hpBarFill.position.x = -(1 - pct) * this.hpBarWidth / 2;
+    this.hpBarBg.lookAt(playerPos);
+    this.hpBarFill.lookAt(playerPos);
 
     if (this.shieldMesh && this.shieldMesh.visible) this.shieldMesh.rotation.y += dt * 2;
 

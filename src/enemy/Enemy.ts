@@ -27,6 +27,9 @@ export class Enemy {
   private deathTimer = 0;
   private patrolTarget = new THREE.Vector3();
   private patrolTimer = 0;
+  private hpBarBg: THREE.Mesh;
+  private hpBarFill: THREE.Mesh;
+  private readonly hpBarWidth = 2;
 
   constructor(id: number, spawn: THREE.Vector3, typeName: EnemyTypeName, level: number, scene: THREE.Scene) {
     this.id = id;
@@ -81,6 +84,24 @@ export class Enemy {
     this.group.position.copy(spawn);
     scene.add(this.group);
     this.randomPatrolTarget();
+
+    // Health bar
+    const barY = scale * 1.2 + 0.5;
+    this.hpBarBg = new THREE.Mesh(
+      new THREE.PlaneGeometry(this.hpBarWidth, 0.2),
+      new THREE.MeshBasicMaterial({ color: 0x330000, side: THREE.DoubleSide, depthTest: false }),
+    );
+    this.hpBarBg.position.y = barY;
+    this.hpBarBg.renderOrder = 999;
+    this.group.add(this.hpBarBg);
+
+    this.hpBarFill = new THREE.Mesh(
+      new THREE.PlaneGeometry(this.hpBarWidth, 0.16),
+      new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, depthTest: false }),
+    );
+    this.hpBarFill.position.y = barY;
+    this.hpBarFill.renderOrder = 1000;
+    this.group.add(this.hpBarFill);
   }
 
   takeDamage(amount: number): boolean {
@@ -99,6 +120,8 @@ export class Enemy {
     this.bodyMat.color.setHex(0x666666);
     this.bodyMat.opacity = 0.5;
     this.bodyMat.transparent = true;
+    this.hpBarBg.visible = false;
+    this.hpBarFill.visible = false;
   }
 
   update(dt: number, playerPos: THREE.Vector3): { attacked: boolean; damage: number } {
@@ -165,6 +188,15 @@ export class Enemy {
       this.group.lookAt(this.position.clone().add(this.velocity));
     }
     this.group.position.y += Math.sin(performance.now() * 0.003 + this.id * 7) * 0.3;
+
+    // Update health bar
+    const pct = Math.max(0, this.hp / this.maxHp);
+    this.hpBarFill.scale.x = pct;
+    this.hpBarFill.position.x = -(1 - pct) * this.hpBarWidth / 2;
+    const hpColor = pct > 0.5 ? 0x00ff00 : pct > 0.25 ? 0xffaa00 : 0xff0000;
+    (this.hpBarFill.material as THREE.MeshBasicMaterial).color.setHex(hpColor);
+    this.hpBarBg.lookAt(playerPos);
+    this.hpBarFill.lookAt(playerPos);
 
     return { attacked, damage: attacked ? this.attackDamage : 0 };
   }
