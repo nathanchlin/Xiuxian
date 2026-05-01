@@ -128,6 +128,13 @@ export class CameraSystem {
       this.camera.position.x += (Math.random() - 0.5) * factor * 2;
       this.camera.position.y += (Math.random() - 0.5) * factor * 2;
     }
+
+    // Dynamic FOV — widen when boosting for speed sensation
+    const baseFov = cfg.fov;
+    const boostFov = baseFov + 12;
+    const targetFov = flight.getBoostState().active ? boostFov : baseFov;
+    this.camera.fov += (targetFov - this.camera.fov) * Math.min(1, 6 * dt);
+    this.camera.updateProjectionMatrix();
   }
 
   private easeInOut(t: number): number {
