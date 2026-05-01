@@ -65,6 +65,7 @@ export class Game {
     crow: new THREE.SphereGeometry(0.2, 6, 6),
     serpent: new THREE.SphereGeometry(0.4, 6, 6),
     dragon: new THREE.SphereGeometry(0.6, 6, 6),
+    boss: new THREE.SphereGeometry(0.8, 8, 8),
   };
 
   private level = 1;
@@ -635,6 +636,7 @@ export class Game {
           this.hud.flashHitMarker();
         } else {
           this.applyDamageToPlayer(bossResult.damage, this.boss.position);
+          this.spawnEnemyProjectile(this.boss.position, playerPos, 'boss');
         }
       }
     } else if (this.boss && !this.boss.alive) {
@@ -781,7 +783,7 @@ export class Game {
 
   /** Spawn a visual-only projectile from enemy to player */
   private spawnEnemyProjectile(from: THREE.Vector3, to: THREE.Vector3, typeName: string): void {
-    const colors: Record<string, number> = { crow: 0xff4400, serpent: 0x44ff44, dragon: 0x4488ff };
+    const colors: Record<string, number> = { crow: 0xff4400, serpent: 0x44ff44, dragon: 0x4488ff, boss: 0xff00ff };
     const color = colors[typeName] ?? 0xff4400;
     const geo = Game.ENEMY_PROJ_GEOS[typeName] ?? Game.ENEMY_PROJ_GEOS.crow!;
     const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1.0 });
