@@ -312,8 +312,7 @@ export class SkillSystem {
     // Parry shield visual
     if (this.parryShield) {
       if (!this.flight.parrying) {
-        this.scene.remove(this.parryShield);
-        this.parryShield = null;
+        this.disposeParryShield();
       } else {
         this.parryShield.position.copy(this.flight.position);
         this.parryShield.rotation.y += dt * 4;
@@ -445,9 +444,24 @@ export class SkillSystem {
     }
   }
 
+  private disposeParryShield(): void {
+    if (!this.parryShield) return;
+    this.parryShield.traverse((obj) => {
+      const o = obj as any;
+      if (o.geometry) o.geometry.dispose();
+      const mat = o.material;
+      if (mat) {
+        if (Array.isArray(mat)) mat.forEach((m: THREE.Material) => m.dispose());
+        else mat.dispose();
+      }
+    });
+    this.scene.remove(this.parryShield);
+    this.parryShield = null;
+  }
+
   private showParryShield(): void {
     if (this.parryShield) {
-      this.scene.remove(this.parryShield);
+      this.disposeParryShield();
     }
     this.parryShield = new THREE.Group();
     const mat = new THREE.MeshBasicMaterial({ color: CONFIG.skills.parry.color, transparent: true, opacity: 0.6 });
@@ -471,10 +485,7 @@ export class SkillSystem {
       this.parryShield.scale.setScalar(3);
       clearTimeout(this.parryShieldTimerId);
       this.parryShieldTimerId = window.setTimeout(() => {
-        if (this.parryShield) {
-          this.scene.remove(this.parryShield);
-          this.parryShield = null;
-        }
+        this.disposeParryShield();
         this.parryShieldTimerId = 0;
       }, 150);
     }
@@ -510,9 +521,7 @@ export class SkillSystem {
       (trail.mesh.material as THREE.Material).dispose();
     }
     this.beamTrails = [];
-    if (this.parryShield) {
-      this.scene.remove(this.parryShield);
-    }
+    this.disposeParryShield();
     for (const r of this.runeTrails) {
       this.scene.remove(r.mesh);
       r.mesh.geometry.dispose();
@@ -545,10 +554,7 @@ export class SkillSystem {
       (r.mesh.material as THREE.Material).dispose();
     }
     this.runeTrails = [];
-    if (this.parryShield) {
-      this.scene.remove(this.parryShield);
-      this.parryShield = null;
-    }
+    this.disposeParryShield();
     this.bladeFanCd = 0;
     this.swordDashCd = 0;
     this.parryCd = 0;
