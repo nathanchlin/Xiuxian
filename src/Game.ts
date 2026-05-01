@@ -85,6 +85,7 @@ export class Game {
   private restTimer = 0;
   private briefingTimer = 0;
   private deathCamTimer = 0;
+  private heartbeatTimer = 0;
 
   constructor(container: HTMLElement) {
     const engineCfg: EngineConfig = {
@@ -219,6 +220,7 @@ export class Game {
     }
     this.enemyProjectiles.length = 0;
     this.startTime = performance.now() / 1000;
+    this.heartbeatTimer = 0;
 
     // Reset player
     this.flight.hp = this.getEffectiveMaxHealth();
@@ -1156,6 +1158,17 @@ export class Game {
     this.flight.parryWindowBonus = bonuses.parryWindow;
     this.hud.setHp(this.flight.hp, this.getEffectiveMaxHealth());
     this.hud.setSpirit(this.flight.spirit, this.getEffectiveMaxSpirit());
+    // Low-HP heartbeat warning every 2s
+    const hpPct = this.flight.hp / this.getEffectiveMaxHealth();
+    if (hpPct < 0.25 && this.flight.alive) {
+      this.heartbeatTimer -= 1 / 60;
+      if (this.heartbeatTimer <= 0) {
+        this.sfx.heartbeat();
+        this.heartbeatTimer = 2.0;
+      }
+    } else {
+      this.heartbeatTimer = 0;
+    }
     this.hud.setAltitude(this.flight.getAltitude());
     this.hud.setSpeed(this.flight.getSpeed());
     this.sfx.updateWind(this.flight.getSpeed());

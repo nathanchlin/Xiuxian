@@ -163,6 +163,12 @@ export class Sfx {
     this.beep(100, 0.15, 'square', 0.5);
   }
 
+  /** Low-HP heartbeat warning — quiet deep thump */
+  heartbeat(): void {
+    if (!this.ready()) return;
+    this.sweep(100, 50, 0.15, 'sine', 0.3);
+  }
+
   // --- wind ambient -------------------------------------------------------
 
   startWind(): void {
