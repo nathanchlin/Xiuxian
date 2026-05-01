@@ -1367,5 +1367,7 @@ export class Hud {
     if (this.deathVignetteEl) { this.deathVignetteEl.remove(); this.deathVignetteEl = null; }
     for (const arrow of this.trackerArrows) arrow.remove();
     this.trackerArrows.length = 0;
+    if (this.damageDirEl) { this.damageDirEl.remove(); this.damageDirEl = null; }
+    if (this.breakthroughFlash) { this.breakthroughFlash.remove(); this.breakthroughFlash = null; }
   }
 }
