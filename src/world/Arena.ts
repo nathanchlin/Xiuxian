@@ -158,6 +158,12 @@ export class Arena {
       island.position.set(ix, iy, iz);
       this.group.add(island);
       this.pickupSpots.push(new THREE.Vector3(ix, iy + ir * 0.5, iz));
+      // Collision: flattened sphere AABB
+      this.colliders.push({
+        minX: ix - ir, maxX: ix + ir,
+        minY: iy - ir * 0.4, maxY: iy + ir * 0.4,
+        minZ: iz - ir, maxZ: iz + ir,
+      });
     }
 
     // Cloud sea
