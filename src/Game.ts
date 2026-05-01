@@ -1385,6 +1385,10 @@ export class Game {
     this.inventoryPanel.onUseSkillBook = (bookId: string) => {
       const bookCfg = (CONFIG.items.skillBooks as Record<string, { skill: string }>)[bookId];
       if (!bookCfg) return;
+      if (this.flight.getSkillLevel(bookCfg.skill) >= CONFIG.skills.growth.maxLevel) {
+        this.hud.showKill('该技能已满级');
+        return;
+      }
       if (!this.inventory.removeItem(bookId)) return;
       // Add kills to trigger level-up through existing system
       const killsNeeded = CONFIG.skills.growth.killsPerLevel;
