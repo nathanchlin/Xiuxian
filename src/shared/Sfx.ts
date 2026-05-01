@@ -45,6 +45,13 @@ export class Sfx {
     this.beep(180, 0.08, 'sine', 0.3);
   }
 
+  /** Critical hit — sharper, brighter ping */
+  critHit(): void {
+    if (!this.ready()) return;
+    this.beep(660, 0.06, 'square', 0.6);
+    this.beep(990, 0.08, 'sine', 0.4);
+  }
+
   empty(): void {
     if (!this.ready()) return;
     this.beep(220, 0.04, 'square', 0.3);

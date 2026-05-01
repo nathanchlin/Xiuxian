@@ -825,11 +825,15 @@ export class Game {
     const targetPos = targetEnemy?.position ?? targetBoss?.position;
     if (targetPos) {
       this.damageNumbers.spawn(targetPos, finalDamage, isCrit ? 0xffd700 : 0xff4444);
-      if (isCrit) this.cameraSystem.shake(0.3, 0.1);
+      if (isCrit) {
+        this.cameraSystem.shake(0.3, 0.1);
+        this.sfx.critHit();
+      } else {
+        this.cameraSystem.shake(0.15, 0.06);
+        this.sfx.hit();
+      }
       // Beam hit spark impact
       this.deathBurst.spawn(targetPos, 0x88ccff, 4);
-      if (!isCrit) this.cameraSystem.shake(0.15, 0.06);
-      this.sfx.hit();
     }
 
     for (const enemy of this.enemies) {
