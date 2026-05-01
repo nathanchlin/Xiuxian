@@ -22,7 +22,7 @@ export class Enemy {
   private readonly attackDamage: number;
   private readonly color: number;
   private attackCooldown = 0;
-  private readonly attackCooldownTime = 3.5;
+  private readonly attackCooldownTime: number;
   private bodyMat: THREE.MeshStandardMaterial;
   private deathTimer = 0;
   private spawnFlashTimer = 0.3;
@@ -49,6 +49,9 @@ export class Enemy {
     this.speed = cfg.speed;
     this.attackDamage = cfg.attackDamage;
     this.color = cfg.color;
+    // Attack cooldown varies by type: crow fast, serpent medium, dragon slow
+    const cooldownByType: Record<EnemyTypeName, number> = { crow: 2.5, serpent: 3.5, dragon: 5.0 };
+    this.attackCooldownTime = cooldownByType[typeName] ?? 3.5;
 
     this.bodyMat = new THREE.MeshStandardMaterial({ color: cfg.color, roughness: 0.4, metalness: 0.1 });
     const scale = cfg.scale;
