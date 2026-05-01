@@ -1346,12 +1346,17 @@ export class Game {
       const cfg = (CONFIG.items.consumables as Record<string, { effect: string; value: number }>)[itemId];
       if (!cfg) return;
       if (!this.inventory.removeItem(itemId)) return;
+      const name = this.getItemName(itemId);
+      this.hud.showKill(`服用 ${name}`);
+      this.sfx.pickup();
       switch (cfg.effect) {
         case 'hp':
           this.flight.hp = Math.min(this.getEffectiveMaxHealth(), this.flight.hp + cfg.value);
+          this.damageNumbers.spawn(this.flight.position.clone(), cfg.value, 0x44ff44, '+');
           break;
         case 'spirit':
           this.flight.spirit = Math.min(this.getEffectiveMaxSpirit(), this.flight.spirit + cfg.value);
+          this.damageNumbers.spawn(this.flight.position.clone(), cfg.value, 0x44aaff, '+');
           break;
         case 'invincible':
           this.flight.dashInvincible = true;
