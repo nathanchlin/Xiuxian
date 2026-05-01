@@ -80,10 +80,10 @@ export class SkillSystem {
 
   // ─── Skill 1: Blade Fan (Q) ───────────────────────────
 
-  fireBladeFan(): void {
+  fireBladeFan(): boolean {
     const cfg = CONFIG.skills.bladeFan;
-    if (this.bladeFanCd > 0) return;
-    if (!this.flight.consumeSpirit(cfg.spiritCost)) return;
+    if (this.bladeFanCd > 0) return false;
+    if (!this.flight.consumeSpirit(cfg.spiritCost)) return false;
 
     this.bladeFanCd = this.scaleCooldown(cfg.cooldown, 'bladeFan');
     this.sfx.bladeFan();
@@ -101,15 +101,16 @@ export class SkillSystem {
       const target = aliveTargets.length > 0 ? aliveTargets[i % aliveTargets.length]! : null;
       this.blades.push(new Blade(origin.clone(), dir, this.scene, target?.position ?? null));
     }
+    return true;
   }
 
   // ─── Skill 2: Sword Dash (F) ──────────────────────────
 
-  activateSwordDash(): void {
+  activateSwordDash(): boolean {
     const cfg = CONFIG.skills.swordDash;
-    if (this.swordDashCd > 0) return;
-    if (this.flight.dashing) return;
-    if (!this.flight.consumeSpirit(cfg.spiritCost)) return;
+    if (this.swordDashCd > 0) return false;
+    if (this.flight.dashing) return false;
+    if (!this.flight.consumeSpirit(cfg.spiritCost)) return false;
 
     this.swordDashCd = this.scaleCooldown(cfg.cooldown, 'swordDash');
     this.dashHitIds.clear();
@@ -117,20 +118,22 @@ export class SkillSystem {
 
     const dir = this.flight.getForward();
     this.flight.startDash(dir, cfg.dashDuration);
+    return true;
   }
 
   // ─── Skill 3: Parry (R) ───────────────────────────────
 
-  activateParry(): void {
+  activateParry(): boolean {
     const cfg = CONFIG.skills.parry;
-    if (this.parryCd > 0) return;
-    if (this.flight.parrying) return;
-    if (!this.flight.consumeSpirit(cfg.spiritCost)) return;
+    if (this.parryCd > 0) return false;
+    if (this.flight.parrying) return false;
+    if (!this.flight.consumeSpirit(cfg.spiritCost)) return false;
 
     this.parryCd = this.scaleCooldown(cfg.cooldown, 'parry');
     this.flight.startParry();
     this.sfx.parryActivate();
     this.showParryShield();
+    return true;
   }
 
   tryParryReflect(): { reflected: boolean; reflectDamage: number } {

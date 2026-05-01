@@ -105,17 +105,17 @@ export class Game {
 
     this.input.registerKey('1', () => {
       if (this.state !== 'playing') return;
-      this.skillSystem.fireBladeFan();
+      if (!this.skillSystem.fireBladeFan()) this.sfx.empty();
     });
 
     this.input.registerKey('2', () => {
       if (this.state !== 'playing') return;
-      this.skillSystem.activateSwordDash();
+      if (!this.skillSystem.activateSwordDash()) this.sfx.empty();
     });
 
     this.input.registerKey('3', () => {
       if (this.state !== 'playing') return;
-      this.skillSystem.activateParry();
+      if (!this.skillSystem.activateParry()) this.sfx.empty();
     });
 
     this.input.registerKey('b', () => {
