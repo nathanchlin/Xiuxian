@@ -25,6 +25,7 @@ export class Boss {
   private phase2Summoned = false;
   private hpBarBg: THREE.Mesh;
   private hpBarFill: THREE.Mesh;
+  private shieldBarFill: THREE.Mesh;
   private readonly hpBarWidth = 4;
 
   onSummon: ((count: number, pos: THREE.Vector3) => void) | null = null;
@@ -98,13 +99,24 @@ export class Boss {
     this.hpBarFill.position.y = barY;
     this.hpBarFill.renderOrder = 1000;
     this.group.add(this.hpBarFill);
+
+    // Shield bar (purple, hidden until shield activates)
+    this.shieldBarFill = new THREE.Mesh(
+      new THREE.PlaneGeometry(this.hpBarWidth, 0.18),
+      new THREE.MeshBasicMaterial({ color: 0x8800ff, side: THREE.DoubleSide, depthTest: false }),
+    );
+    this.shieldBarFill.position.y = barY + 0.35;
+    this.shieldBarFill.renderOrder = 1000;
+    this.shieldBarFill.visible = false;
+    this.group.add(this.shieldBarFill);
   }
 
   takeDamage(amount: number): boolean {
     if (!this.alive) return false;
     if (this.shieldHp > 0) {
       this.shieldHp -= amount;
-      if (this.shieldHp <= 0) { this.shieldHp = 0; if (this.shieldMesh) this.shieldMesh.visible = false; }
+      this.updateShieldBar();
+      if (this.shieldHp <= 0) { this.shieldHp = 0; if (this.shieldMesh) this.shieldMesh.visible = false; this.shieldBarFill.visible = false; }
       return false;
     }
     this.hp -= amount;
@@ -121,6 +133,8 @@ export class Boss {
 
   private activateShield(): void {
     this.shieldHp = CONFIG.boss.shieldHp;
+    this.shieldBarFill.visible = true;
+    this.updateShieldBar();
     if (!this.shieldMesh) {
       this.shieldMesh = new THREE.Mesh(
         new THREE.SphereGeometry(4, 16, 12),
@@ -139,6 +153,13 @@ export class Boss {
     this.bodyMat.color.setHex(0x333333);
     this.hpBarBg.visible = false;
     this.hpBarFill.visible = false;
+    this.shieldBarFill.visible = false;
+  }
+
+  private updateShieldBar(): void {
+    const pct = Math.max(0, this.shieldHp / CONFIG.boss.shieldHp);
+    this.shieldBarFill.scale.x = pct;
+    this.shieldBarFill.position.x = -(1 - pct) * this.hpBarWidth / 2;
   }
 
   update(dt: number, playerPos: THREE.Vector3): { attacked: boolean; damage: number; aoe: boolean } {
@@ -196,6 +217,7 @@ export class Boss {
     this.hpBarFill.position.x = -(1 - pct) * this.hpBarWidth / 2;
     this.hpBarBg.lookAt(playerPos);
     this.hpBarFill.lookAt(playerPos);
+    if (this.shieldBarFill.visible) this.shieldBarFill.lookAt(playerPos);
 
     if (this.shieldMesh && this.shieldMesh.visible) this.shieldMesh.rotation.y += dt * 2;
 
