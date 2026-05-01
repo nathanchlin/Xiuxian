@@ -85,6 +85,9 @@ export class Hud {
   private hitMarkerTimer = 0;
   private killTimer = 0;
   private bossPhaseTimer = 0;
+  private damageDirTimer = 0;
+  private breakthroughTimer = 0;
+  private comboAnimTimer = 0;
 
   // Skill HUD
   private intentIcons: HTMLDivElement[] = [];
@@ -467,8 +470,10 @@ export class Hud {
     this.comboContainer.textContent = `${count}连斩 x${multiplier.toFixed(1)}`;
     // Punch animation
     this.comboContainer.style.transform = 'translateX(-50%) scale(1.2)';
-    setTimeout(() => {
+    clearTimeout(this.comboAnimTimer);
+    this.comboAnimTimer = window.setTimeout(() => {
       if (this.comboContainer) this.comboContainer.style.transform = 'translateX(-50%) scale(1)';
+      this.comboAnimTimer = 0;
     }, 100);
   }
 
@@ -734,11 +739,13 @@ export class Hud {
       `linear-gradient(${deg}deg, rgba(200,30,30,0.5) 0%, transparent 40%)`;
     this.damageDirEl.style.transition = 'opacity 0s';
     this.damageDirEl.style.opacity = '1';
-    setTimeout(() => {
+    clearTimeout(this.damageDirTimer);
+    this.damageDirTimer = window.setTimeout(() => {
       if (this.damageDirEl) {
         this.damageDirEl.style.transition = 'opacity 0.4s';
         this.damageDirEl.style.opacity = '0';
       }
+      this.damageDirTimer = 0;
     }, 200);
   }
 
@@ -775,11 +782,13 @@ export class Hud {
     }
     this.breakthroughFlash.style.transition = 'opacity 0s';
     this.breakthroughFlash.style.opacity = '1';
-    setTimeout(() => {
+    clearTimeout(this.breakthroughTimer);
+    this.breakthroughTimer = window.setTimeout(() => {
       if (this.breakthroughFlash) {
         this.breakthroughFlash.style.transition = 'opacity 1.0s';
         this.breakthroughFlash.style.opacity = '0';
       }
+      this.breakthroughTimer = 0;
     }, 200);
   }
 

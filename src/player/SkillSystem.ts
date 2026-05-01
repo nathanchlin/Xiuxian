@@ -18,6 +18,7 @@ export interface EnemyTarget {
 export class SkillSystem {
   private bladeFanCd = 0;
   private parrySparks: { mesh: THREE.Mesh; vel: THREE.Vector3; life: number }[] = [];
+  private parryShieldTimerId = 0;
   private swordDashCd = 0;
   private parryCd = 0;
 
@@ -410,11 +411,13 @@ export class SkillSystem {
   private flashParrySuccess(): void {
     if (this.parryShield) {
       this.parryShield.scale.setScalar(3);
-      setTimeout(() => {
+      clearTimeout(this.parryShieldTimerId);
+      this.parryShieldTimerId = window.setTimeout(() => {
         if (this.parryShield) {
           this.scene.remove(this.parryShield);
           this.parryShield = null;
         }
+        this.parryShieldTimerId = 0;
       }, 150);
     }
 
@@ -441,6 +444,7 @@ export class SkillSystem {
   // ─── Dispose ───────────────────────────────────────────
 
   dispose(): void {
+    clearTimeout(this.parryShieldTimerId);
     for (const b of this.blades) b.dispose(this.scene);
     for (const trail of this.beamTrails) {
       this.scene.remove(trail.mesh);
