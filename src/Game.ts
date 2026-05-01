@@ -482,7 +482,7 @@ export class Game {
           }
           this.hud.flashHitMarker();
         } else {
-          this.applyDamageToPlayer(result.damage);
+          this.applyDamageToPlayer(result.damage, enemy.position);
         }
       }
     }
@@ -503,7 +503,7 @@ export class Game {
           }
           this.hud.flashHitMarker();
         } else {
-          this.applyDamageToPlayer(bossResult.damage);
+          this.applyDamageToPlayer(bossResult.damage, this.boss.position);
         }
       }
     }
@@ -606,12 +606,15 @@ export class Game {
      DAMAGE & COMBAT
      ═══════════════════════════════════════════════════════════════════ */
 
-  private applyDamageToPlayer(damage: number): void {
+  private applyDamageToPlayer(damage: number, sourcePos?: THREE.Vector3): void {
     const died = this.flight.takeDamage(damage);
     this.sfx.damage();
     this.hud.flashDamage();
     this.cameraSystem.shake(0.6, 0.15);
     if (this.playerModel) this.playerModel.flashDamage();
+    if (sourcePos) {
+      this.hud.flashDamageDirection(sourcePos, this.flight.position, this.flight.quaternion);
+    }
     if (died) this.onDeath();
   }
 

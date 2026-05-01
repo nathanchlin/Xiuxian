@@ -612,6 +612,39 @@ export class Hud {
     }, 150);
   }
 
+  private damageDirEl: HTMLDivElement | null = null;
+  flashDamageDirection(source: { x: number; z: number }, player: { x: number; z: number }, playerQuat: { x: number; y: number; z: number; w: number }): void {
+    // Calculate angle from player to source in world space
+    const dx = source.x - player.x;
+    const dz = source.z - player.z;
+    // Transform to player-local space using quaternion yaw
+    const sinY = 2 * (playerQuat.w * playerQuat.y - playerQuat.x * playerQuat.z);
+    const cosY = 1 - 2 * (playerQuat.y * playerQuat.y + playerQuat.z * playerQuat.z);
+    const localX = dx * cosY + dz * sinY;
+    const localZ = -dx * sinY + dz * cosY;
+    // Screen angle: 0=right, 90=bottom, etc. (player forward = -Z = top of screen)
+    const angle = Math.atan2(localX, -localZ);
+
+    if (!this.damageDirEl) {
+      this.damageDirEl = document.createElement('div');
+      this.damageDirEl.style.cssText =
+        `position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:80;`;
+      document.body.appendChild(this.damageDirEl);
+    }
+    // Red gradient from the direction of the hit
+    const deg = (angle * 180 / Math.PI) - 90; // CSS gradient angle
+    this.damageDirEl.style.background =
+      `linear-gradient(${deg}deg, rgba(200,30,30,0.5) 0%, transparent 40%)`;
+    this.damageDirEl.style.transition = 'opacity 0s';
+    this.damageDirEl.style.opacity = '1';
+    setTimeout(() => {
+      if (this.damageDirEl) {
+        this.damageDirEl.style.transition = 'opacity 0.4s';
+        this.damageDirEl.style.opacity = '0';
+      }
+    }, 200);
+  }
+
   flashHitMarker(): void {
     clearTimeout(this.hitMarkerTimer);
     this.hitMarker.style.transition = 'opacity 0s';
@@ -1016,6 +1049,9 @@ export class Hud {
     if (this.comboContainer) {
       this.comboContainer.remove();
       this.comboContainer = null;
+    }
+    if (this.damageDirEl) {
+      this.damageDirEl.style.opacity = '0';
     }
   }
 
