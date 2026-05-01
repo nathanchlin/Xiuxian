@@ -14,6 +14,7 @@ export class PlayerModel {
   private bodyMats: THREE.MeshStandardMaterial[] = [];
   private damageFlashTimer = 0;
   private intentRing: THREE.Mesh;
+  private swordMat: THREE.MeshStandardMaterial;
 
   constructor(private readonly scene: THREE.Scene) {
     const bodyMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.4 });
@@ -41,7 +42,8 @@ export class PlayerModel {
 
     // Flying sword platform beneath feet
     const swordGeo = new THREE.BoxGeometry(0.3, 0.05, 1.2);
-    const sword = new THREE.Mesh(swordGeo, accentMat);
+    this.swordMat = accentMat;
+    const sword = new THREE.Mesh(swordGeo, this.swordMat);
     sword.position.y = -0.2;
     this.group.add(sword);
 
@@ -121,6 +123,27 @@ export class PlayerModel {
       mat.emissive.setHex(0xff2222);
       mat.emissiveIntensity = 1.5;
     }
+  }
+
+  /** Update sword appearance based on cultivation level */
+  setCultivationLevel(level: number): void {
+    const colors = [
+      0x4488ff, // 0: blue (default)
+      0x4488ff, // 1
+      0x4488ff, // 2
+      0x44ffcc, // 3: cyan
+      0x44ffcc, // 4
+      0x44ffcc, // 5
+      0xffd700, // 6: gold
+      0xffd700, // 7
+      0xffd700, // 8
+      0xbb44ff, // 9: purple
+      0xbb44ff, // 10
+    ];
+    const c = colors[Math.min(level, colors.length - 1)]!;
+    this.swordMat.color.setHex(c);
+    this.swordMat.emissive.setHex(c);
+    this.swordMat.emissiveIntensity = 0.3 + level * 0.1;
   }
 
   dispose(): void {

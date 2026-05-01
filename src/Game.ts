@@ -943,6 +943,7 @@ export class Game {
       : 0;
     const expPct = nextExp === Infinity ? 1 : (curExp - prevLevelExp) / (nextExp - prevLevelExp);
     this.hud.setCultivationLevel(this.inventory.cultivationLevel, Math.max(0, Math.min(1, expPct)));
+    if (this.playerModel) this.playerModel.setCultivationLevel(this.inventory.cultivationLevel);
     const boost = this.flight.getBoostState();
     this.hud.setBoost(boost.active ? 1 : boost.cooldownPct);
 
