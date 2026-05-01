@@ -46,31 +46,72 @@ export class Enemy {
 
     this.bodyMat = new THREE.MeshStandardMaterial({ color: cfg.color, roughness: 0.4, metalness: 0.1 });
     const scale = cfg.scale;
-
-    // Body
-    const bodyGeo = new THREE.BoxGeometry(1.2 * scale, 0.8 * scale, 2.0 * scale);
-    const body = new THREE.Mesh(bodyGeo, this.bodyMat);
-    this.group.add(body);
-
-    // Wings
-    const wingGeo = new THREE.BoxGeometry(3.0 * scale, 0.1 * scale, 1.0 * scale);
     const wingMat = new THREE.MeshStandardMaterial({ color: cfg.color, roughness: 0.5 });
-    const leftWing = new THREE.Mesh(wingGeo, wingMat);
-    leftWing.position.x = -1.5 * scale;
-    this.group.add(leftWing);
-    const rightWing = new THREE.Mesh(wingGeo, wingMat);
-    rightWing.position.x = 1.5 * scale;
-    this.group.add(rightWing);
 
-    // Eyes
-    const eyeMat = new THREE.MeshStandardMaterial({ color: 0xff2222, emissive: 0xff2222, emissiveIntensity: 2.0 });
-    const eyeGeo = new THREE.SphereGeometry(0.15 * scale, 6, 6);
-    const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
-    leftEye.position.set(-0.3 * scale, 0.2 * scale, -1.0 * scale);
-    this.group.add(leftEye);
-    const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
-    rightEye.position.set(0.3 * scale, 0.2 * scale, -1.0 * scale);
-    this.group.add(rightEye);
+    // Type-specific geometry
+    let bodyGeo: THREE.BoxGeometry;
+    if (typeName === 'serpent') {
+      // Elongated snake body, no wings, hood crest on top
+      bodyGeo = new THREE.BoxGeometry(0.8 * scale, 0.6 * scale, 3.0 * scale);
+      const body = new THREE.Mesh(bodyGeo, this.bodyMat);
+      this.group.add(body);
+      // Hood crest
+      const hoodGeo = new THREE.BoxGeometry(1.4 * scale, 0.15 * scale, 0.8 * scale);
+      const hood = new THREE.Mesh(hoodGeo, wingMat);
+      hood.position.set(0, 0.4 * scale, -1.0 * scale);
+      this.group.add(hood);
+      // Green eyes
+      const eyeMat = new THREE.MeshStandardMaterial({ color: 0x44ff44, emissive: 0x44ff44, emissiveIntensity: 2.0 });
+      const eyeGeo = new THREE.SphereGeometry(0.18 * scale, 6, 6);
+      const le = new THREE.Mesh(eyeGeo, eyeMat); le.position.set(-0.2 * scale, 0.15 * scale, -1.5 * scale);
+      const re = new THREE.Mesh(eyeGeo, eyeMat); re.position.set(0.2 * scale, 0.15 * scale, -1.5 * scale);
+      this.group.add(le, re);
+    } else if (typeName === 'dragon') {
+      // Bulkier body, angled wings, tail, horns
+      bodyGeo = new THREE.BoxGeometry(1.4 * scale, 1.0 * scale, 2.2 * scale);
+      const body = new THREE.Mesh(bodyGeo, this.bodyMat);
+      this.group.add(body);
+      // Angled wings
+      const wGeo = new THREE.BoxGeometry(3.5 * scale, 0.1 * scale, 1.4 * scale);
+      const lw = new THREE.Mesh(wGeo, wingMat); lw.position.set(-1.8 * scale, 0.3 * scale, 0); lw.rotation.z = 0.25;
+      const rw = new THREE.Mesh(wGeo, wingMat); rw.position.set(1.8 * scale, 0.3 * scale, 0); rw.rotation.z = -0.25;
+      this.group.add(lw, rw);
+      // Tail
+      const tailGeo = new THREE.BoxGeometry(0.3 * scale, 0.3 * scale, 1.8 * scale);
+      const tail = new THREE.Mesh(tailGeo, this.bodyMat); tail.position.z = 1.8 * scale;
+      this.group.add(tail);
+      // Horns + cyan eyes
+      const hornGeo = new THREE.ConeGeometry(0.12 * scale, 0.6 * scale, 4);
+      const hornMat = new THREE.MeshStandardMaterial({ color: 0xccccdd, roughness: 0.3 });
+      const lh = new THREE.Mesh(hornGeo, hornMat); lh.position.set(-0.3 * scale, 0.7 * scale, -0.8 * scale); lh.rotation.x = -0.3;
+      const rh = new THREE.Mesh(hornGeo, hornMat); rh.position.set(0.3 * scale, 0.7 * scale, -0.8 * scale); rh.rotation.x = -0.3;
+      this.group.add(lh, rh);
+      const eyeMat = new THREE.MeshStandardMaterial({ color: 0x22ccff, emissive: 0x22ccff, emissiveIntensity: 2.5 });
+      const eyeGeo = new THREE.SphereGeometry(0.18 * scale, 6, 6);
+      const le = new THREE.Mesh(eyeGeo, eyeMat); le.position.set(-0.35 * scale, 0.3 * scale, -1.1 * scale);
+      const re = new THREE.Mesh(eyeGeo, eyeMat); re.position.set(0.35 * scale, 0.3 * scale, -1.1 * scale);
+      this.group.add(le, re);
+    } else {
+      // Crow: compact body + flat wings + beak + yellow eyes
+      bodyGeo = new THREE.BoxGeometry(1.0 * scale, 0.6 * scale, 1.6 * scale);
+      const body = new THREE.Mesh(bodyGeo, this.bodyMat);
+      this.group.add(body);
+      const wGeo = new THREE.BoxGeometry(2.8 * scale, 0.08 * scale, 0.8 * scale);
+      const lw = new THREE.Mesh(wGeo, wingMat); lw.position.x = -1.4 * scale;
+      const rw = new THREE.Mesh(wGeo, wingMat); rw.position.x = 1.4 * scale;
+      this.group.add(lw, rw);
+      // Beak
+      const beakGeo = new THREE.ConeGeometry(0.12 * scale, 0.4 * scale, 4);
+      const beak = new THREE.Mesh(beakGeo, this.bodyMat);
+      beak.position.set(0, 0, -1.0 * scale); beak.rotation.x = Math.PI / 2;
+      this.group.add(beak);
+      // Yellow eyes
+      const eyeMat = new THREE.MeshStandardMaterial({ color: 0xffcc00, emissive: 0xffcc00, emissiveIntensity: 2.0 });
+      const eyeGeo = new THREE.SphereGeometry(0.12 * scale, 6, 6);
+      const le = new THREE.Mesh(eyeGeo, eyeMat); le.position.set(-0.25 * scale, 0.2 * scale, -0.8 * scale);
+      const re = new THREE.Mesh(eyeGeo, eyeMat); re.position.set(0.25 * scale, 0.2 * scale, -0.8 * scale);
+      this.group.add(le, re);
+    }
 
     // Wireframe
     this.group.add(new THREE.LineSegments(new THREE.EdgesGeometry(bodyGeo), new THREE.LineBasicMaterial({ color: 0x000000 })));
