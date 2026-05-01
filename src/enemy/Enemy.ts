@@ -25,6 +25,7 @@ export class Enemy {
   private readonly attackCooldownTime = 3.5;
   private bodyMat: THREE.MeshStandardMaterial;
   private deathTimer = 0;
+  private spawnFlashTimer = 0.3;
   private patrolTarget = new THREE.Vector3();
   private patrolTimer = 0;
   private hpBarBg: THREE.Mesh;
@@ -85,6 +86,10 @@ export class Enemy {
     scene.add(this.group);
     this.randomPatrolTarget();
 
+    // Spawn flash — bright emissive glow that fades
+    this.bodyMat.emissive.setHex(0xffffff);
+    this.bodyMat.emissiveIntensity = 2.0;
+
     // Health bar
     const barY = scale * 1.2 + 0.5;
     this.hpBarBg = new THREE.Mesh(
@@ -132,6 +137,17 @@ export class Enemy {
         this.bodyMat.opacity = Math.max(0, this.deathTimer / 2.0);
       }
       return { attacked: false, damage: 0 };
+    }
+
+    // Spawn flash decay
+    if (this.spawnFlashTimer > 0) {
+      this.spawnFlashTimer -= dt;
+      const t = Math.max(0, this.spawnFlashTimer / 0.3);
+      this.bodyMat.emissiveIntensity = t * 2.0;
+      if (this.spawnFlashTimer <= 0) {
+        this.bodyMat.emissive.setHex(0x000000);
+        this.bodyMat.emissiveIntensity = 0;
+      }
     }
 
     this.attackCooldown = Math.max(0, this.attackCooldown - dt);
