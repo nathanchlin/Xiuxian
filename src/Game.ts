@@ -1239,7 +1239,16 @@ export class Game {
       : undefined;
     const pickupBlips = [...this.pickups, ...this.talismanDrops, ...this.lootDrops]
       .filter(p => !p.collected)
-      .map((p) => ({ x: p.position.x, z: p.position.z }));
+      .map((p) => {
+        let color = '#4af'; // default blue
+        if (p.type === 'chest' || p.type === 'talisman_drop') color = '#ffaa00';
+        else if (p.type === 'health') color = '#44ff44';
+        else if (p.type === 'missile') color = '#ff8844';
+        else if (p.type === 'cultivation_orb') color = '#ffd700';
+        else if (p.type === 'skill_book') color = '#ff66ff';
+        else if (p.type === 'treasure_drop') color = '#ffaa00';
+        return { x: p.position.x, z: p.position.z, color };
+      });
     this.hud.updateRadar(
       this.flight.position.x,
       this.flight.position.z,

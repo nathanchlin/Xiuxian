@@ -21,6 +21,7 @@ interface EnemyBlip {
 interface PickupBlip {
   x: number;
   z: number;
+  color?: string;
 }
 
 /** Small helper — create a div with inline style string, optionally add an id. */
@@ -1000,13 +1001,13 @@ export class Hud {
       return [bx, by];
     };
 
-    // Pickups (blue dots)
+    // Pickups (colored dots by type)
     for (const p of pickups) {
       const [bx, by] = toBlip(p.x, p.z);
       if ((bx - cx) ** 2 + (by - cy) ** 2 > R * R) continue;
       ctx.beginPath();
       ctx.arc(bx, by, 3, 0, Math.PI * 2);
-      ctx.fillStyle = '#4af';
+      ctx.fillStyle = p.color ?? '#4af';
       ctx.fill();
     }
 
