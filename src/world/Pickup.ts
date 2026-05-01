@@ -125,6 +125,9 @@ export class Pickup {
 
   update(dt: number): void {
     if (this.collected) return;
+    this.position.y = this.position.y; // keep base position stable
+    this.mesh.position.x = this.position.x;
+    this.mesh.position.z = this.position.z;
     this.mesh.position.y = this.position.y + Math.sin(performance.now() * 0.003 + this.position.x) * 0.5;
     this.mesh.rotation.y += 0.02;
 
@@ -134,6 +137,18 @@ export class Pickup {
         this.collected = true;
         this.mesh.visible = false;
       }
+    }
+  }
+
+  /** Pull toward player when within magnet range */
+  attract(playerPos: THREE.Vector3, dt: number): void {
+    if (this.collected) return;
+    const magnetRadius = 18;
+    const dist = this.position.distanceTo(playerPos);
+    if (dist < magnetRadius && dist > 0.1) {
+      const pullStrength = (1 - dist / magnetRadius) * 40; // stronger when closer
+      const dir = playerPos.clone().sub(this.position).normalize();
+      this.position.addScaledVector(dir, pullStrength * dt);
     }
   }
 

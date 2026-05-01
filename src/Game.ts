@@ -448,6 +448,7 @@ export class Game {
     // 7. Pickup collection (pickups + talisman drops + loot drops)
     const allPickups = [...this.pickups, ...this.talismanDrops, ...this.lootDrops];
     for (const pickup of allPickups) {
+      pickup.attract(this.flight.position, dt);
       pickup.update(dt);
       if (pickup.checkCollect(this.flight.position, CONFIG.flight.playerRadius)) {
         const loot = pickup.collect();
