@@ -196,17 +196,19 @@ export class SkillSystem {
     this.sfx.shoot();
 
     const origin = this.flight.position.clone();
+    const forward = this.flight.getForward();
 
-    // Auto-target: find nearest alive enemy within range
+    // Auto-target: find nearest alive enemy within forward cone and range
     let closest: EnemyTarget | null = null;
     let closestDist: number = cfg.maxRange;
     for (const target of this.targets) {
       if (!target.alive) continue;
       const d = origin.distanceTo(target.position);
-      if (d < closestDist) {
-        closestDist = d;
-        closest = target;
-      }
+      if (d >= closestDist) continue;
+      const toTarget = target.position.clone().sub(origin).normalize();
+      if (toTarget.dot(forward) < 0.3) continue;
+      closestDist = d;
+      closest = target;
     }
 
     if (closest) {
