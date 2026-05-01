@@ -777,6 +777,7 @@ export class Game {
   private updateHud(): void {
     const bonuses = this.inventory.getStatBonuses();
     this.skillSystem.setDamageBonus(bonuses.damage);
+    this.flight.speedBonus = bonuses.speed;
     this.hud.setHp(this.flight.hp, this.getEffectiveMaxHealth());
     this.hud.setSpirit(this.flight.spirit, this.getEffectiveMaxSpirit());
     this.hud.setAltitude(this.flight.getAltitude());

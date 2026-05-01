@@ -30,6 +30,9 @@ export class FlightController {
   dashing = false;
   dashInvincible = false;
 
+  // External stat bonus (set by Game from inventory)
+  speedBonus = 0;
+
   // ─── Sword Intent ───
   swordIntent = 0;
   private intentDecayTimer = 0;
@@ -186,6 +189,7 @@ export class FlightController {
     }
 
     const thrustMult = this.boostActive ? cfg.boostMultiplier : 1.0;
+    const speedMult = 1 + this.speedBonus;
 
     // Collect thrust input (local frame)
     let thrustX = 0,
@@ -206,7 +210,7 @@ export class FlightController {
     }
 
     const localThrust = new THREE.Vector3(thrustX, thrustY, thrustZ);
-    localThrust.multiplyScalar(cfg.maxThrust * thrustMult);
+    localThrust.multiplyScalar(cfg.maxThrust * thrustMult * speedMult);
     const worldAccel = localThrust.applyQuaternion(this.quaternion);
 
     // Integrate linear velocity
@@ -214,7 +218,7 @@ export class FlightController {
     this.velocity.multiplyScalar(Math.pow(cfg.drag, dt * 60));
 
     const speed = this.velocity.length();
-    const maxSpd = cfg.maxSpeed * thrustMult;
+    const maxSpd = cfg.maxSpeed * thrustMult * speedMult;
     if (speed > maxSpd) {
       this.velocity.multiplyScalar(maxSpd / speed);
     }
