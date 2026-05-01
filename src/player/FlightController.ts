@@ -83,6 +83,13 @@ export class FlightController {
     return this.velocity.length();
   }
 
+  getBoostState(): { active: boolean; cooldownPct: number } {
+    return {
+      active: this.boostActive,
+      cooldownPct: this.boostCooldownTimer > 0 ? 1 - this.boostCooldownTimer / CONFIG.flight.boostCooldown : 1,
+    };
+  }
+
   getAltitude(): number {
     return this.position.y;
   }

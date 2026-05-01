@@ -814,6 +814,8 @@ export class Game {
     this.hud.setAltitude(this.flight.getAltitude());
     this.hud.setSpeed(this.flight.getSpeed());
     this.hud.setCultivationLevel(this.inventory.cultivationLevel);
+    const boost = this.flight.getBoostState();
+    this.hud.setBoost(boost.active ? 1 : boost.cooldownPct);
 
     const aliveCount = this.enemies.filter((e) => e.alive).length + (this.boss?.alive ? 1 : 0);
     this.hud.setEnemyCount(aliveCount);
@@ -875,7 +877,7 @@ export class Game {
     if (this.boss?.alive) {
       enemyBlips.push({ x: this.boss.position.x, z: this.boss.position.z });
     }
-    const pickupBlips = [...this.pickups, ...this.talismanDrops]
+    const pickupBlips = [...this.pickups, ...this.talismanDrops, ...this.lootDrops]
       .filter(p => !p.collected)
       .map((p) => ({ x: p.position.x, z: p.position.z }));
     this.hud.updateRadar(
