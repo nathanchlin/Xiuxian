@@ -1198,7 +1198,7 @@ export class Hud {
     }
   }
 
-  showGameOver(stats: { level: number; kills: number; time: number; maxCombo: number; newBest?: boolean }): void {
+  showGameOver(stats: { level: number; kills: number; time: number; maxCombo: number; newBest?: boolean; cultivation?: number }): void {
     this.hideEndScreens();
     const overlay = div(
       `position:fixed;top:0;left:0;width:100%;height:100%;` +
@@ -1218,6 +1218,7 @@ export class Hud {
       `到达第 <span style="color:${GOLD}">${stats.level}</span> 关&emsp;` +
       `斩杀 <span style="color:${GOLD}">${stats.kills}</span> 敌&emsp;` +
       `最高 <span style="color:${GOLD}">${stats.maxCombo}</span> 连斩&emsp;` +
+      `修为 <span style="color:${GOLD}">${stats.cultivation ?? 0}</span> 层&emsp;` +
       `历时 <span style="color:${GOLD}">${mins}:${String(secs).padStart(2, '0')}</span>`;
     const bestTag = stats.newBest ? div(`margin-top:8px;font-size:14px;color:${GOLD};letter-spacing:2px;`) : null;
     if (bestTag) bestTag.textContent = '★ 新纪录 ★';
@@ -1233,7 +1234,7 @@ export class Hud {
     document.body.appendChild(overlay);
   }
 
-  showVictory(stats: { level: number; kills: number; time: number; maxCombo: number; newBest?: boolean }): void {
+  showVictory(stats: { level: number; kills: number; time: number; maxCombo: number; newBest?: boolean; cultivation?: number }): void {
     this.hideEndScreens();
     const overlay = div(
       `position:fixed;top:0;left:0;width:100%;height:100%;` +
@@ -1258,6 +1259,7 @@ export class Hud {
       `通关 <span style="color:${GOLD}">${stats.level}</span> 关&emsp;` +
       `斩杀 <span style="color:${GOLD}">${stats.kills}</span> 敌&emsp;` +
       `最高 <span style="color:${GOLD}">${stats.maxCombo}</span> 连斩&emsp;` +
+      `修为 <span style="color:${GOLD}">${stats.cultivation ?? 0}</span> 层&emsp;` +
       `历时 <span style="color:${GOLD}">${mins}:${String(secs).padStart(2, '0')}</span>`;
     const bestTag = stats.newBest ? div(`margin-top:8px;font-size:14px;color:${GOLD};letter-spacing:2px;`) : null;
     if (bestTag) bestTag.textContent = '★ 新纪录 ★';

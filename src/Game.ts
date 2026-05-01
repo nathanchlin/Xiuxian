@@ -1019,7 +1019,7 @@ export class Game {
 
     const elapsed = performance.now() / 1000 - this.startTime;
     const isNewBest = this.saveHighScore(this.level, this.kills, elapsed);
-    this.hud.showGameOver({ level: this.level, kills: this.kills, time: elapsed, maxCombo: this.maxCombo, newBest: isNewBest });
+    this.hud.showGameOver({ level: this.level, kills: this.kills, time: elapsed, maxCombo: this.maxCombo, newBest: isNewBest, cultivation: this.inventory.cultivationLevel });
 
     // Bind restart button (created dynamically by HUD)
     requestAnimationFrame(() => {
@@ -1038,7 +1038,7 @@ export class Game {
       this.input.exitPointerLock();
       const elapsed = performance.now() / 1000 - this.startTime;
       const isNewBest = this.saveHighScore(this.level, this.kills, elapsed);
-      this.hud.showVictory({ level: this.level, kills: this.kills, time: elapsed, maxCombo: this.maxCombo, newBest: isNewBest });
+      this.hud.showVictory({ level: this.level, kills: this.kills, time: elapsed, maxCombo: this.maxCombo, newBest: isNewBest, cultivation: this.inventory.cultivationLevel });
       requestAnimationFrame(() => {
         const btn = document.getElementById('hud-restart');
         if (btn) btn.addEventListener('click', () => this.restart());
