@@ -548,6 +548,8 @@ export class Game {
           if (leveledUp) {
             this.hud.showKill(`修为突破 — 第${this.inventory.cultivationLevel}层`);
             this.hud.showBreakthroughFlash();
+            this.cameraSystem.shake(0.8, 0.3);
+            this.deathBurst.spawn(this.flight.position.clone(), 0xffd700, 8);
             this.sfx.levelComplete();
           }
         } else if (loot.itemId && loot.itemType) {
