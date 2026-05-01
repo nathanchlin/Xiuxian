@@ -303,8 +303,8 @@ export class Game {
     this.hud.setLevel(level);
     this.hud.setWave(1, CONFIG.progression.wavesPerLevel);
     this.hud.showAnnouncement(`第 ${level} 关`, '#daa520');
-    this.hud.setHp(this.flight.hp, this.getEffectiveMaxHealth());
-    this.hud.setSpirit(this.flight.spirit, this.getEffectiveMaxSpirit());
+    this.hud.setHp(this.flight.hp, this.getEffectiveMaxHealth(), 0);
+    this.hud.setSpirit(this.flight.spirit, this.getEffectiveMaxSpirit(), 0);
     this.nextWave();
 
     // Spawn pickups from arena spots

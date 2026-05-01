@@ -543,7 +543,7 @@ export class Hud {
   private hpPrev = 0;
   private hpFlashTimer = 0;
 
-  setHp(hp: number, max: number, dt = 1 / 60): void {
+  setHp(hp: number, max: number, dt: number): void {
     const pct = Math.max(0, Math.min(1, hp / max)) * 100;
     this.hpBar.style.width = `${pct}%`;
     this.hpText.textContent = `${Math.ceil(hp)}/${Math.ceil(max)}`;
@@ -582,7 +582,7 @@ export class Hud {
   private spiritPrev = 0;
   private spiritFlashTimer = 0;
 
-  setSpirit(spirit: number, max: number, dt = 1 / 60): void {
+  setSpirit(spirit: number, max: number, dt: number): void {
     const pct = Math.max(0, Math.min(1, spirit / max)) * 100;
     this.spiritBar.style.width = `${pct}%`;
     this.spiritText.textContent = `${Math.floor(spirit)}/${Math.ceil(max)}`;
@@ -635,7 +635,7 @@ export class Hud {
     this.ammoEl.textContent = ammoText;
   }
 
-  setCrosshairLocked(locked: boolean, dt = 1 / 60): void {
+  setCrosshairLocked(locked: boolean, dt: number): void {
     const color = locked ? '#e74c3c' : '#fff';
     // Decay crosshair spread
     if (this.crosshairSpread > 0) {
