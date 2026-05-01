@@ -870,6 +870,8 @@ export class Game {
   }
 
   private setupInventoryCallbacks(): void {
+    this.inventoryPanel.onClose = () => this.toggleInventoryPanel();
+
     this.inventoryPanel.onUseSkillBook = (bookId: string) => {
       const bookCfg = (CONFIG.items.skillBooks as Record<string, { skill: string }>)[bookId];
       if (!bookCfg) return;

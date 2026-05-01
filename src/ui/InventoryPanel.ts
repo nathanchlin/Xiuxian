@@ -28,6 +28,7 @@ export class InventoryPanel {
   private visible = false;
 
   // Callbacks
+  onClose: (() => void) | null = null;
   onUseSkillBook: ((skillName: string) => void) | null = null;
   onUseConsumable: ((itemId: string) => void) | null = null;
   onEquipTreasure: ((itemId: string) => void) | null = null;
@@ -50,7 +51,7 @@ export class InventoryPanel {
       `font-size:24px;cursor:pointer;color:#888;padding:4px 12px;pointer-events:auto;`,
       '✕',
     );
-    closeBtn.addEventListener('click', () => this.hide());
+    closeBtn.addEventListener('click', () => this.onClose?.());
     header.append(title, closeBtn);
     this.root.appendChild(header);
 
