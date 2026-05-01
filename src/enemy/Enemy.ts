@@ -238,6 +238,8 @@ export class Enemy {
 
   getPosition(): THREE.Vector3 { return this.position.clone(); }
 
+  isDeathDone(): boolean { return !this.alive && this.deathTimer <= 0; }
+
   dispose(scene: THREE.Scene): void {
     scene.remove(this.group);
     this.group.traverse((obj) => {

@@ -503,6 +503,18 @@ export class Game {
       }
     }
 
+    // 5b. Dead enemy fade + cleanup
+    for (let i = this.enemies.length - 1; i >= 0; i--) {
+      const e = this.enemies[i];
+      if (!e.alive) {
+        e.update(dt, playerPos);
+        if (e.isDeathDone()) {
+          e.dispose(this.engine.scene);
+          this.enemies.splice(i, 1);
+        }
+      }
+    }
+
     // 6. Boss update
     if (this.boss && this.boss.alive) {
       const bossResult = this.boss.update(dt, playerPos);
@@ -603,7 +615,10 @@ export class Game {
       if (this.restTimer <= 0) {
         this.restTimer = 0;
         this.hud.setWaveCountdown(0);
-        // Clear dead enemies before spawning new wave
+        // Clear dead enemies before spawning new wave (dispose for memory safety)
+        for (const e of this.enemies) {
+          if (!e.alive) e.dispose(this.engine.scene);
+        }
         this.enemies = this.enemies.filter((e) => e.alive);
         this.nextWave();
       }
