@@ -50,6 +50,10 @@ export class Game {
   // ─── Enemy attack projectiles (visual only) ───
   private enemyProjectiles: { mesh: THREE.Mesh; vel: THREE.Vector3; life: number }[] = [];
 
+  // ─── Boost sprint particle trail ───
+  private boostParticles: { mesh: THREE.Mesh; life: number }[] = [];
+  private boostTrailTimer = 0;
+
   // ─── Dash trail afterimages ───
   private dashAfterimages: { mesh: THREE.Mesh; life: number }[] = [];
   private dashTrailTimer = 0;
@@ -187,6 +191,12 @@ export class Game {
       (ai.mesh.material as THREE.MeshBasicMaterial).dispose();
     }
     this.dashAfterimages.length = 0;
+    for (const bp of this.boostParticles) {
+      this.engine.scene.remove(bp.mesh);
+      bp.mesh.geometry.dispose();
+      (bp.mesh.material as THREE.MeshBasicMaterial).dispose();
+    }
+    this.boostParticles.length = 0;
     for (const p of this.enemyProjectiles) {
       this.engine.scene.remove(p.mesh);
       p.mesh.geometry.dispose();
@@ -471,6 +481,36 @@ export class Game {
         ai.mesh.geometry.dispose();
         mat.dispose();
         this.dashAfterimages.splice(i, 1);
+      }
+    }
+
+    // 3.7 Boost sprint particle trail
+    if (this.flight.getBoostState().active) {
+      this.boostTrailTimer -= dt;
+      if (this.boostTrailTimer <= 0) {
+        this.boostTrailTimer = 0.04;
+        const geo = new THREE.SphereGeometry(0.15, 4, 4);
+        const mat = new THREE.MeshBasicMaterial({ color: 0x88ddff, transparent: true, opacity: 0.6 });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.copy(this.flight.position);
+        mesh.position.x += (Math.random() - 0.5) * 0.8;
+        mesh.position.y += (Math.random() - 0.5) * 0.5;
+        mesh.position.z += (Math.random() - 0.5) * 0.8;
+        this.engine.scene.add(mesh);
+        this.boostParticles.push({ mesh, life: 0.25 });
+      }
+    }
+    for (let i = this.boostParticles.length - 1; i >= 0; i--) {
+      const p = this.boostParticles[i];
+      p.life -= dt;
+      const mat = p.mesh.material as THREE.MeshBasicMaterial;
+      mat.opacity = Math.max(0, p.life / 0.25) * 0.6;
+      p.mesh.scale.multiplyScalar(0.94);
+      if (p.life <= 0) {
+        this.engine.scene.remove(p.mesh);
+        p.mesh.geometry.dispose();
+        mat.dispose();
+        this.boostParticles.splice(i, 1);
       }
     }
 
