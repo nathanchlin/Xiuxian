@@ -826,21 +826,29 @@ export class Hud {
         `${BASE}top:35%;left:50%;transform:translateX(-50%);` +
           `font-size:36px;font-weight:bold;letter-spacing:6px;` +
           `text-shadow:0 0 20px rgba(0,0,0,0.8),0 2px 4px rgba(0,0,0,0.5);` +
-          `opacity:0;transition:opacity 0.3s;pointer-events:none;`,
+          `opacity:0;pointer-events:none;`,
       );
       this.root.appendChild(this.announcementEl);
     }
     clearTimeout(this.announcementTimer);
     this.announcementEl.textContent = text;
     this.announcementEl.style.color = color;
-    this.announcementEl.style.transition = 'opacity 0s';
+    // Phase 1: start big, slam in with deceleration
+    this.announcementEl.style.transition = 'none';
+    this.announcementEl.style.transform = 'translateX(-50%) scale(2.0)';
+    this.announcementEl.style.opacity = '0';
+    void this.announcementEl.offsetHeight; // force reflow
+    this.announcementEl.style.transition = 'all 0.25s cubic-bezier(0.22, 1, 0.36, 1)';
+    this.announcementEl.style.transform = 'translateX(-50%) scale(1.0)';
     this.announcementEl.style.opacity = '1';
+    // Phase 2: shrink-fade out
     this.announcementTimer = window.setTimeout(() => {
       if (this.announcementEl) {
-        this.announcementEl.style.transition = 'opacity 0.8s';
+        this.announcementEl.style.transition = 'all 0.6s ease-in';
+        this.announcementEl.style.transform = 'translateX(-50%) scale(0.9)';
         this.announcementEl.style.opacity = '0';
       }
-    }, 2000);
+    }, 1500);
   }
 
   updateRadar(
