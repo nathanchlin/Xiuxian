@@ -1074,7 +1074,10 @@ export class Game {
     // Score: 0-100 combining kills, combo, and survival
     const enemiesPerWave = CONFIG.progression.scaling.enemyCountBase +
       CONFIG.progression.scaling.enemyCountPerLevel * this.level;
-    const totalExpected = enemiesPerWave * CONFIG.progression.wavesPerLevel;
+    // Boss wave replaces regular enemies — boss=1 kill + summons, not enemiesPerWave
+    const isBossLevel = (CONFIG.progression.bossLevels as readonly number[]).includes(this.level);
+    const bossWaveReduction = isBossLevel ? (enemiesPerWave - 1 - CONFIG.boss.summonCount) : 0;
+    const totalExpected = enemiesPerWave * CONFIG.progression.wavesPerLevel - bossWaveReduction;
     const killScore = Math.min(1, this.levelKills / totalExpected) * 40;       // 0-40 pts
     const comboScore = Math.min(1, this.levelMaxCombo / 20) * 30;               // 0-30 pts
     const hpScore = hpPct * 30;                                                  // 0-30 pts
