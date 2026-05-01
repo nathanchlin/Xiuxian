@@ -19,6 +19,10 @@ export class CameraSystem {
 
   private currentLookAt = new THREE.Vector3();
 
+  // Screen shake
+  private shakeIntensity = 0;
+  private shakeTimer = 0;
+
   // Snapshot of camera state when transition starts
   private transitionStartPos = new THREE.Vector3();
   private transitionStartLookAt = new THREE.Vector3();
@@ -116,10 +120,24 @@ export class CameraSystem {
       this.camera.lookAt(lookAt);
       this.currentLookAt.copy(lookAt);
     }
+
+    // Apply screen shake
+    if (this.shakeTimer > 0) {
+      this.shakeTimer -= dt;
+      const factor = this.shakeTimer > 0 ? this.shakeIntensity * (this.shakeTimer / 0.15) : 0;
+      this.camera.position.x += (Math.random() - 0.5) * factor * 2;
+      this.camera.position.y += (Math.random() - 0.5) * factor * 2;
+    }
   }
 
   private easeInOut(t: number): number {
     return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  }
+
+  /** Trigger a screen shake */
+  shake(intensity = 0.5, duration = 0.15): void {
+    this.shakeIntensity = intensity;
+    this.shakeTimer = duration;
   }
 
   /** Instantly snap camera to follow target — no spring delay. Use after teleport/level change. */

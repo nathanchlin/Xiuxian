@@ -538,6 +538,7 @@ export class Game {
     const died = this.flight.takeDamage(damage);
     this.sfx.damage();
     this.hud.flashDamage();
+    this.cameraSystem.shake(0.6, 0.15);
     if (died) this.onDeath();
   }
 
