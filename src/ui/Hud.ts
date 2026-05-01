@@ -68,6 +68,11 @@ export class Hud {
   private killText: HTMLDivElement;
   private bossPhaseText: HTMLDivElement;
 
+  // Boss HP bar
+  private bossHpContainer: HTMLDivElement;
+  private bossHpBar: HTMLDivElement;
+  private bossHpFill: HTMLDivElement;
+
   // Timers
   private damageTimer = 0;
   private hitMarkerTimer = 0;
@@ -317,6 +322,18 @@ export class Hud {
     );
     this.root.appendChild(this.bossPhaseText);
 
+    // ── Boss HP bar (hidden until boss fight) ────────────────────────────────
+    this.bossHpContainer = div(
+      `${BASE}top:8%;left:50%;transform:translateX(-50%);width:40%;display:none;flex-direction:column;align-items:center;gap:3px;`,
+    );
+    const bossLabel = div(`font-size:12px;color:#c0392b;letter-spacing:2px;`, '妖王');
+    this.bossHpBar = div(`width:100%;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;`);
+    this.bossHpFill = div(`width:100%;height:100%;background:linear-gradient(90deg,#c0392b,#e74c3c);border-radius:4px;transition:width 0.2s;`);
+    this.bossHpBar.appendChild(this.bossHpFill);
+    this.bossHpContainer.appendChild(bossLabel);
+    this.bossHpContainer.appendChild(this.bossHpBar);
+    this.root.appendChild(this.bossHpContainer);
+
     document.body.appendChild(this.root);
   }
 
@@ -536,6 +553,16 @@ export class Hud {
       this.bossPhaseText.style.transition = 'opacity 0.8s';
       this.bossPhaseText.style.opacity = '0';
     }, 2500);
+  }
+
+  /** Show/hide the boss HP bar at the top of the screen */
+  setBossHpVisible(visible: boolean): void {
+    this.bossHpContainer.style.display = visible ? 'flex' : 'none';
+  }
+
+  setBossHp(hp: number, maxHp: number): void {
+    const pct = Math.max(0, Math.min(100, (hp / maxHp) * 100));
+    this.bossHpFill.style.width = `${pct}%`;
   }
 
   updateRadar(

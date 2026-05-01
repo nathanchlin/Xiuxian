@@ -833,6 +833,14 @@ export class Game {
     }
     this.hud.setCrosshairLocked(locked);
 
+    // Boss HP bar on HUD
+    if (this.boss && this.boss.alive) {
+      this.hud.setBossHpVisible(true);
+      this.hud.setBossHp(this.boss.hp, this.boss.maxHp);
+    } else {
+      this.hud.setBossHpVisible(false);
+    }
+
     // Skill HUD
     const intent = this.flight.swordIntent;
     const maxIntent = CONFIG.skills.swordIntent.maxStacks;
