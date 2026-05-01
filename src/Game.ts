@@ -368,7 +368,7 @@ export class Game {
       }
       // Update camera + player model during briefing so scene is visible
       this.cameraSystem.update(dt, this.flight);
-      if (this.playerModel) this.playerModel.update(this.flight, this.cameraSystem);
+      if (this.playerModel) this.playerModel.update(this.flight, this.cameraSystem, dt);
       return;
     }
 
@@ -390,7 +390,7 @@ export class Game {
     this.cameraSystem.update(dt, this.flight);
 
     // 3.5 Player model (third-person visible mesh)
-    if (this.playerModel) this.playerModel.update(this.flight, this.cameraSystem);
+    if (this.playerModel) this.playerModel.update(this.flight, this.cameraSystem, dt);
 
     // 3.6 Dash afterimage trail
     if (this.flight.dashing) {
@@ -601,6 +601,7 @@ export class Game {
     this.sfx.damage();
     this.hud.flashDamage();
     this.cameraSystem.shake(0.6, 0.15);
+    if (this.playerModel) this.playerModel.flashDamage();
     if (died) this.onDeath();
   }
 

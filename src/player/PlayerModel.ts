@@ -10,6 +10,9 @@ import type { CameraSystem } from '../core/CameraSystem';
 export class PlayerModel {
   readonly group = new THREE.Group();
   private swordTrail: THREE.Mesh;
+  private bodyMeshes: THREE.Mesh[] = [];
+  private bodyMats: THREE.MeshStandardMaterial[] = [];
+  private damageFlashTimer = 0;
 
   constructor(private readonly scene: THREE.Scene) {
     const bodyMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.4 });
@@ -21,6 +24,8 @@ export class PlayerModel {
     const torso = new THREE.Mesh(torsoGeo, bodyMat);
     torso.position.y = 0.5;
     this.group.add(torso);
+    this.bodyMeshes.push(torso);
+    this.bodyMats.push(bodyMat);
     const torsoWire = new THREE.LineSegments(new THREE.EdgesGeometry(torsoGeo), outlineMat);
     torsoWire.position.copy(torso.position);
     this.group.add(torsoWire);
@@ -30,6 +35,8 @@ export class PlayerModel {
     const head = new THREE.Mesh(headGeo, bodyMat);
     head.position.y = 1.2;
     this.group.add(head);
+    this.bodyMeshes.push(head);
+    this.bodyMats.push(bodyMat);
 
     // Flying sword platform beneath feet
     const swordGeo = new THREE.BoxGeometry(0.3, 0.05, 1.2);
@@ -50,7 +57,7 @@ export class PlayerModel {
     scene.add(this.group);
   }
 
-  update(flight: FlightController, camera: CameraSystem): void {
+  update(flight: FlightController, camera: CameraSystem, dt: number): void {
     this.group.position.copy(flight.position);
     this.group.quaternion.copy(flight.quaternion);
     this.group.visible = camera.getMode() === 'third_person';
@@ -66,6 +73,25 @@ export class PlayerModel {
     const trailLength = baseLength + (maxLength - baseLength) * speedRatio;
     this.swordTrail.scale.y = trailLength / baseLength;
     this.swordTrail.position.z = 1.2 + (trailLength - baseLength) * 0.5;
+
+    // Damage flash decay
+    if (this.damageFlashTimer > 0) {
+      this.damageFlashTimer -= dt;
+      if (this.damageFlashTimer <= 0) {
+        for (const mat of this.bodyMats) {
+          mat.emissive.setHex(0x000000);
+          mat.emissiveIntensity = 0;
+        }
+      }
+    }
+  }
+
+  flashDamage(): void {
+    this.damageFlashTimer = 0.15;
+    for (const mat of this.bodyMats) {
+      mat.emissive.setHex(0xff2222);
+      mat.emissiveIntensity = 1.5;
+    }
   }
 
   dispose(): void {
