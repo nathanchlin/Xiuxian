@@ -1175,6 +1175,7 @@ export class Game {
     }
     this.hud.setAltitude(this.flight.getAltitude());
     this.hud.setSpeed(this.flight.getSpeed());
+    this.hud.setWeapon('灵力射线', `灵力: ${Math.floor(this.flight.spirit)}`);
     this.sfx.updateWind(this.flight.getSpeed());
     // Boundary proximity warning
     const distXZ = Math.hypot(this.flight.position.x, this.flight.position.z);
