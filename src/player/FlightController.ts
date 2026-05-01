@@ -358,5 +358,23 @@ export class FlightController {
     this.resetDashState();
   }
 
+  /** Reset combat state for level transition — keeps skillKills. */
+  resetForNextLevel(): void {
+    this.position.set(0, CONFIG.player.startHeight, 0);
+    this.velocity.set(0, 0, 0);
+    this.quaternion.identity();
+    this.angularVelocity.set(0, 0, 0);
+    this.alive = true;
+    this.swordIntent = 0;
+    this.intentDecayTimer = 0;
+    this.hitInvincibleTimer = 0;
+    this.parrying = false;
+    this.parryTimer = 0;
+    this.boostActive = false;
+    this.boostTimer = 0;
+    this.boostCooldownTimer = 0;
+    this.resetDashState();
+  }
+
   dispose(): void {}
 }

@@ -314,14 +314,10 @@ export class Game {
       this.playerModel = new PlayerModel(this.engine.scene);
     }
 
-    // Reset player
+    // Reset player combat state (keeps skillKills, uses effective stats)
+    this.flight.resetForNextLevel();
     this.flight.hp = this.getEffectiveMaxHealth();
     this.flight.spirit = this.getEffectiveMaxSpirit();
-    this.flight.alive = true;
-    this.flight.quaternion.identity();
-    this.flight.swordIntent = 0;
-    this.flight.resetDashState();
-    this.flight.teleportTo(0, CONFIG.player.startHeight, 0);
 
     // Snap camera to player — eliminates spring-catch-up lag after teleport
     this.cameraSystem.snapTo(this.flight);
