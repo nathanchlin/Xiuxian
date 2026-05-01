@@ -795,6 +795,9 @@ export class Game {
      ═══════════════════════════════════════════════════════════════════ */
 
   private applyDamageToPlayer(damage: number, sourcePos?: THREE.Vector3): void {
+    // Skip entirely if invincible (dash or i-frames)
+    if (!this.flight.alive || this.flight.dashInvincible || this.flight.hitInvincibleTimer > 0) return;
+
     const died = this.flight.takeDamage(damage);
     this.sfx.damage();
     this.hud.flashDamage();
