@@ -768,14 +768,14 @@ export class Game {
     this.updateSkillTargets();
 
     // 11.5 Auto-use consumables when HP/Spirit low
-    this.autoUseConsumables();
+    this.autoUseConsumables(dt);
 
     // 11.6 Update damage numbers + death particles
     this.damageNumbers.update(dt);
     this.deathBurst.update(dt);
 
     // 12. Update HUD
-    this.updateHud();
+    this.updateHud(dt);
 
     // 13. Combo decay
     this.updateCombo(dt);
@@ -1164,8 +1164,8 @@ export class Game {
     return books[id]?.name ?? treasures[id]?.name ?? consumables[id]?.name ?? id;
   }
 
-  private autoUseConsumables(): void {
-    if (this.autoConsumeCd > 0) { this.autoConsumeCd -= 1 / 60; return; }
+  private autoUseConsumables(dt: number): void {
+    if (this.autoConsumeCd > 0) { this.autoConsumeCd -= dt; return; }
 
     const hpPct = this.flight.hp / this.getEffectiveMaxHealth();
     const spPct = this.flight.spirit / this.getEffectiveMaxSpirit();
@@ -1201,7 +1201,7 @@ export class Game {
     }
   }
 
-  private updateHud(): void {
+  private updateHud(dt: number): void {
     const bonuses = this.inventory.getStatBonuses();
     this.skillSystem.setDamageBonus(bonuses.damage);
     this.flight.speedBonus = bonuses.speed;
@@ -1212,7 +1212,7 @@ export class Game {
     // Low-HP heartbeat warning every 2s
     const hpPct = this.flight.hp / this.getEffectiveMaxHealth();
     if (hpPct < 0.25 && this.flight.alive) {
-      this.heartbeatTimer -= 1 / 60;
+      this.heartbeatTimer -= dt;
       if (this.heartbeatTimer <= 0) {
         this.sfx.heartbeat();
         this.heartbeatTimer = 2.0;
