@@ -801,6 +801,24 @@ export class Game {
     const aliveCount = this.enemies.filter((e) => e.alive).length + (this.boss?.alive ? 1 : 0);
     this.hud.setEnemyCount(aliveCount);
 
+    // Crosshair lock: check if any enemy is in the forward aim cone
+    const origin = this.flight.position;
+    const forward = this.flight.getForward();
+    let locked = false;
+    const beamRange = CONFIG.weapons.beam.maxRange;
+    for (const e of this.enemies) {
+      if (!e.alive) continue;
+      const toTarget = e.position.clone().sub(origin);
+      const dist = toTarget.length();
+      if (dist > beamRange) continue;
+      if (toTarget.normalize().dot(forward) > 0.3) { locked = true; break; }
+    }
+    if (!locked && this.boss?.alive) {
+      const toTarget = this.boss.position.clone().sub(origin);
+      if (toTarget.length() <= beamRange && toTarget.normalize().dot(forward) > 0.3) locked = true;
+    }
+    this.hud.setCrosshairLocked(locked);
+
     // Skill HUD
     const intent = this.flight.swordIntent;
     const maxIntent = CONFIG.skills.swordIntent.maxStacks;
