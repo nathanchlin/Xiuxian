@@ -219,6 +219,50 @@ export const CONFIG = {
     missileBox: { color: 0xffcc00, value: 2 },
   },
 
+  // ─── Talismans (符箓副武器) ───
+  talismans: {
+    maxCarry: 2,
+    dropExpireTime: 10,
+    chestPerLevel: 3,
+    dropRates: {
+      crow: 0.15,
+      serpent: 0.30,
+      dragon: 0.50,
+      boss: 1.0,
+    } as Record<string, number>,
+    types: {
+      soulseeker: {
+        name: '追魂符',
+        description: '自动追踪攻击最近敌人',
+        durability: 20,
+        damage: 12,
+        interval: 1.0,
+        range: 60,
+        projectileSpeed: 50,
+        trackingLerp: 2,
+        color: 0xffaa00,
+      },
+      thunderbolt: {
+        name: '雷罚符',
+        description: '对最近敌人释放雷电AOE',
+        durability: 10,
+        damage: 30,
+        interval: 2.5,
+        range: 40,
+        aoeRadius: 8,
+        color: 0xaa88ff,
+      },
+      ironguard: {
+        name: '金刚符',
+        description: '持续恢复生命力',
+        durability: 15,
+        healAmount: 8,
+        interval: 3.0,
+        color: 0x88ff44,
+      },
+    },
+  },
+
   // ─── Progression ───
   progression: {
     totalLevels: 6,
