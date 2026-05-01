@@ -159,7 +159,8 @@ export class SkillSystem {
     if (!this.flight.parrying) {
       return { reflected: false, reflectDamage: 0 };
     }
-    this.flight.endParry();
+    // Don't endParry here — let parryTimer expire naturally so multiple
+    // enemies attacking in the same frame all get reflected.
     this.flight.addSwordIntent(CONFIG.skills.parry.intentOnSuccess);
     this.sfx.parrySuccess();
     this.flashParrySuccess();
