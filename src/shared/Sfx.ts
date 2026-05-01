@@ -274,6 +274,7 @@ export class Sfx {
     src.connect(filter);
     filter.connect(gain);
     gain.connect(master);
+    src.onended = () => { src.disconnect(); filter.disconnect(); gain.disconnect(); };
     src.start();
   }
 
