@@ -31,6 +31,8 @@ export class Input {
     document.addEventListener('pointerlockerror', () => {
       console.warn('Pointer lock failed');
     });
+    // Clear keys on blur — browser doesn't fire keyup when tab loses focus
+    window.addEventListener('blur', () => { this.keys.clear(); });
     this.registerKey('e', () => {
       for (const cb of this.onInteract) cb();
     });
