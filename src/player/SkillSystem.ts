@@ -29,8 +29,6 @@ export class SkillSystem {
 
   private targets: EnemyTarget[] = [];
 
-  private readonly raycaster = new THREE.Raycaster();
-
   private beamMesh: THREE.Mesh | null = null;
   private beamTimer = 0;
   private parryShield: THREE.Group | null = null;
@@ -189,25 +187,29 @@ export class SkillSystem {
     this.sfx.shoot();
 
     const origin = this.flight.position.clone();
-    const dir = this.flight.getForward();
-    this.raycaster.set(origin, dir);
-    this.raycaster.far = cfg.maxRange;
 
-    const meshes = this.targets.map(t => t.mesh);
-    const hits = this.raycaster.intersectObjects(meshes, false);
-
-    const endPoint = hits.length > 0
-      ? hits[0]!.point.clone()
-      : origin.clone().add(dir.clone().multiplyScalar(cfg.maxRange));
-    this.showBeamVisual(origin, endPoint);
-
-    if (hits.length > 0) {
-      const hitMesh = hits[0]!.object;
-      const target = this.targets.find(t => t.mesh.id === hitMesh.id);
-      if (target) {
-        return { targetId: target.id, damage: cfg.damage };
+    // Auto-target: find nearest alive enemy within range
+    let closest: EnemyTarget | null = null;
+    let closestDist: number = cfg.maxRange;
+    for (const target of this.targets) {
+      if (!target.alive) continue;
+      const d = origin.distanceTo(target.position);
+      if (d < closestDist) {
+        closestDist = d;
+        closest = target;
       }
     }
+
+    if (closest) {
+      const endPoint = closest.position.clone();
+      this.showBeamVisual(origin, endPoint);
+      return { targetId: closest.id, damage: cfg.damage };
+    }
+
+    // No target in range — fire forward into empty space
+    const dir = this.flight.getForward();
+    const endPoint = origin.clone().add(dir.clone().multiplyScalar(cfg.maxRange));
+    this.showBeamVisual(origin, endPoint);
     return null;
   }
 
