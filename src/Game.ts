@@ -630,6 +630,10 @@ export class Game {
     if (this.playerModel) this.playerModel.flashDamage();
     if (sourcePos) {
       this.hud.flashDamageDirection(sourcePos, this.flight.position, this.flight.quaternion);
+      // Knockback impulse away from damage source
+      const knockDir = this.flight.position.clone().sub(sourcePos).normalize();
+      knockDir.y = Math.max(knockDir.y, 0.3); // slight upward push
+      this.flight.velocity.add(knockDir.multiplyScalar(15));
     }
     if (died) this.onDeath();
   }
