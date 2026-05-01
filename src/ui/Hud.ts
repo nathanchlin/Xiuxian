@@ -565,6 +565,32 @@ export class Hud {
     this.bossHpFill.style.width = `${pct}%`;
   }
 
+  /** Show a large centered announcement (level start, wave, etc.) */
+  private announcementEl: HTMLDivElement | null = null;
+  private announcementTimer = 0;
+  showAnnouncement(text: string, color = '#daa520'): void {
+    if (!this.announcementEl) {
+      this.announcementEl = div(
+        `${BASE}top:35%;left:50%;transform:translateX(-50%);` +
+          `font-size:36px;font-weight:bold;letter-spacing:6px;` +
+          `text-shadow:0 0 20px rgba(0,0,0,0.8),0 2px 4px rgba(0,0,0,0.5);` +
+          `opacity:0;transition:opacity 0.3s;pointer-events:none;`,
+      );
+      this.root.appendChild(this.announcementEl);
+    }
+    clearTimeout(this.announcementTimer);
+    this.announcementEl.textContent = text;
+    this.announcementEl.style.color = color;
+    this.announcementEl.style.transition = 'opacity 0s';
+    this.announcementEl.style.opacity = '1';
+    this.announcementTimer = window.setTimeout(() => {
+      if (this.announcementEl) {
+        this.announcementEl.style.transition = 'opacity 0.8s';
+        this.announcementEl.style.opacity = '0';
+      }
+    }, 2000);
+  }
+
   updateRadar(
     playerX: number,
     playerZ: number,

@@ -219,6 +219,7 @@ export class Game {
     // HUD updates
     this.hud.setLevel(level);
     this.hud.setWave(1, CONFIG.progression.wavesPerLevel);
+    this.hud.showAnnouncement(`第 ${level} 关`, '#daa520');
     this.hud.setHp(this.flight.hp, this.getEffectiveMaxHealth());
     this.hud.setSpirit(this.flight.spirit, this.getEffectiveMaxSpirit());
     this.nextWave();
@@ -241,6 +242,7 @@ export class Game {
 
     if (isBossLevel && isFinalWave) {
       this.spawnBoss();
+      this.hud.showAnnouncement('妖王降临', '#c0392b');
     } else {
       this.spawnEnemies();
     }
