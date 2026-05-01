@@ -88,6 +88,11 @@ export class PlayerModel {
     this.swordTrail.scale.y = trailLength / baseLength;
     this.swordTrail.position.z = 1.2 + (trailLength - baseLength) * 0.5;
 
+    // Idle floating bob — subtle hover animation
+    const time = performance.now() * 0.001;
+    this.group.position.y += Math.sin(time * 1.8) * 0.15;
+    this.group.rotation.z += Math.sin(time * 1.26) * 0.04;
+
     // Damage flash decay
     if (this.damageFlashTimer > 0) {
       this.damageFlashTimer -= dt;
