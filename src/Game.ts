@@ -602,6 +602,8 @@ export class Game {
             const leveledUp = this.flight.addSkillKill('parry');
             if (leveledUp) {
               this.hud.showSkillLevelUp('剑气护体', this.flight.getSkillLevel('parry'));
+              this.sfx.chestOpen();
+              this.deathBurst.spawn(this.flight.position.clone(), 0xffd700, 5);
             }
           }
           this.hud.flashHitMarker();
@@ -637,6 +639,8 @@ export class Game {
             const leveledUp = this.flight.addSkillKill('parry');
             if (leveledUp) {
               this.hud.showSkillLevelUp('剑气护体', this.flight.getSkillLevel('parry'));
+              this.sfx.chestOpen();
+              this.deathBurst.spawn(this.flight.position.clone(), 0xffd700, 5);
             }
           }
           this.hud.flashHitMarker();
@@ -836,6 +840,8 @@ export class Game {
                 parry: '剑气护体', finalStrike: '万剑归宗',
               };
               this.hud.showSkillLevelUp(names[skillName] ?? skillName, level);
+              this.sfx.chestOpen();
+              this.deathBurst.spawn(this.flight.position.clone(), 0xffd700, 5);
             }
           }
         }
@@ -856,6 +862,8 @@ export class Game {
               parry: '剑气护体', finalStrike: '万剑归宗',
             };
             this.hud.showSkillLevelUp(names[skillName] ?? skillName, level);
+            this.sfx.chestOpen();
+            this.deathBurst.spawn(this.flight.position.clone(), 0xffd700, 5);
           }
         }
       }
