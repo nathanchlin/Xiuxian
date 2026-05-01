@@ -57,6 +57,14 @@ export class TalismanSystem {
     const cfg = CONFIG.talismans.types[type];
     const durability = 'durability' in cfg ? cfg.durability : 0;
 
+    // If same type already equipped, refresh durability instead of duplicating
+    const existingIdx = this.slots.findIndex(s => s?.type === type);
+    if (existingIdx >= 0) {
+      const existing = this.slots[existingIdx]!;
+      existing.durability = Math.min(existing.durability + durability, durability * 2);
+      return;
+    }
+
     const mat = new THREE.MeshBasicMaterial({
       color: cfg.color, transparent: true, opacity: 0.7, side: THREE.DoubleSide,
     });
