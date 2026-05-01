@@ -75,6 +75,8 @@ export class Hud {
   private lowHpVignette: HTMLDivElement;
   private hitMarker: HTMLDivElement;
   private killText: HTMLDivElement;
+  private killFeed: HTMLDivElement[] = [];
+  private killTimers: number[] = [];
   private bossPhaseText: HTMLDivElement;
 
   // Boss HP bar
@@ -85,7 +87,6 @@ export class Hud {
   // Timers
   private damageTimer = 0;
   private hitMarkerTimer = 0;
-  private killTimer = 0;
   private bossPhaseTimer = 0;
   private damageDirTimer = 0;
   private breakthroughTimer = 0;
@@ -355,12 +356,20 @@ export class Hud {
     this.hitMarker.textContent = '+';
     this.root.appendChild(this.hitMarker);
 
-    // ── Kill notification ─────────────────────────────────────────────────────
-    this.killText = div(
-      `${BASE}top:38%;left:50%;transform:translateX(-50%);` +
-        `font-size:16px;color:${GOLD};letter-spacing:2px;text-shadow:0 0 8px #000;opacity:0;`,
+    // ── Kill notification (3-line rolling feed) ────────────────────────────────
+    const killContainer = div(
+      `${BASE}top:32%;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:4px;align-items:center;`,
     );
-    this.root.appendChild(this.killText);
+    for (let i = 0; i < 3; i++) {
+      const line = div(
+        `font-size:16px;color:${GOLD};letter-spacing:2px;text-shadow:0 0 8px #000;opacity:0;transition:opacity 0.5s;white-space:nowrap;`,
+      );
+      this.killFeed.push(line);
+      killContainer.appendChild(line);
+    }
+    this.killText = div(''); // kept for hideEndScreens compat
+    this.killText.style.display = 'none';
+    this.root.appendChild(killContainer);
 
     // ── Boss phase text ───────────────────────────────────────────────────────
     this.bossPhaseText = div(
@@ -762,14 +771,27 @@ export class Hud {
   }
 
   showKill(text: string): void {
-    clearTimeout(this.killTimer);
-    this.killText.textContent = text;
-    this.killText.style.transition = 'opacity 0s';
-    this.killText.style.opacity = '1';
-    this.killTimer = window.setTimeout(() => {
-      this.killText.style.transition = 'opacity 0.5s';
-      this.killText.style.opacity = '0';
-    }, 1500);
+    // Shift entries: [1]→[0], [2]→[1], new→[2]
+    for (let i = 0; i < 2; i++) {
+      const from = this.killFeed[i + 1]!;
+      const to = this.killFeed[i]!;
+      to.textContent = from.textContent;
+      to.style.opacity = from.style.opacity;
+      clearTimeout(this.killTimers[i]);
+      this.killTimers[i] = this.killTimers[i + 1];
+    }
+    // Clear old timer on slot 2
+    clearTimeout(this.killTimers[2]);
+    // Set new message on slot 2 (bottom = newest)
+    const slot = this.killFeed[2]!;
+    slot.textContent = text;
+    slot.style.transition = 'opacity 0s';
+    slot.style.opacity = '1';
+    this.killTimers[2] = window.setTimeout(() => {
+      slot.style.transition = 'opacity 0.5s';
+      slot.style.opacity = '0';
+      this.killTimers[2] = 0;
+    }, 2500);
   }
 
   private breakthroughFlash: HTMLDivElement | null = null;
@@ -1234,6 +1256,11 @@ export class Hud {
     }
     if (this.damageDirEl) {
       this.damageDirEl.style.opacity = '0';
+    }
+    // Clear kill feed
+    for (let i = 0; i < this.killFeed.length; i++) {
+      clearTimeout(this.killTimers[i]);
+      this.killFeed[i]!.style.opacity = '0';
     }
     if (this.breakthroughFlash) {
       this.breakthroughFlash.style.opacity = '0';
