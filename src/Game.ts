@@ -602,17 +602,7 @@ export class Game {
       if (result.attacked) {
         const parryResult = this.skillSystem.tryParryReflect();
         if (parryResult.reflected) {
-          const killed = enemy.takeDamage(parryResult.reflectDamage);
-          if (killed) {
-            this.onEnemyKilled(enemy.typeName, enemy.position.clone());
-            const leveledUp = this.flight.addSkillKill('parry');
-            if (leveledUp) {
-              this.hud.showSkillLevelUp('剑气护体', this.flight.getSkillLevel('parry'));
-              this.sfx.chestOpen();
-              this.deathBurst.spawn(this.flight.position.clone(), 0xffd700, 5);
-            }
-          }
-          this.hud.flashHitMarker();
+          this.onSkillHit({ targetId: enemy.id, damage: parryResult.reflectDamage }, 'parry');
         } else {
           this.applyDamageToPlayer(result.damage, enemy.position);
           // Visual projectile from enemy to player
@@ -639,17 +629,7 @@ export class Game {
       if (bossResult.attacked) {
         const parryResult = this.skillSystem.tryParryReflect();
         if (parryResult.reflected) {
-          const killed = this.boss.takeDamage(parryResult.reflectDamage);
-          if (killed) {
-            this.onBossKilled();
-            const leveledUp = this.flight.addSkillKill('parry');
-            if (leveledUp) {
-              this.hud.showSkillLevelUp('剑气护体', this.flight.getSkillLevel('parry'));
-              this.sfx.chestOpen();
-              this.deathBurst.spawn(this.flight.position.clone(), 0xffd700, 5);
-            }
-          }
-          this.hud.flashHitMarker();
+          this.onSkillHit({ targetId: this.boss.id, damage: parryResult.reflectDamage }, 'parry');
         } else {
           this.applyDamageToPlayer(bossResult.damage, this.boss.position);
           this.spawnEnemyProjectile(this.boss.position, playerPos, 'boss');
