@@ -35,6 +35,10 @@ export class Pickup {
   itemType: 'skill_book' | 'treasure' | 'consumable' | null = null;
   cultivationExp = 0;
 
+  private glowLight: THREE.PointLight | null = null;
+  private glowBase = 0;
+  private glowSpeed = 1;
+
   constructor(type: PickupType, position: THREE.Vector3, scene: THREE.Scene, extra?: {
     talismanType?: TalismanTypeName;
     itemId?: string;
@@ -110,6 +114,17 @@ export class Pickup {
     this.mesh = new THREE.Mesh(geo, mat);
     this.mesh.position.copy(position);
     scene.add(this.mesh);
+
+    // Rarity glow light for special drops
+    if (type === 'treasure_drop' || type === 'skill_book') {
+      const lightColor = this.getItemQualityColor();
+      const intensity = type === 'skill_book' ? 3.0 : this.getQualityIntensity();
+      const distance = type === 'skill_book' ? 8 : this.getQualityRadius();
+      this.glowLight = new THREE.PointLight(lightColor, intensity, distance);
+      this.glowBase = intensity;
+      this.glowSpeed = this.getQualityPulseSpeed();
+      this.mesh.add(this.glowLight);
+    }
   }
 
   private getItemColor(): number {
@@ -123,6 +138,38 @@ export class Pickup {
       ?? 0xffffff;
   }
 
+  private getItemQuality(): string {
+    if (!this.itemId) return 'common';
+    const treasures = CONFIG.items.treasures as Record<string, { quality: string }>;
+    return treasures[this.itemId]?.quality ?? 'common';
+  }
+
+  private getItemQualityColor(): number {
+    const q = this.getItemQuality();
+    return (CONFIG.items.qualityColors as Record<string, number>)[q] ?? 0xcccccc;
+  }
+
+  private getQualityIntensity(): number {
+    const q = this.getItemQuality();
+    if (q === 'epic') return 6.0;
+    if (q === 'rare') return 3.0;
+    return 1.5;
+  }
+
+  private getQualityRadius(): number {
+    const q = this.getItemQuality();
+    if (q === 'epic') return 18;
+    if (q === 'rare') return 10;
+    return 5;
+  }
+
+  private getQualityPulseSpeed(): number {
+    const q = this.getItemQuality();
+    if (q === 'epic') return 3;
+    if (q === 'rare') return 2;
+    return 1;
+  }
+
   update(dt: number): void {
     if (this.collected) return;
     this.position.y = this.position.y; // keep base position stable
@@ -130,6 +177,11 @@ export class Pickup {
     this.mesh.position.z = this.position.z;
     this.mesh.position.y = this.position.y + Math.sin(performance.now() * 0.003 + this.position.x) * 0.5;
     this.mesh.rotation.y += 0.02;
+
+    // Pulse glow light
+    if (this.glowLight) {
+      this.glowLight.intensity = this.glowBase * (0.6 + 0.4 * Math.sin(performance.now() * 0.003 * this.glowSpeed));
+    }
 
     if (this.expireTimer > 0) {
       this.expireTimer -= dt;
