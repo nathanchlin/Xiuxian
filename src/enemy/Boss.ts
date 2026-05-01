@@ -28,6 +28,8 @@ export class Boss {
   private hpBarFill: THREE.Mesh;
   private shieldBarFill: THREE.Mesh;
   private readonly hpBarWidth = 4;
+  private strafeSign = 1;
+  private strafeTimer = 2;
   private hitRecoil = 0;
   private hitFlashTimer = 0;
   private shieldFlashTimer = 0;
@@ -226,26 +228,39 @@ export class Boss {
 
     let attacked = false, damage = 0, aoe = false;
 
+    // Strafe timer — flip direction periodically
+    this.strafeTimer -= dt;
+    if (this.strafeTimer <= 0) { this.strafeSign *= -1; this.strafeTimer = 2 + Math.random() * 3; }
+    const strafeDir = new THREE.Vector3(-toPlayer.z, 0, toPlayer.x).normalize()
+      .multiplyScalar(this.strafeSign);
+
     if (this.phase === 1) {
-      if (dist > 30) {
-        this.velocity.lerp(toPlayer.clone().normalize().multiplyScalar(speed), Math.min(1, 3 * dt));
-      }
+      // Phase 1: cautious orbit + approach
+      const approach = toPlayer.clone().normalize().multiplyScalar(speed * 0.7);
+      const moveDir = approach.add(strafeDir.multiplyScalar(speed * 0.35));
+      this.velocity.lerp(moveDir, Math.min(1, 3 * dt));
       if (this.attackCooldown <= 0 && dist < 80) {
         this.attackCooldown = 1.5; attacked = true; damage = 20;
       }
     } else if (this.phase === 2) {
+      // Phase 2: aggressive strafe + faster approach
       if (!this.phase2Summoned) { this.phase2Summoned = true; this.onSummon?.(CONFIG.boss.summonCount, this.position.clone()); }
+      const approach = toPlayer.clone().normalize().multiplyScalar(speed * 0.6);
+      const moveDir = approach.add(strafeDir.multiplyScalar(speed * 0.5));
+      this.velocity.lerp(moveDir, Math.min(1, 4 * dt));
       if (this.attackCooldown <= 0 && dist < 60) {
         this.attackCooldown = 1.0; attacked = true; damage = 25; aoe = dist < 20;
       }
-      this.velocity.lerp(toPlayer.clone().normalize().multiplyScalar(speed), Math.min(1, 4 * dt));
     } else {
+      // Phase 3: dash attack + weave between dashes
       if (this.dashCooldown <= 0 && dist < 50) {
         this.dashCooldown = 2.0;
         this.velocity.copy(toPlayer.clone().normalize().multiplyScalar(speed * 2));
         attacked = true; damage = 40;
       } else {
-        this.velocity.lerp(toPlayer.clone().normalize().multiplyScalar(speed), Math.min(1, 5 * dt));
+        const approach = toPlayer.clone().normalize().multiplyScalar(speed);
+        const weave = strafeDir.multiplyScalar(speed * 0.25);
+        this.velocity.lerp(approach.add(weave), Math.min(1, 5 * dt));
       }
     }
 
