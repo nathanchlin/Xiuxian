@@ -297,6 +297,10 @@ export class Game {
     this.enemyProjectiles.length = 0;
     this.dashTrailTimer = 0;
 
+    // Clear stale floating damage numbers and death particles
+    this.damageNumbers.dispose();
+    this.deathBurst.dispose();
+
     // Create new arena
     this.arena = new Arena(this.engine.scene, level);
 
