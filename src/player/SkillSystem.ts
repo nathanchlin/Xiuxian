@@ -19,6 +19,7 @@ export class SkillSystem {
   private bladeFanCd = 0;
   private parrySparks: { mesh: THREE.Mesh; vel: THREE.Vector3; life: number }[] = [];
   private parryShieldTimerId = 0;
+  private runeTrails: { mesh: THREE.Mesh; life: number }[] = [];
   private swordDashCd = 0;
   private parryCd = 0;
 
@@ -189,6 +190,7 @@ export class SkillSystem {
 
     this.sfx.finalStrikeRelease();
     this.showFinalStrikeBeam(origin, dir, cfg.range);
+    this.spawnRuneTrail(origin, dir, cfg.range);
     return results;
   }
 
@@ -321,6 +323,23 @@ export class SkillSystem {
         this.parrySparks.splice(i, 1);
       }
     }
+
+    // Rune trail decay
+    for (let i = this.runeTrails.length - 1; i >= 0; i--) {
+      const r = this.runeTrails[i]!;
+      r.life -= dt;
+      r.mesh.position.y += 3 * dt;
+      r.mesh.rotation.y += dt * 0.5;
+      const mat = r.mesh.material as THREE.MeshBasicMaterial;
+      mat.opacity = Math.max(0, r.life / 1.5) * 0.9;
+      if (r.life <= 0) {
+        this.scene.remove(r.mesh);
+        r.mesh.geometry.dispose();
+        mat.map?.dispose();
+        mat.dispose();
+        this.runeTrails.splice(i, 1);
+      }
+    }
   }
 
   consumeDashHits(): number[] {
@@ -385,6 +404,33 @@ export class SkillSystem {
     const mesh = new THREE.Mesh(geo, mat);
     this.scene.add(mesh);
     this.beamTrails.push({ mesh, timer: cfg.beamDuration });
+  }
+
+  private spawnRuneTrail(origin: THREE.Vector3, dir: THREE.Vector3, range: number): void {
+    const chars = ['道', '剑', '仙', '气', '法'];
+    for (let i = 0; i < chars.length; i++) {
+      const t = (i + 0.5) / chars.length;
+      const pos = origin.clone().add(dir.clone().multiplyScalar(range * t));
+      pos.y += (Math.random() - 0.5) * 2;
+      const canvas = document.createElement('canvas');
+      canvas.width = 64; canvas.height = 64;
+      const ctx = canvas.getContext('2d')!;
+      ctx.fillStyle = '#ffd700';
+      ctx.font = 'bold 48px serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(chars[i], 32, 32);
+      const tex = new THREE.CanvasTexture(canvas);
+      const mat = new THREE.MeshBasicMaterial({
+        map: tex, transparent: true, opacity: 0.9, depthTest: false,
+        blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+      });
+      const plane = new THREE.Mesh(new THREE.PlaneGeometry(3, 3), mat);
+      plane.position.copy(pos);
+      plane.lookAt(pos.clone().add(dir));
+      plane.renderOrder = 999;
+      this.scene.add(plane);
+      this.runeTrails.push({ mesh: plane, life: 1.5 });
+    }
   }
 
   private showParryShield(): void {
@@ -455,6 +501,13 @@ export class SkillSystem {
     if (this.parryShield) {
       this.scene.remove(this.parryShield);
     }
+    for (const r of this.runeTrails) {
+      this.scene.remove(r.mesh);
+      r.mesh.geometry.dispose();
+      (r.mesh.material as THREE.MeshBasicMaterial).map?.dispose();
+      (r.mesh.material as THREE.Material).dispose();
+    }
+    this.runeTrails = [];
   }
 }
 
